@@ -23,6 +23,23 @@ npm run dev
 Google OAuth callback URL
 - When you create Google OAuth credentials, set the Authorized redirect URI to: `http://localhost:3000/api/auth/callback/google` for local testing.
 
+Seeding local DB (SQLite)
+- After running migrations for SQLite (see above), run seed:
+
+```bash
+node prisma/seed.ts
+```
+
+Vercel
+- The project is linked locally to a Vercel project. To add environment variables via CLI:
+
+```bash
+vercel env add DATABASE_URL production
+vercel env add DATABASE_URL preview
+vercel env add DATABASE_URL development
+```
+
+
 
 Env vars
 - `DATABASE_URL` - Postgres connection for Neon
