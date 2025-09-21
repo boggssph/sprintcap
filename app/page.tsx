@@ -13,7 +13,7 @@ export default function Landing() {
         <section className="bg-gray-50 rounded-xl p-8 shadow-sm">
           <p className="text-gray-700 mb-6">Designed with clarity. Inspired by simple, tactile interfaces.</p>
           <div className="flex gap-4">
-            <Link href="/setup/scrum-master" className="px-6 py-3 bg-black text-white rounded-md">Become a Scrum Master</Link>
+            <Link href="/setup/scrum-master" className="px-6 py-3 bg-black text-white rounded-md">Register as Scrum Master</Link>
             <Link href="/app" className="px-6 py-3 border border-gray-200 rounded-md">View Demo</Link>
           </div>
         </section>
