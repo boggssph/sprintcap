@@ -20,6 +20,8 @@ model User {
   squads     SquadMember[]
   absences   Absence[]
   assignments Assignment[]
+  sprintMembers SprintMember[]
+  dayAllocations DayAllocation[]
 }
 
 enum UserRole {
@@ -37,6 +39,7 @@ model Squad {
   members   SquadMember[]
   sprints   Sprint[]
   holidays  Holiday[]
+  invitations Invitation[]
 }
 
 model SquadMember {
@@ -59,6 +62,8 @@ model Sprint {
 
   members   SprintMember[]
   tickets   Ticket[]
+  absences  Absence[]
+  assignments Assignment[]
 }
 
 model SprintMember {
@@ -118,6 +123,7 @@ model Assignment {
   assignee  User?  @relation(fields: [assigneeId], references: [id])
   assigneeId String?
   hours     Float
+  dayAllocations DayAllocation[]
 }
 
 model DayAllocation {

@@ -1,0 +1,44 @@
+
+> sprint-capacity-app@0.1.0 dev
+> next dev
+
+It looks like you're trying to use TypeScript but do not have the required package(s) installed.
+Installing dependencies
+
+If you are not trying to use TypeScript, please remove the tsconfig.json file from your package root (and any TypeScript files in your pages directory).
+
+
+Installing devDependencies (npm):
+- typescript
+- @types/react
+- @types/node
+
+
+added 6 packages, and audited 169 packages in 4s
+
+39 packages are looking for funding
+  run `npm fund` for details
+
+1 high severity vulnerability
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+
+   We detected TypeScript in your project and created a tsconfig.json file for you.
+  ▲ Next.js 13.5.11
+  - Local:        http://localhost:3000
+  - Environments: .env
+
+ ✓ Ready in 7.6s
+
+Your page app/page.tsx did not have a root layout. We created app/layout.tsx for you.
+
+ ○ Compiling /page ...
+ ✓ Compiled /page in 3.5s (408 modules)
+ ✓ Compiled in 598ms (447 modules)
+ ✓ Compiled in 109ms (232 modules)
+ ✓ Compiled in 89ms (433 modules)
+ ✓ Compiled in 115ms (232 modules)
