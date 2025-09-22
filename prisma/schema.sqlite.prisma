@@ -20,9 +20,11 @@ model User {
   squads     SquadMember[]
   absences   Absence[]
   assignments Assignment[]
+  auditLogs  AuditLog[]
 }
 
 enum UserRole {
+  ADMIN
   SCRUM_MASTER
   MEMBER
 }
@@ -135,6 +137,7 @@ model Invitation {
   email     String
   squad     Squad? @relation(fields: [squadId], references: [id])
   squadId   String?
+  invitedRole UserRole?
   tokenHash String
   expiresAt DateTime
   status    InvitationStatus @default(PENDING)
@@ -145,4 +148,13 @@ enum InvitationStatus {
   PENDING
   ACCEPTED
   EXPIRED
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String
+  actor     User     @relation(fields: [actorId], references: [id])
+  action    String
+  meta      Json?
+  createdAt DateTime @default(now())
 }

@@ -1,4 +1,11 @@
 import NextAuth from 'next-auth'
-import { authOptions } from '../../../lib/auth'
+import { authOptions, nextAuthConfig, validateAuthEnv } from '../../../lib/auth'
 
-export default NextAuth(authOptions)
+// Validate env on module load so errors show in server logs
+validateAuthEnv()
+
+export default NextAuth({
+	...authOptions,
+	secret: nextAuthConfig.secret,
+	debug: nextAuthConfig.debug,
+})

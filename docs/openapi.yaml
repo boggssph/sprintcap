@@ -1,0 +1,65 @@
+openapi: 3.1.0
+info:
+  title: SprintCap Invite API
+  version: 0.1.0
+paths:
+  /api/invite:
+    get:
+      summary: List invites
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: cursor
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of invites
+    post:
+      summary: Create or manage invites
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  properties:
+                    email:
+                      type: string
+                    role:
+                      type: string
+                - type: object
+                  properties:
+                    action:
+                      type: string
+                    inviteId:
+                      type: string
+      responses:
+        '201':
+          description: Created (returns id and token)
+        '200':
+          description: OK (for regenerate/revoke)
+  /api/accept-invite:
+    post:
+      summary: Accept an invite
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                userEmail:
+                  type: string
+      responses:
+        '200':
+          description: Accepted
+        '400':
+          description: Invalid request
+        '404':
+          description: Invalid token

@@ -1,0 +1,12 @@
+site_name: SprintCap Docs
+nav:
+  - Home: docs/index.md
+  - Development: docs/DEVELOPMENT.md
+  - Testing: docs/TESTING.md
+  - API: docs/API.md
+  - Invite Flow: docs/INVITE_FLOW.md
+  - Playwright: docs/PLAYWRIGHT.md
+  - CI: docs/CI.md
+
+theme:
+  name: material
