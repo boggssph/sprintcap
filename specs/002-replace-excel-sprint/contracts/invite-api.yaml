@@ -1,0 +1,78 @@
+openapi: 3.0.3
+info:
+  title: Invite API
+  version: 1.0.0
+paths:
+  /api/invites:
+    post:
+      summary: Create an invite
+      tags: [invites]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                invitedEmail:
+                  type: string
+                invitedRole:
+                  type: string
+                  enum: [SCRUM_MASTER, MEMBER]
+      responses:
+        '201':
+          description: Invite created (plaintext token returned once)
+        '429':
+          description: Rate limited
+  /api/invites/{id}/regenerate:
+    post:
+      summary: Regenerate invite token
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: New invite created
+        '429':
+          description: Rate limited
+  /api/invites/{id}/revoke:
+    post:
+      summary: Revoke an invite
+      parameters:
+        - name: id
+          in: path
+          required: true
+      responses:
+        '200':
+          description: Invite revoked
+  /api/invites/accept:
+    post:
+      summary: Accept an invite
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                email:
+                  type: string
+      responses:
+        '200':
+          description: Accepted
+        '400':
+          description: Invalid token
+        '410':
+          description: Expired or already used
+        '429':
+          description: Rate limited
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

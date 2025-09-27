@@ -38,9 +38,10 @@ export async function createInvite(actorEmail: string, params: { email: string, 
 
   const token = generateToken()
   const tokenHash = hashToken(token)
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+  // Default TTL: 72 hours
+  const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000)
 
-  const invite = await prisma.invitation.create({ data: { email: params.email, squadId: params.squadId, tokenHash, expiresAt, invitedRole: desiredRole } })
+  const invite = await prisma.invitation.create({ data: { email: params.email.toLowerCase(), squadId: params.squadId, tokenHash, expiresAt, invitedRole: desiredRole as any } })
 
   try {
     await prisma.auditLog.create({ data: { actorId: actor.id, action: 'CREATE_INVITE', meta: { inviteId: invite.id, email: params.email, squadId: params.squadId, role: desiredRole } } })
@@ -56,16 +57,48 @@ export async function regenerateInvite(actorEmail: string, inviteId: string) {
   if (!actor) throw new Error('forbidden')
   if ((actor as any).role !== 'ADMIN') throw new Error('only ADMIN can regenerate tokens')
 
+  // Expire the existing invite and create a new invite record with a fresh token
+  const existing = await prisma.invitation.findUnique({ where: { id: inviteId } })
+  if (!existing) throw new Error('invite not found')
+  await prisma.invitation.update({ where: { id: inviteId }, data: { status: 'EXPIRED' } })
+
   const newToken = generateToken()
   const newTokenHash = hashToken(newToken)
-  const newExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-  const updated = await prisma.invitation.update({ where: { id: inviteId }, data: { tokenHash: newTokenHash, expiresAt: newExpires } })
+  const newExpires = new Date(Date.now() + 72 * 60 * 60 * 1000)
+  const created = await prisma.invitation.create({ data: { email: existing.email, squadId: existing.squadId, tokenHash: newTokenHash, expiresAt: newExpires, invitedRole: existing.invitedRole as any } })
   try {
     await prisma.auditLog.create({ data: { actorId: actor.id, action: 'REGENERATE_INVITE', meta: { inviteId } } })
   } catch (e) {
     console.warn('Failed to write audit log', e)
   }
-  return { id: updated.id, token: newToken }
+  return { id: created.id, token: newToken }
+}
+
+export async function acceptInvite(token: string, email: string) {
+  const tokenHash = hashToken(token)
+  const now = new Date()
+  const invite = await prisma.invitation.findFirst({ where: { tokenHash, status: 'PENDING', expiresAt: { gt: now } } })
+  if (!invite) throw new Error('invalid or expired token')
+
+  // Create or link user
+  const normalizedEmail = email.toLowerCase()
+  let user = await prisma.user.findUnique({ where: { email: normalizedEmail } })
+  if (!user) {
+    user = await prisma.user.create({ data: { email: normalizedEmail, role: 'MEMBER' } })
+  }
+
+  // Attach to squad if present
+  try {
+    if (invite.squadId) {
+      await prisma.squadMember.create({ data: { userId: user.id, squadId: invite.squadId } })
+    }
+    await prisma.invitation.update({ where: { id: invite.id }, data: { status: 'ACCEPTED' } })
+    await prisma.auditLog.create({ data: { actorId: user.id, action: 'ACCEPT_INVITE', meta: { inviteId: invite.id, email: normalizedEmail } } })
+  } catch (e) {
+    console.warn('Failed to finalize invite acceptance', e)
+  }
+
+  return { success: true, userId: user.id }
 }
 
 export async function revokeInvite(actorEmail: string, inviteId: string) {
