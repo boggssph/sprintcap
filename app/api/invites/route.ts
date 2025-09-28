@@ -5,8 +5,18 @@ import { rateLimit } from '../../../lib/rateLimit'
 import { prisma } from '../../../lib/prisma'
 
 export async function POST(request: Request) {
-  const url = new URL(request.url)
-  const path = url.pathname
+  // Guard: during some build/prerender phases request.url can be empty or invalid.
+  // Protect against throwing when constructing a URL by falling back to an empty path.
+  let path = ''
+  try {
+    if (request?.url) {
+      const url = new URL(request.url)
+      path = url.pathname
+    }
+  } catch (err) {
+    console.warn('app/api/invites: could not parse request.url', err)
+    path = ''
+  }
   try {
     const body = await request.json()
 

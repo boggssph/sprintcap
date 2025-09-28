@@ -1,19 +1,59 @@
 {
   "pages": {
+    "/_not-found": [
+      "static/chunks/webpack-7561be93121753da.js",
+      "static/chunks/fd9d1056-447d397fddc1facb.js",
+      "static/chunks/472-7b1cd7e3fd2a66bc.js",
+      "static/chunks/main-app-6f60e8fe3361339e.js",
+      "static/chunks/app/_not-found-77a6530beaf48779.js"
+    ],
     "/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/layout.js"
+      "static/chunks/webpack-7561be93121753da.js",
+      "static/chunks/fd9d1056-447d397fddc1facb.js",
+      "static/chunks/472-7b1cd7e3fd2a66bc.js",
+      "static/chunks/main-app-6f60e8fe3361339e.js",
+      "static/chunks/749-1bf5025817004e9d.js",
+      "static/chunks/app/layout-b4f82b94a8c0e768.js"
     ],
     "/accept-invite/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/accept-invite/page.js"
+      "static/chunks/webpack-7561be93121753da.js",
+      "static/chunks/fd9d1056-447d397fddc1facb.js",
+      "static/chunks/472-7b1cd7e3fd2a66bc.js",
+      "static/chunks/main-app-6f60e8fe3361339e.js",
+      "static/chunks/app/accept-invite/page-ad236835462f86f5.js"
     ],
     "/admin/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/page.js"
+      "static/chunks/webpack-7561be93121753da.js",
+      "static/chunks/fd9d1056-447d397fddc1facb.js",
+      "static/chunks/472-7b1cd7e3fd2a66bc.js",
+      "static/chunks/main-app-6f60e8fe3361339e.js",
+      "static/chunks/app/admin/page-119ba44e52c58fb8.js"
+    ],
+    "/page": [
+      "static/chunks/webpack-7561be93121753da.js",
+      "static/chunks/fd9d1056-447d397fddc1facb.js",
+      "static/chunks/472-7b1cd7e3fd2a66bc.js",
+      "static/chunks/main-app-6f60e8fe3361339e.js",
+      "static/chunks/326-a84953a5378f2f57.js",
+      "static/css/d3b2fee5a45b6ffb.css",
+      "static/chunks/app/page-66dafa59e08a2f1e.js"
+    ],
+    "/auth/no-access/page": [
+      "static/chunks/webpack-7561be93121753da.js",
+      "static/chunks/fd9d1056-447d397fddc1facb.js",
+      "static/chunks/472-7b1cd7e3fd2a66bc.js",
+      "static/chunks/main-app-6f60e8fe3361339e.js",
+      "static/chunks/326-a84953a5378f2f57.js",
+      "static/chunks/app/auth/no-access/page-49d345cb410b1a8c.js"
+    ],
+    "/setup/scrum-master/page": [
+      "static/chunks/webpack-7561be93121753da.js",
+      "static/chunks/fd9d1056-447d397fddc1facb.js",
+      "static/chunks/472-7b1cd7e3fd2a66bc.js",
+      "static/chunks/main-app-6f60e8fe3361339e.js",
+      "static/chunks/326-a84953a5378f2f57.js",
+      "static/chunks/749-1bf5025817004e9d.js",
+      "static/chunks/app/setup/scrum-master/page-3cb33f5ed1070957.js"
     ]
   }
 }

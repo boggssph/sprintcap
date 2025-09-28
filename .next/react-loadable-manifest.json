@@ -1,1 +1,6 @@
-{}
+{
+  "../components/ScrumMasterClient.tsx -> next-auth/react": {
+    "id": 2749,
+    "files": []
+  }
+}

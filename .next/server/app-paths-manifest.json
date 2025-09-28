@@ -1,1 +1,11 @@
-{}
+{
+  "/_not-found": "app/_not-found.js",
+  "/accept-invite/page": "app/accept-invite/page.js",
+  "/api/invites/accept/route": "app/api/invites/accept/route.js",
+  "/admin/page": "app/admin/page.js",
+  "/api/register/route": "app/api/register/route.js",
+  "/page": "app/page.js",
+  "/auth/no-access/page": "app/auth/no-access/page.js",
+  "/api/invites/route": "app/api/invites/route.js",
+  "/setup/scrum-master/page": "app/setup/scrum-master/page.js"
+}

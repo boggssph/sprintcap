@@ -14,7 +14,7 @@ vi.mock('../../lib/prisma', async () => {
 })
 
 describe('acceptInvite', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks(); return undefined })
 
   it('accepts a valid token and creates/links user', async () => {
     const mockInvite = { id: 'inv1', email: 'new@user.com', squadId: null }

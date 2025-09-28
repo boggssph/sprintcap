@@ -8,8 +8,18 @@ export async function devAuthGuard(request: NextRequest) {
 
   // Priority: X-Test-User header, then query param ?test_user=
   const headerUser = request.headers.get('x-test-user')
-  const url = new URL(request.url)
-  const queryUser = url.searchParams.get('test_user')
+  // request.url may be empty during static prerender/build steps. Guard parsing.
+  let queryUser: string | null = null
+  try {
+    if (request?.url) {
+      const url = new URL(request.url)
+      queryUser = url.searchParams.get('test_user')
+    }
+  } catch (err) {
+    // ignore parse errors and continue with headerUser
+    console.warn('devAuthGuard: could not parse request.url', err)
+    queryUser = null
+  }
   const email = (headerUser || queryUser || '').toLowerCase()
   if (!email) return null
 

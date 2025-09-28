@@ -1,3 +1,5 @@
+// Normalize environment variables early to avoid empty-string URL parsing
+import './normalizeEnv'
 import GoogleProvider from 'next-auth/providers/google'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { NextAuthOptions } from 'next-auth'

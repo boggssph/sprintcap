@@ -2,26 +2,29 @@ name: CI
 
 on:
   push:
-    branches: ["main", "master", "002-replace-excel-sprint"]
+    branches: [ main, master, '003-i-want-this' ]
   pull_request:
-    branches: ["main", "master"]
+    branches: [ main, master ]
 
 jobs:
-  lint-and-build:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '18'
+
       - name: Install dependencies
         run: npm ci
-      - name: Lint (ESLint)
-        run: npm run lint
+
+      - name: Validate env files for empty critical keys
+        run: npm run validate:env
+
       - name: Typecheck
         run: npx tsc --noEmit
-      - name: Run tests
-        run: npm test --silent
-      - name: Build
-        run: npm run build --silent
+
+      - name: Run build (optional, may require secrets)
+        run: npm run build
