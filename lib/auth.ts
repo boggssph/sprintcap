@@ -2,7 +2,7 @@ import GoogleProvider from 'next-auth/providers/google'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { NextAuthOptions } from 'next-auth'
 import { prisma } from './prisma'
-import type { UserRole } from '@prisma/client'
+import type { UserRole, User } from '@prisma/client'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -34,44 +34,61 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user }) {
-      if (!user?.email) return false
-      const email = user.email.toLowerCase()
+        if (!user?.email) return false
 
-      // If user already exists, allow sign in and update metadata
-      const existing = await prisma.user.findUnique({ where: { email } })
-      if (existing) {
-        try {
-          await prisma.user.update({ where: { email }, data: { name: user.name ?? existing.name, image: user.image ?? existing.image } })
-        } catch (e) {
-          console.warn('Failed to update existing user metadata', e)
+        // canonicalize email
+        const email = user.email.toLowerCase().trim()
+
+        // provider id (e.g., Google sub) may be available on user.id or user.providerId depending on NextAuth provider
+        const providerId = (user as any).id || (user as any).sub || (user as any).providerId || null
+
+        // Try providerId first to avoid email aliasing issues
+        let existing: any = null
+        if (providerId) {
+          existing = await prisma.user.findFirst({ where: { providerId } as any })
         }
-        return true
-      }
 
-      // New user: bootstrap the first signer as ADMIN (application admin)
-      const adminCount = await prisma.user.count({ where: { role: 'ADMIN' as unknown as UserRole } })
-      if (adminCount === 0) {
-        await prisma.user.create({ data: { email, name: user.name, image: user.image, role: 'ADMIN' as unknown as UserRole } })
-        return true
-      }
+        // Fallback to email match
+        if (!existing) {
+          existing = await prisma.user.findUnique({ where: { email } })
+        }
 
-      // Otherwise, allow registration only if there's a pending invitation for this email
-      const invite = await prisma.invitation.findFirst({ where: { email, status: 'PENDING' } })
-      if (invite) {
-  const created = await prisma.user.create({ data: { email, name: user.name, image: user.image, role: 'MEMBER' as unknown as UserRole } })
-        try {
-          if (invite.squadId) {
-            await prisma.squadMember.create({ data: { userId: created.id, squadId: invite.squadId } })
+        if (existing) {
+          try {
+            const updateData: any = { name: user.name ?? existing.name, image: user.image ?? existing.image }
+            // persist providerId when available
+            if (providerId && !existing.providerId) updateData.providerId = providerId
+            await prisma.user.update({ where: { id: existing.id }, data: updateData })
+          } catch (e) {
+            console.warn('Failed to update existing user metadata', e)
           }
-          await prisma.invitation.update({ where: { id: invite.id }, data: { status: 'ACCEPTED' } })
-        } catch (e) {
-          console.warn('Failed to attach invited user to squad or update invitation', e)
+          return true
         }
-        return true
-      }
 
-      // No invite and not the bootstrap scenario — block sign in and redirect to a friendly page
-      return '/auth/no-access'
+        // New user: bootstrap the first signer as ADMIN (application admin)
+        const adminCount = await prisma.user.count({ where: { role: 'ADMIN' as unknown as UserRole } })
+        if (adminCount === 0) {
+          await prisma.user.create({ data: { email, name: user.name, image: user.image, providerId: providerId ?? undefined, role: 'ADMIN' as unknown as UserRole } })
+          return true
+        }
+
+        // Otherwise, allow registration only if there's a pending invitation for this email
+        const invite = await prisma.invitation.findFirst({ where: { email, status: 'PENDING' } })
+        if (invite) {
+          const created = await prisma.user.create({ data: { email, name: user.name, image: user.image, providerId: providerId ?? undefined, role: 'MEMBER' as unknown as UserRole } })
+          try {
+            if (invite.squadId) {
+              await prisma.squadMember.create({ data: { userId: created.id, squadId: invite.squadId } })
+            }
+            await prisma.invitation.update({ where: { id: invite.id }, data: { status: 'ACCEPTED' } })
+          } catch (e) {
+            console.warn('Failed to attach invited user to squad or update invitation', e)
+          }
+          return true
+        }
+
+        // No invite and not the bootstrap scenario — block sign in and redirect to a friendly page
+        return '/auth/no-access'
     },
     async jwt({ token, user }) {
       // When a user signs in, attach their DB role to the token

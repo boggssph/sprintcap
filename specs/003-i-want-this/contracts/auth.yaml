@@ -1,0 +1,48 @@
+openapi: 3.0.0
+info:
+  title: SprintCap Auth Contracts
+  version: 1.0.0
+paths:
+  /api/auth/providers:
+    get:
+      summary: List enabled auth providers
+      responses:
+        '200':
+          description: Providers list
+  /api/auth/callback/google:
+    get:
+      summary: OAuth callback endpoint handled by NextAuth
+      responses:
+        '302':
+          description: Redirect to application with session cookie on success
+        '400':
+          description: Bad request or token exchange error
+  /api/invites:
+    post:
+      summary: Create an invite (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                role:
+                  type: string
+      responses:
+        '201':
+          description: Invite created
+  /api/invites/{id}/revoke:
+    post:
+      summary: Revoke an invite (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invite revoked
