@@ -1,6 +1,7 @@
 "use client"
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 export default function AcceptInvitePage(){
   const [msg, setMsg] = useState<string | null>(null)
@@ -9,6 +10,7 @@ export default function AcceptInvitePage(){
   const token = params?.get('token') || ''
 
   const [email, setEmail] = useState(params?.get('email') || '')
+  const router = useRouter()
 
   async function handleAccept(){
     setLoading(true)
@@ -16,7 +18,17 @@ export default function AcceptInvitePage(){
     try{
       const res = await fetch('/api/accept-invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, userEmail: email }) })
       if (res.ok) {
-        setMsg('Invitation accepted')
+        const data = await res.json()
+        setMsg('Invitation accepted! Redirecting...')
+        
+        // Redirect after successful acceptance
+        setTimeout(() => {
+          if (data.redirectUrl) {
+            router.push(data.redirectUrl)
+          } else {
+            router.push('/')
+          }
+        }, 2000)
       } else {
         const e = await res.json()
         setMsg('Error: ' + (e.error || 'accept failed'))

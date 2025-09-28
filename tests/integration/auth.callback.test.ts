@@ -11,16 +11,16 @@ describe('Auth callback logic (signIn)', () => {
     const nextAuthUser = { email, name: 'Seed' }
     // call signIn callback directly
     const result = await (authOptions.callbacks as any).signIn({ user: nextAuthUser })
-    expect(result).toBe(true)
+    expect(result).toBe('/dashboard/member')
 
     // cleanup
     await prisma.user.delete({ where: { id: user.id } })
   })
 
-  it('should reject unknown users without invite', async () => {
+  it('should redirect unknown users to access request page', async () => {
     const email = `test+unknown-${Date.now()}@example.com`
     const nextAuthUser = { email, name: 'Unknown' }
     const result = await (authOptions.callbacks as any).signIn({ user: nextAuthUser })
-    expect(result).toBe('/auth/no-access')
+    expect(result).toBe(`/auth/request-access?email=${encodeURIComponent(email)}&name=Unknown&image=&providerId=`)
   })
 })

@@ -62,11 +62,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // create
-    const { email, squadId, role } = body
-    if (!email) return res.status(400).json({ error: 'email required' })
+    const { email, emails, squadId, role } = body
+    
+    // Support both single email and multiple emails
+    const emailList = emails || (email ? [email] : [])
+    
+    if (!emailList.length) return res.status(400).json({ error: 'email(s) required' })
+    if (emailList.length > 10) return res.status(400).json({ error: 'maximum 10 emails allowed' })
+    
     try {
-      const data = await createInvite((session as any).user.email, { email, squadId, role })
-      return res.status(201).json(data)
+      const results: any[] = []
+      for (const emailAddr of emailList) {
+        const data = await createInvite((session as any).user.email, { email: emailAddr, squadId, role })
+        results.push(data)
+      }
+      return res.status(201).json({ invites: results })
     } catch (e:any) {
       return res.status(400).json({ error: e.message })
     }

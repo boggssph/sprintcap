@@ -49,6 +49,27 @@ export async function createInvite(actorEmail: string, params: { email: string, 
     console.warn('Failed to write audit log', e)
   }
 
+  // notify via brevo if configured
+  try {
+    const brevoKey = process.env.BREVO_API_KEY
+    if (brevoKey) {
+      const baseUrl = process.env.BASE_URL || 'http://localhost:3000'
+      const acceptUrl = `${baseUrl}/accept-invite?token=${token}&email=${encodeURIComponent(params.email)}`
+      await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'api-key': brevoKey },
+        body: JSON.stringify({
+          sender: { name: 'SprintCap', email: 'ftseguerra@gmail.com' },
+          to: [{ email: params.email }],
+          subject: 'You\'ve been invited to SprintCap',
+          htmlContent: `<p>You've been invited to join SprintCap as a ${desiredRole.toLowerCase()}.</p><p><a href="${acceptUrl}">Click here to accept your invitation</a></p><p>This invitation expires in 72 hours.</p>`
+        })
+      })
+    }
+  } catch (e) {
+    console.warn('Failed to send invite email', e)
+  }
+
   return { id: invite.id, token }
 }
 
@@ -119,7 +140,7 @@ export async function revokeInvite(actorEmail: string, inviteId: string) {
       await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'api-key': brevoKey },
-        body: JSON.stringify({ sender: { name: 'SprintCap', email: 'no-reply@example.com' }, to: [{ email: updated.email }], subject: 'Your invite has been revoked', htmlContent: `<p>Your invitation to SprintCap has been revoked by an administrator.</p>` })
+        body: JSON.stringify({ sender: { name: 'SprintCap', email: 'ftseguerra@gmail.com' }, to: [{ email: updated.email }], subject: 'Your invite has been revoked', htmlContent: `<p>Your invitation to SprintCap has been revoked by an administrator.</p>` })
       })
     }
   } catch (e) {

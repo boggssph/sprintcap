@@ -9,7 +9,7 @@ async function main(){
     create: { email: 'scrum.master@example.com', name: 'Scrum Master', role: 'SCRUM_MASTER' }
   })
 
-  const squad = await prisma.squad.create({ data: { name: 'FM Browse & Shop Squad', scrumMasterId: user.id } })
+  const squad = await prisma.squad.create({ data: { name: 'FM Browse & Shop Squad', alias: 'FMBS', scrumMasterId: user.id } })
 
   console.log('seeded', { user: user.email, squad: squad.name })
 }

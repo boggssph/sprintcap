@@ -70,6 +70,14 @@ export const authOptions: NextAuthOptions = {
             console.warn('Failed to update existing user metadata', e)
           }
           authLog('signIn_success', { emailHash: hashPII(email || undefined), userId: existing.id, role: existing.role })
+
+          // Redirect based on role
+          const roleRedirects = {
+            ADMIN: '/admin',
+            SCRUM_MASTER: '/dashboard/scrum-master',
+            MEMBER: '/dashboard/member'
+          }
+          // Don't redirect from server-side callback, let client handle it
           return true
         }
 
@@ -97,20 +105,23 @@ export const authOptions: NextAuthOptions = {
           return true
         }
 
-        // No invite and not the bootstrap scenario — block sign in and redirect to a friendly page
-  authLog('signIn_denied_no_invite', { emailHash: hashPII(email || undefined) })
-    return '/auth/no-access'
+        // No invite and not the bootstrap scenario — allow sign-in but require access request
+        authLog('signIn_access_request_needed', { emailHash: hashPII(email || undefined), providerId })
+        // Return a special URL that will show the access request dialog
+        return '/auth/request-access?email=' + encodeURIComponent(email) + '&name=' + encodeURIComponent(user.name || '') + '&image=' + encodeURIComponent(user.image || '') + '&providerId=' + encodeURIComponent(providerId || '')
     },
     async jwt({ token, user }) {
-      // When a user signs in, attach their DB role to the token
+      // When a user signs in, attach their DB role and display name to the token
       if (user?.email) {
         const dbUser = await prisma.user.findUnique({ where: { email: user.email.toLowerCase() } })
         ;(token as any).role = dbUser?.role ?? 'MEMBER'
+        ;(token as any).displayName = dbUser?.displayName
       }
       return token
     },
     async session({ session, token }) {
       ;(session.user as any).role = (token as any).role ?? 'MEMBER'
+      ;(session.user as any).displayName = (token as any).displayName
       return session
     }
   },

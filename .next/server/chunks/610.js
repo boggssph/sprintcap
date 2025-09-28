@@ -1,1 +1,0 @@
-"use strict";exports.id=610,exports.ids=[610],exports.modules={5610:(e,r,t)=>{t.r(r),t.d(r,{$$typeof:()=>d,__esModule:()=>a,default:()=>u});var s=t(5153);let o=(0,s.createProxy)(String.raw`/Users/fseguerra/Projects/sprintCap/components/ScrumMasterClient.tsx`),{__esModule:a,$$typeof:d}=o,p=o.default,u=p}};

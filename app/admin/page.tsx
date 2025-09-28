@@ -1,6 +1,10 @@
 "use client"
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import DisplayNameEditor from '@/components/DisplayNameEditor'
 
 type Invite = {
   id: string
@@ -11,12 +15,22 @@ type Invite = {
   status?: string
 }
 
+type AccessRequest = {
+  id: string
+  email: string
+  name?: string | null
+  requestedRole: string
+  status: string
+  createdAt: string
+}
+
 export default function AdminPage(){
   const [email, setEmail] = useState('')
   const [role, setRole] = useState('MEMBER')
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const [invites, setInvites] = useState<Invite[]>([])
+  const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([])
   const [refreshing, setRefreshing] = useState(false)
   const router = useRouter()
 
@@ -46,7 +60,34 @@ export default function AdminPage(){
   const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [confirming, setConfirming] = useState<Invite | null>(null)
 
-  useEffect(()=>{ fetchInvites() }, [])
+  useEffect(()=>{ fetchInvites(); fetchAccessRequests() }, [])
+
+  async function fetchAccessRequests(){
+    try{
+      const res = await fetch('/api/access-requests')
+      if (res.ok) {
+        const data = await res.json()
+        setAccessRequests(data.requests || [])
+      }
+    }catch(e){
+      console.warn('failed to fetch access requests', e)
+    }
+  }
+
+  async function handleAccessRequest(requestId: string, action: 'approve' | 'decline'){
+    try{
+      const res = await fetch('/api/access-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestId, action })
+      })
+      if (res.ok) {
+        await fetchAccessRequests()
+      }
+    }catch(e){
+      console.warn('failed to process access request', e)
+    }
+  }
 
   async function handleSubmit(e: any){
     e.preventDefault()
@@ -89,6 +130,10 @@ export default function AdminPage(){
 
   return (
     <main className="min-h-screen flex flex-col items-center bg-white p-8">
+      <header className="w-full max-w-2xl flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <DisplayNameEditor />
+      </header>
       <section className="w-full max-w-2xl bg-gray-50 p-6 rounded-md shadow mb-6">
         <form onSubmit={handleSubmit} className="">
           <h2 className="text-2xl mb-4">Admin - Create Invite</h2>
@@ -169,6 +214,41 @@ export default function AdminPage(){
             </div>
           </div>
         )}
+      </section>
+
+      <section className="w-full max-w-2xl mt-8">
+        <h3 className="text-lg mb-4">Access Requests</h3>
+        <div className="space-y-4">
+          {accessRequests.map((request: AccessRequest) => (
+            <Card key={request.id} className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{request.email}</p>
+                  <p className="text-sm text-gray-600">{request.name}</p>
+                  <p className="text-xs text-gray-500">{new Date(request.createdAt).toLocaleDateString()}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={request.status === 'pending' ? 'secondary' : request.status === 'approved' ? 'default' : 'destructive'}>
+                    {request.status}
+                  </Badge>
+                  {request.status === 'pending' && (
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => handleAccessRequest(request.id, 'approve')}>
+                        Approve
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleAccessRequest(request.id, 'decline')}>
+                        Decline
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+          ))}
+          {accessRequests.length === 0 && (
+            <p className="text-gray-500 text-center py-8">No access requests found</p>
+          )}
+        </div>
       </section>
     </main>
   )

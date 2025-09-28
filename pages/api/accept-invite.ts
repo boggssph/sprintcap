@@ -13,8 +13,52 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (invite.expiresAt < new Date()) return res.status(410).json({ error: 'expired' })
   if (invite.email.toLowerCase() !== userEmail.toLowerCase()) return res.status(403).json({ error: 'email mismatch' })
 
-  // mark accepted and optionally add user to squad; actual user creation is handled by auth flow
-  await prisma.invitation.update({ where: { id: invite.id }, data: { status: 'ACCEPTED' } })
+  try {
+    // Create or find user
+    const normalizedEmail = userEmail.toLowerCase()
+    let user = await prisma.user.findUnique({ where: { email: normalizedEmail } })
+    if (!user) {
+      user = await prisma.user.create({ 
+        data: { 
+          email: normalizedEmail, 
+          role: invite.invitedRole || 'MEMBER' 
+        } 
+      })
+    }
 
-  return res.status(200).json({ ok: true })
+    // Add user to squad if specified
+    if (invite.squadId) {
+      await prisma.squadMember.create({ 
+        data: { 
+          userId: user.id, 
+          squadId: invite.squadId 
+        } 
+      })
+    }
+
+    // Mark invitation as accepted
+    await prisma.invitation.update({ 
+      where: { id: invite.id }, 
+      data: { status: 'ACCEPTED' } 
+    })
+
+    // Determine redirect URL based on user role
+    let redirectUrl = '/'
+    if (user.role === 'SCRUM_MASTER' || user.role === 'ADMIN') {
+      redirectUrl = '/dashboard/scrum-master'
+    } else if (invite.squadId) {
+      // For members, redirect to squad dashboard (to be implemented)
+      redirectUrl = `/dashboard/member?squad=${invite.squadId}`
+    }
+
+    return res.status(200).json({ 
+      ok: true, 
+      redirectUrl,
+      userId: user.id,
+      role: user.role 
+    })
+  } catch (error) {
+    console.error('Failed to accept invite:', error)
+    return res.status(500).json({ error: 'Failed to accept invitation' })
+  }
 }

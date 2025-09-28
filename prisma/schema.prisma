@@ -12,6 +12,7 @@ model User {
   email     String   @unique
   providerId String?  @unique
   name      String?
+  displayName String?
   image     String?
   role      UserRole @default(MEMBER)
   createdAt DateTime @default(now())
@@ -34,6 +35,7 @@ enum UserRole {
 
 model Squad {
   id        String   @id @default(uuid())
+  alias     String   @unique
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -164,4 +166,22 @@ model AuditLog {
   action    String
   meta      Json?
   createdAt DateTime @default(now())
+}
+
+model AccessRequest {
+  id        String @id @default(uuid())
+  email     String
+  name      String?
+  image     String?
+  providerId String?
+  requestedRole UserRole
+  status    AccessRequestStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum AccessRequestStatus {
+  PENDING
+  APPROVED
+  DECLINED
 }
