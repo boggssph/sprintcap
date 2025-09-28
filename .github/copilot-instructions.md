@@ -19,6 +19,7 @@ npm test [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNO
 TypeScript 5.9: Follow standard conventions
 
 ## Recent Changes
+- 003-i-want-this: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 - 001-bootstrap: Added TypeScript 5.9 + Next.js, Prisma, Playwrigh
 
 <!-- MANUAL ADDITIONS START -->

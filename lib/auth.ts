@@ -2,6 +2,7 @@ import GoogleProvider from 'next-auth/providers/google'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { NextAuthOptions } from 'next-auth'
 import { prisma } from './prisma'
+import { authLog, hashPII } from './logger'
 import type { UserRole, User } from '@prisma/client'
 
 export const authOptions: NextAuthOptions = {
@@ -34,7 +35,11 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user }) {
-        if (!user?.email) return false
+  authLog('signIn_attempt', { provider: (user as any)?.provider || 'unknown', emailHash: hashPII(user?.email || undefined) })
+        if (!user?.email) {
+          authLog('signIn_failed_no_email', { emailHash: hashPII((user as any)?.email || undefined) })
+          return false
+        }
 
         // canonicalize email
         const email = user.email.toLowerCase().trim()
@@ -43,9 +48,9 @@ export const authOptions: NextAuthOptions = {
         const providerId = (user as any).id || (user as any).sub || (user as any).providerId || null
 
         // Try providerId first to avoid email aliasing issues
-        let existing: any = null
+        let existing: User | null = null
         if (providerId) {
-          existing = await prisma.user.findFirst({ where: { providerId } as any })
+          existing = await prisma.user.findFirst({ where: { providerId: { equals: providerId } } as any })
         }
 
         // Fallback to email match
@@ -62,13 +67,15 @@ export const authOptions: NextAuthOptions = {
           } catch (e) {
             console.warn('Failed to update existing user metadata', e)
           }
+          authLog('signIn_success', { emailHash: hashPII(email || undefined), userId: existing.id, role: existing.role })
           return true
         }
 
         // New user: bootstrap the first signer as ADMIN (application admin)
         const adminCount = await prisma.user.count({ where: { role: 'ADMIN' as unknown as UserRole } })
         if (adminCount === 0) {
-          await prisma.user.create({ data: { email, name: user.name, image: user.image, providerId: providerId ?? undefined, role: 'ADMIN' as unknown as UserRole } })
+          const created = await prisma.user.create({ data: { email, name: user.name, image: user.image, providerId: providerId ?? undefined, role: 'ADMIN' as unknown as UserRole } })
+          authLog('signIn_bootstrap_admin', { emailHash: hashPII(email || undefined), userId: created.id })
           return true
         }
 
@@ -84,11 +91,13 @@ export const authOptions: NextAuthOptions = {
           } catch (e) {
             console.warn('Failed to attach invited user to squad or update invitation', e)
           }
+          authLog('signIn_success_invite', { emailHash: hashPII(email || undefined), userId: created.id, inviteId: invite.id })
           return true
         }
 
         // No invite and not the bootstrap scenario — block sign in and redirect to a friendly page
-        return '/auth/no-access'
+  authLog('signIn_denied_no_invite', { emailHash: hashPII(email || undefined) })
+    return '/auth/no-access'
     },
     async jwt({ token, user }) {
       // When a user signs in, attach their DB role to the token
@@ -106,6 +115,10 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt'
   }
+  ,
+  // Use secure cookies in production
+  useSecureCookies: process.env.NODE_ENV === 'production',
+  cookies: process.env.NODE_ENV === 'production' ? undefined : undefined,
 }
 
 // Expose secret and debug flag for NextAuth when imported elsewhere
