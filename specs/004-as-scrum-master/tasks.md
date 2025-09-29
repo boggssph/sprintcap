@@ -63,14 +63,14 @@
 - [x] T015 POST /api/sprints endpoint implementation in pages/api/sprints.ts
 - [x] T016 GET /api/sprints endpoint implementation in pages/api/sprints.ts
 - [x] T017 GET /api/sprints/[id] endpoint implementation in pages/api/sprints/[id].ts
-- [ ] T018 SprintCreationForm component implementation
-- [ ] T019 SprintList component implementation
+- [x] T018 SprintCreationForm component implementation
+- [x] T019 SprintList component implementation
 
 ## Phase 3.4: Integration
-- [ ] T020 Connect sprint services to Prisma database client in lib/services/sprintService.ts
-- [ ] T021 Add authentication middleware to sprint endpoints in pages/api/sprints.ts
-- [ ] T022 Add authorization checks for Scrum Master role in lib/services/sprintService.ts
-- [ ] T023 Integrate sprint creation form into Scrum Master dashboard in app/(admin)/scrum-master/page.tsx
+- [x] T020 Connect sprint services to Prisma database client in lib/services/sprintService.ts
+- [x] T021 Add authentication middleware to sprint endpoints in pages/api/sprints.ts
+- [x] T022 Add authorization checks for Scrum Master role in lib/services/sprintService.ts
+- [x] T023 Integrate sprint creation form into Scrum Master dashboard in app/(admin)/scrum-master/page.tsx
 
 ## Phase 3.5: Polish
 - [ ] T024 [P] Unit tests for date validation logic in test/unit/date-validation.test.ts
@@ -80,7 +80,7 @@
 - [ ] T028 [P] Update API documentation in docs/API.md
 - [ ] T029 [P] Add sprint creation user documentation in docs/scrum-master-guide.md
 - [ ] T030 Run quickstart test scenarios manually in quickstart.md
-- [ ] T031 Add error handling and user-friendly messages in components/SprintCreationForm.tsx
+- [x] T031 Add error handling and user-friendly messages in components/SprintCreationForm.tsx
 
 ## Dependencies
 - Setup (T001-T003) before all other tasks

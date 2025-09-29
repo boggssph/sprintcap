@@ -41,9 +41,13 @@ export default function SprintCreationForm({ onSprintCreated }: SprintCreationFo
       if (res.ok) {
         const data = await res.json()
         setSquads(data.squads || [])
+      } else {
+        console.error('Failed to fetch squads:', res.status, res.statusText)
+        setErrors({ submit: 'Failed to load squads. Please refresh the page.' })
       }
     } catch (error) {
       console.error('Failed to fetch squads:', error)
+      setErrors({ submit: 'Network error. Please check your connection.' })
     } finally {
       setLoadingSquads(false)
     }
@@ -156,7 +160,17 @@ export default function SprintCreationForm({ onSprintCreated }: SprintCreationFo
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {loadingSquads ? (
+          <div className="text-center py-4">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto"></div>
+            <p className="mt-2 text-sm text-gray-600">Loading squads...</p>
+          </div>
+        ) : squads.length === 0 ? (
+          <div className="text-center py-4">
+            <p className="text-sm text-gray-600">No squads available. Please contact an administrator to create a squad for you.</p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Sprint Name</Label>
             <Input
@@ -223,6 +237,7 @@ export default function SprintCreationForm({ onSprintCreated }: SprintCreationFo
             {loading ? 'Creating Sprint...' : 'Create Sprint'}
           </Button>
         </form>
+        )}
       </CardContent>
     </Card>
   )
