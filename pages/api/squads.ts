@@ -20,14 +20,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (req.method === 'GET') {
     try {
-      // In development, return all squads for authenticated users
-      // In production, only return squads owned by the current user
-      const whereClause = process.env.NODE_ENV === 'production' 
-        ? { scrumMasterId: user.id }
-        : {} // Return all squads in development
-
+      // Get squads for the current Scrum Master
       const squads = await prisma.squad.findMany({
-        where: whereClause,
+        where: { scrumMasterId: user.id },
         include: {
           _count: {
             select: { members: true }

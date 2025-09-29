@@ -69,6 +69,23 @@ export const authOptions: NextAuthOptions = {
           } catch (e) {
             console.warn('Failed to update existing user metadata', e)
           }
+          
+          // Ensure Scrum Masters have at least one squad in development
+          if (existing.role === 'SCRUM_MASTER' && process.env.NODE_ENV !== 'production') {
+            const squadCount = await prisma.squad.count({ where: { scrumMasterId: existing.id } })
+            if (squadCount === 0) {
+              // Create a default squad for the Scrum Master
+              await prisma.squad.create({
+                data: {
+                  name: `${existing.name || existing.email}'s Squad`,
+                  alias: `DEV-${existing.id.slice(0, 8)}`,
+                  scrumMasterId: existing.id
+                }
+              })
+              console.log(`Created default squad for Scrum Master: ${existing.email}`)
+            }
+          }
+          
           authLog('signIn_success', { emailHash: hashPII(email || undefined), userId: existing.id, role: existing.role })
 
           // Redirect based on role
