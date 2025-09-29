@@ -57,27 +57,33 @@ model SquadMember {
 }
 
 model Sprint {
-  id        String @id @default(uuid())
-  squad     Squad  @relation(fields: [squadId], references: [id])
-  squadId   String
-  number    Int
+  id        String   @id @default(uuid())
+  name      String
   startDate DateTime
   endDate   DateTime
+  squadId   String
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  squad     Squad         @relation(fields: [squadId], references: [id])
   members   SprintMember[]
   tickets   Ticket[]
   absences  Absence[]
   assignments Assignment[]
+
+  @@unique([squadId, name]) // Prevent duplicate sprint names within squad
 }
 
 model SprintMember {
-  id        String @id @default(uuid())
-  sprint    Sprint @relation(fields: [sprintId], references: [id])
+  id        String   @id @default(uuid())
   sprintId  String
-  user      User   @relation(fields: [userId], references: [id])
   userId    String
-  dailyHours Float @default(7.5)
+  createdAt DateTime @default(now())
+
+  sprint    Sprint @relation(fields: [sprintId], references: [id])
+  user      User   @relation(fields: [userId], references: [id])
+
+  @@unique([sprintId, userId]) // User can only be in sprint once
 }
 
 model Holiday {

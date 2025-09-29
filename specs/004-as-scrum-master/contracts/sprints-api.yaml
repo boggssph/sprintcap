@@ -1,0 +1,319 @@
+openapi: 3.0.3
+info:
+  title: Sprint Management API
+  description: API for creating and managing sprints within squads
+  version: 1.0.0
+  contact:
+    name: sprintCap Development Team
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+  - url: https://sprint-cap.vercel.app/api
+    description: Production server
+
+paths:
+  /sprints:
+    post:
+      summary: Create a new sprint
+      description: Creates a new sprint for a specific squad with automatic member population
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSprintRequest'
+            example:
+              name: "Sprint 2025.10"
+              squadId: "squad-uuid-123"
+              startDate: "2025-10-01T09:00:00Z"
+              endDate: "2025-10-15T17:00:00Z"
+      responses:
+        '201':
+          description: Sprint created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SprintResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_dates:
+                  value:
+                    error: "End date must be after start date"
+                overlap:
+                  value:
+                    error: "Sprint dates overlap with existing sprint 'Sprint 2025.09'"
+                invalid_squad:
+                  value:
+                    error: "Squad not found or access denied"
+        '401':
+          description: Authentication required
+        '403':
+          description: Insufficient permissions
+        '500':
+          description: Internal server error
+
+    get:
+      summary: List sprints for user's squads
+      description: Retrieves all sprints for squads owned by the current Scrum Master
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: squadId
+          in: query
+          schema:
+            type: string
+          description: Filter sprints by specific squad ID
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, upcoming, completed]
+          description: Filter sprints by status
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Maximum number of sprints to return
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Number of sprints to skip
+      responses:
+        '200':
+          description: List of sprints
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SprintListResponse'
+        '401':
+          description: Authentication required
+        '500':
+          description: Internal server error
+
+  /sprints/{sprintId}:
+    get:
+      summary: Get sprint details
+      description: Retrieves detailed information about a specific sprint including members
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: sprintId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier of the sprint
+      responses:
+        '200':
+          description: Sprint details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SprintDetailResponse'
+        '404':
+          description: Sprint not found
+        '401':
+          description: Authentication required
+        '403':
+          description: Access denied
+        '500':
+          description: Internal server error
+
+components:
+  schemas:
+    CreateSprintRequest:
+      type: object
+      required:
+        - name
+        - squadId
+        - startDate
+        - endDate
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Human-readable name for the sprint
+          example: "Sprint 2025.10"
+        squadId:
+          type: string
+          description: ID of the squad to create the sprint for
+          example: "squad-uuid-123"
+        startDate:
+          type: string
+          format: date-time
+          description: ISO 8601 datetime when the sprint begins
+          example: "2025-10-01T09:00:00Z"
+        endDate:
+          type: string
+          format: date-time
+          description: ISO 8601 datetime when the sprint ends
+          example: "2025-10-15T17:00:00Z"
+
+    SprintResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the created sprint
+        name:
+          type: string
+          description: Sprint name
+        squadId:
+          type: string
+          description: Associated squad ID
+        squadName:
+          type: string
+          description: Associated squad name
+        startDate:
+          type: string
+          format: date-time
+          description: Sprint start datetime
+        endDate:
+          type: string
+          format: date-time
+          description: Sprint end datetime
+        memberCount:
+          type: integer
+          description: Number of members in the sprint
+        createdAt:
+          type: string
+          format: date-time
+          description: When the sprint was created
+
+    SprintListResponse:
+      type: object
+      properties:
+        sprints:
+          type: array
+          items:
+            $ref: '#/components/schemas/SprintSummary'
+        total:
+          type: integer
+          description: Total number of sprints available
+        limit:
+          type: integer
+          description: Requested limit
+        offset:
+          type: integer
+          description: Requested offset
+
+    SprintSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Sprint unique identifier
+        name:
+          type: string
+          description: Sprint name
+        squadName:
+          type: string
+          description: Associated squad name
+        startDate:
+          type: string
+          format: date-time
+          description: Sprint start datetime
+        endDate:
+          type: string
+          format: date-time
+          description: Sprint end datetime
+        memberCount:
+          type: integer
+          description: Number of members in the sprint
+        status:
+          type: string
+          enum: [upcoming, active, completed]
+          description: Current status of the sprint
+
+    SprintDetailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Sprint unique identifier
+        name:
+          type: string
+          description: Sprint name
+        squadId:
+          type: string
+          description: Associated squad ID
+        squadName:
+          type: string
+          description: Associated squad name
+        startDate:
+          type: string
+          format: date-time
+          description: Sprint start datetime
+        endDate:
+          type: string
+          format: date-time
+          description: Sprint end datetime
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/SprintMember'
+        createdAt:
+          type: string
+          format: date-time
+          description: When the sprint was created
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the sprint was last updated
+
+    SprintMember:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Sprint member unique identifier
+        userId:
+          type: string
+          description: User unique identifier
+        displayName:
+          type: string
+          description: User's display name
+        email:
+          type: string
+          format: email
+          description: User's email address
+        joinedAt:
+          type: string
+          format: date-time
+          description: When the user was added to the sprint
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+        code:
+          type: string
+          description: Machine-readable error code
+          enum: [VALIDATION_ERROR, PERMISSION_DENIED, NOT_FOUND, CONFLICT, INTERNAL_ERROR]
+        details:
+          type: object
+          description: Additional error context (optional)
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: NextAuth session token
