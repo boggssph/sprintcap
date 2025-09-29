@@ -87,11 +87,14 @@ export default function SprintCreationForm({ onSprintCreated }: SprintCreationFo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('Form submitted', formData)
 
     if (!validateForm()) {
+      console.log('Form validation failed')
       return
     }
 
+    console.log('Form validation passed, submitting...')
     setLoading(true)
     setErrors({})
 
@@ -111,6 +114,7 @@ export default function SprintCreationForm({ onSprintCreated }: SprintCreationFo
 
       if (res.ok) {
         const data = await res.json()
+        console.log('Sprint created successfully:', data)
         // Reset form
         setFormData({
           name: '',
@@ -122,6 +126,7 @@ export default function SprintCreationForm({ onSprintCreated }: SprintCreationFo
         onSprintCreated?.()
       } else {
         const errorData = await res.json()
+        console.error('API error:', errorData)
         setErrors({ submit: errorData.error || 'Failed to create sprint' })
       }
     } catch (error) {
