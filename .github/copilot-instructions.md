@@ -1,5 +1,18 @@
 # sprintCap Development Guidelines
 
+## ⚠️ CRITICAL: Testing Policy
+
+**ALWAYS test on the production domain: `www.sprintcap.info`**
+
+Do NOT use Vercel deployment URLs like `https://sprint-xxx.vercel.app` for testing because:
+- These URLs change with every deployment
+- Google OAuth requires adding each new URL to authorized redirect URIs
+- This creates unnecessary configuration overhead
+
+All manual testing should be done on `www.sprintcap.info` only.
+
+---
+
 Auto-generated from all feature plans. Last updated: 2025-09-28
 
 ## Active Technologies

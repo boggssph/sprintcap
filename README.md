@@ -1,5 +1,18 @@
 # Sprint Capacity Planner (scaffold)
 
+## ⚠️ IMPORTANT: Testing Policy
+
+**ALWAYS test on the production domain: `www.sprintcap.info`**
+
+Do NOT use Vercel deployment URLs like `https://sprint-xxx.vercel.app` for testing because:
+- These URLs change with every deployment
+- Google OAuth requires adding each new URL to authorized redirect URIs
+- This creates unnecessary configuration overhead
+
+All manual testing should be done on `www.sprintcap.info` only.
+
+## Overview
+
 Minimal scaffold for Sprint Capacity Planner using Next.js, Tailwind, shadcn-style components, Prisma, Neon, NextAuth (Google-only), and Brevo for email invites.
 
 Quick start
