@@ -7,7 +7,7 @@ const prisma = new PrismaClient()
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const session = await getServerSession(req, res, authOptions)
-  if (!session || !session.user || (session.user as any).role !== 'ADMIN') {
+  if (!session || !session.user || typeof session.user !== 'object' || !('role' in session.user) || (session.user as { role?: string }).role !== 'ADMIN') {
     return res.status(401).json({ error: 'Unauthorized' })
   }
 

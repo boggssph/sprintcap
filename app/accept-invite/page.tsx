@@ -15,12 +15,11 @@ export default function AcceptInvitePage(){
   async function handleAccept(){
     setLoading(true)
     setMsg(null)
-    try{
+    try {
       const res = await fetch('/api/accept-invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, userEmail: email }) })
       if (res.ok) {
         const data = await res.json()
         setMsg('Invitation accepted! Redirecting...')
-        
         // Redirect after successful acceptance
         setTimeout(() => {
           if (data.redirectUrl) {
@@ -33,7 +32,13 @@ export default function AcceptInvitePage(){
         const e = await res.json()
         setMsg('Error: ' + (e.error || 'accept failed'))
       }
-    } catch(e:any){ setMsg('Error: ' + e.message) }
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        setMsg('Error: ' + e.message)
+      } else {
+        setMsg('Error: Unknown error')
+      }
+    }
     setLoading(false)
   }
 

@@ -17,49 +17,53 @@ export interface SprintValidationError {
 /**
  * Validates a sprint creation request
  */
-export function validateCreateSprintRequest(data: any): SprintValidationError[] {
+export function validateCreateSprintRequest(data: CreateSprintRequest): SprintValidationError[] {
   const errors: SprintValidationError[] = []
 
   // Validate name
-  if (!data.name || typeof data.name !== 'string') {
+  const name = typeof data.name === 'string' ? data.name : '';
+  if (!name) {
     errors.push({ field: 'name', message: 'Name is required and must be a string' })
-  } else if (data.name.trim().length === 0) {
+  } else if (name.trim().length === 0) {
     errors.push({ field: 'name', message: 'Name cannot be empty' })
-  } else if (data.name.length > 100) {
+  } else if (name.length > 100) {
     errors.push({ field: 'name', message: 'Name must be 100 characters or less' })
   }
 
   // Validate squadId
-  if (!data.squadId || typeof data.squadId !== 'string') {
+  const squadId = typeof data.squadId === 'string' ? data.squadId : '';
+  if (!squadId) {
     errors.push({ field: 'squadId', message: 'Squad ID is required and must be a string' })
   }
 
   // Validate dates
-  if (!data.startDate || typeof data.startDate !== 'string') {
+  const startDateStr = typeof data.startDate === 'string' ? data.startDate : '';
+  if (!startDateStr) {
     errors.push({ field: 'startDate', message: 'Start date is required and must be a string' })
   } else {
-    const startDate = new Date(data.startDate)
+    const startDate = new Date(startDateStr);
     if (isNaN(startDate.getTime())) {
       errors.push({ field: 'startDate', message: 'Start date must be a valid ISO date string' })
     }
   }
 
-  if (!data.endDate || typeof data.endDate !== 'string') {
+  const endDateStr = typeof data.endDate === 'string' ? data.endDate : '';
+  if (!endDateStr) {
     errors.push({ field: 'endDate', message: 'End date is required and must be a string' })
   } else {
-    const endDate = new Date(data.endDate)
+    const endDate = new Date(endDateStr);
     if (isNaN(endDate.getTime())) {
       errors.push({ field: 'endDate', message: 'End date must be a valid ISO date string' })
     }
   }
 
   // Cross-field validation: end date must be after start date
-  if (data.startDate && data.endDate) {
-    const startDate = new Date(data.startDate)
-    const endDate = new Date(data.endDate)
+  if (startDateStr && endDateStr) {
+    const startDate = new Date(startDateStr);
+    const endDate = new Date(endDateStr);
     if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
       if (endDate <= startDate) {
-        errors.push({ field: 'endDate', message: 'End date must be after start date' })
+        errors.push({ field: 'endDate', message: 'End date must be after start date' });
       }
     }
   }
@@ -73,7 +77,7 @@ export function validateCreateSprintRequest(data: any): SprintValidationError[] 
 export function validateSprintDates(startDate: Date, endDate: Date): SprintValidationError[] {
   const errors: SprintValidationError[] = []
 
-  const now = new Date()
+  // const now = new Date() // Unused variable removed
 
   // Start date should be in the future or present (allow immediate starts)
   // Note: We allow past start dates for flexibility
@@ -100,14 +104,16 @@ export function validateSprintDates(startDate: Date, endDate: Date): SprintValid
 /**
  * Type guard to check if data is a valid CreateSprintRequest
  */
-export function isCreateSprintRequest(data: any): data is CreateSprintRequest {
-  return (
+export function isCreateSprintRequest(data: Record<string, unknown>): boolean {
+  const isValid = (
     typeof data === 'object' &&
     data !== null &&
     typeof data.name === 'string' &&
     typeof data.squadId === 'string' &&
     typeof data.startDate === 'string' &&
-    typeof data.endDate === 'string' &&
-    validateCreateSprintRequest(data).length === 0
-  )
+    typeof data.endDate === 'string'
+  );
+  if (!isValid) return false;
+  // Cast to unknown first, then to CreateSprintRequest
+  return validateCreateSprintRequest(data as unknown as CreateSprintRequest).length === 0;
 }

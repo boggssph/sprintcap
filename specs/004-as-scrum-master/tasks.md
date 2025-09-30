@@ -73,13 +73,13 @@
 - [x] T023 Integrate sprint creation form into Scrum Master dashboard in app/(admin)/scrum-master/page.tsx
 
 ## Phase 3.5: Polish
-- [ ] T024 [P] Unit tests for date validation logic in test/unit/date-validation.test.ts
-- [ ] T025 [P] Unit tests for overlap detection in test/unit/overlap-detection.test.ts
-- [ ] T026 [P] Unit tests for sprint service methods in test/unit/sprint-service.test.ts
-- [ ] T027 Performance tests for sprint creation (<500ms) in test/performance/sprint-creation.perf.test.ts
-- [ ] T028 [P] Update API documentation in docs/API.md
-- [ ] T029 [P] Add sprint creation user documentation in docs/scrum-master-guide.md
-- [ ] T030 Run quickstart test scenarios manually in quickstart.md
+- [x] T024 [P] Unit tests for date validation logic in test/unit/date-validation.test.ts
+- [x] T025 [P] Unit tests for overlap detection in test/unit/overlap-detection.test.ts
+- [x] T026 [P] Unit tests for sprint service methods in test/unit/sprint-service.test.ts
+- [x] T027 Performance tests for sprint creation (<500ms) in test/performance/sprint-creation.perf.test.ts
+- [x] T028 [P] Update API documentation in docs/API.md
+- [x] T029 [P] Add sprint creation user documentation in docs/scrum-master-guide.md
+- [x] T030 Run quickstart test scenarios manually in quickstart.md
 - [x] T031 Add error handling and user-friendly messages in components/SprintCreationForm.tsx
 
 ## Dependencies

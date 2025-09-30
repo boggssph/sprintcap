@@ -6,7 +6,7 @@ export async function listInvites(actorEmail: string, opts: { limit?: number, cu
   if (!actor) throw new Error('forbidden')
 
   const limit = Math.min(50, opts.limit || 20)
-  const where: any = {}
+  const where: Record<string, unknown> = {}
   if (opts.status) where.status = opts.status
   if (opts.q) where.email = { contains: opts.q, mode: 'insensitive' }
 
@@ -32,7 +32,7 @@ export async function createInvite(actorEmail: string, params: { email: string, 
   const desiredRole = (params.role || 'MEMBER')
   const allowedRoles = ['MEMBER', 'SCRUM_MASTER', 'ADMIN']
   if (!allowedRoles.includes(desiredRole)) throw new Error('invalid role')
-  if ((desiredRole === 'SCRUM_MASTER' || desiredRole === 'ADMIN') && (actor as any).role !== 'ADMIN') {
+  if ((desiredRole === 'SCRUM_MASTER' || desiredRole === 'ADMIN') && typeof actor === 'object' && 'role' in actor && actor.role !== 'ADMIN') {
     throw new Error('only ADMIN can invite SCRUM_MASTER or ADMIN')
   }
 
@@ -41,7 +41,7 @@ export async function createInvite(actorEmail: string, params: { email: string, 
   // Default TTL: 72 hours
   const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000)
 
-  const invite = await prisma.invitation.create({ data: { email: params.email.toLowerCase(), squadId: params.squadId, tokenHash, expiresAt, invitedRole: desiredRole as any } })
+  const invite = await prisma.invitation.create({ data: { email: params.email.toLowerCase(), squadId: params.squadId, tokenHash, expiresAt, invitedRole: desiredRole as 'MEMBER' | 'SCRUM_MASTER' | 'ADMIN' } })
 
   try {
     await prisma.auditLog.create({ data: { actorId: actor.id, action: 'CREATE_INVITE', meta: { inviteId: invite.id, email: params.email, squadId: params.squadId, role: desiredRole } } })
@@ -76,7 +76,7 @@ export async function createInvite(actorEmail: string, params: { email: string, 
 export async function regenerateInvite(actorEmail: string, inviteId: string) {
   const actor = await prisma.user.findUnique({ where: { email: actorEmail.toLowerCase() } })
   if (!actor) throw new Error('forbidden')
-  if ((actor as any).role !== 'ADMIN') throw new Error('only ADMIN can regenerate tokens')
+  if (typeof actor === 'object' && 'role' in actor && actor.role !== 'ADMIN') throw new Error('only ADMIN can regenerate tokens')
 
   // Expire the existing invite and create a new invite record with a fresh token
   const existing = await prisma.invitation.findUnique({ where: { id: inviteId } })
@@ -86,7 +86,7 @@ export async function regenerateInvite(actorEmail: string, inviteId: string) {
   const newToken = generateToken()
   const newTokenHash = hashToken(newToken)
   const newExpires = new Date(Date.now() + 72 * 60 * 60 * 1000)
-  const created = await prisma.invitation.create({ data: { email: existing.email, squadId: existing.squadId, tokenHash: newTokenHash, expiresAt: newExpires, invitedRole: existing.invitedRole as any } })
+  const created = await prisma.invitation.create({ data: { email: existing.email, squadId: existing.squadId, tokenHash: newTokenHash, expiresAt: newExpires, invitedRole: existing.invitedRole } })
   try {
     await prisma.auditLog.create({ data: { actorId: actor.id, action: 'REGENERATE_INVITE', meta: { inviteId } } })
   } catch (e) {
@@ -125,7 +125,7 @@ export async function acceptInvite(token: string, email: string) {
 export async function revokeInvite(actorEmail: string, inviteId: string) {
   const actor = await prisma.user.findUnique({ where: { email: actorEmail.toLowerCase() } })
   if (!actor) throw new Error('forbidden')
-  if ((actor as any).role !== 'ADMIN') throw new Error('only ADMIN can revoke invites')
+  if (typeof actor === 'object' && 'role' in actor && actor.role !== 'ADMIN') throw new Error('only ADMIN can revoke invites')
   const updated = await prisma.invitation.update({ where: { id: inviteId }, data: { status: 'EXPIRED' } })
   try {
     await prisma.auditLog.create({ data: { actorId: actor.id, action: 'REVOKE_INVITE', meta: { inviteId } } })

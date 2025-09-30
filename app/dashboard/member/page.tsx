@@ -19,7 +19,7 @@ export default function MemberDashboard() {
       router.push('/')
       return
     }
-    if ((session.user as any)?.role !== 'MEMBER' && (session.user as any)?.role !== 'SCRUM_MASTER' && (session.user as any)?.role !== 'ADMIN') {
+  if ((session.user as { role?: string })?.role !== 'MEMBER' && (session.user as { role?: string })?.role !== 'SCRUM_MASTER' && (session.user as { role?: string })?.role !== 'ADMIN') {
       router.push('/auth/no-access')
       return
     }

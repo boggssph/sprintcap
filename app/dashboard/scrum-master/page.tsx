@@ -23,9 +23,7 @@ import {
   Target,
   TrendingUp,
   Calendar,
-  Clock,
   CheckCircle,
-  AlertCircle,
   BarChart3,
   Settings,
   Plus,
@@ -55,7 +53,7 @@ type Squad = {
 export default function ScrumMasterDashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [currentSprint, setCurrentSprint] = useState({
+  const [currentSprint] = useState({
     name: 'Sprint 2025.09',
     startDate: '2025-09-23',
     endDate: '2025-10-06',
@@ -94,7 +92,7 @@ export default function ScrumMasterDashboard() {
       router.push('/')
       return
     }
-    if ((session.user as any)?.role !== 'SCRUM_MASTER' && (session.user as any)?.role !== 'ADMIN') {
+  if ((session.user as { role?: string })?.role !== 'SCRUM_MASTER' && (session.user as { role?: string })?.role !== 'ADMIN') {
       router.push('/auth/no-access')
       return
     }
@@ -111,13 +109,13 @@ export default function ScrumMasterDashboard() {
           const data = await res.json()
           // Convert database invites to the format expected by sentInvites
           const recentInvites = data.invites
-            .filter((invite: any) => {
+            .filter((invite: { createdAt: string }) => {
               // Only show invites from the last 24 hours
               const inviteTime = new Date(invite.createdAt)
               const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
               return inviteTime > oneDayAgo
             })
-            .map((invite: any) => ({
+            .map((invite: { email: string, createdAt: string }) => ({
               email: invite.email,
               timestamp: new Date(invite.createdAt)
             }))
@@ -358,9 +356,9 @@ export default function ScrumMasterDashboard() {
             <div className="flex items-center space-x-4">
               <div className="hidden md:flex items-center space-x-2">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={(session.user as any)?.image} />
+                  <AvatarImage src={(session.user as { image?: string })?.image} />
                   <AvatarFallback className="bg-indigo-100 text-indigo-700">
-                    {(session.user as any)?.displayName?.charAt(0) || (session.user as any)?.name?.charAt(0) || session.user?.email?.charAt(0)}
+                    {(session.user as { displayName?: string, name?: string })?.displayName?.charAt(0) || (session.user as { name?: string })?.name?.charAt(0) || session.user?.email?.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-right">

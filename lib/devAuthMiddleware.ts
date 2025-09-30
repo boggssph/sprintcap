@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from './prisma'
 
 // Enable only when NODE_ENV !== 'production' and DEV_AUTH_ENABLED=true

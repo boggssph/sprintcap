@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { useSession, signOut } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -23,7 +23,9 @@ export default function DisplayNameEditor() {
   const [open, setOpen] = useState(false)
   const [error, setError] = useState('')
 
-  const currentDisplayName = (session?.user as any)?.displayName || (session?.user as any)?.name || 'No name'
+  const currentDisplayName = typeof session?.user === 'object' && session?.user !== null
+    ? ('displayName' in session.user ? (session.user as { displayName?: string }).displayName : undefined) || ('name' in session.user ? (session.user as { name?: string }).name : undefined) || 'No name'
+    : 'No name'
 
   const handleOpen = () => {
     setDisplayName(currentDisplayName)

@@ -67,8 +67,8 @@ As a Scrum Master, I want to create a sprint for a specific squad so that I can 
 
 ### Acceptance Scenarios
 1. **Given** I am a Scrum Master with access to multiple squads, **When** I select a squad and create a sprint with name, start/end dates, **Then** the sprint is created and all active squad members are automatically added as sprint participants
-2. **Given** I am creating a sprint, **When** I enter invalid dates (end before start), **Then** the system prevents creation and shows an appropriate error message
-3. **Given** I am creating a sprint, **When** I select a squad with no active members, **Then** the sprint is created but shows a warning about empty sprint membership
+2. **Given** I am creating a sprint, **When** I enter invalid dates (end before start), **Then** the system prevents creation and shows an inline error message: 'End date must be after start date.'
+3. **Given** I am creating a sprint, **When** I select a squad with no active members, **Then** the sprint is created but shows a toast warning: 'Sprint created with no members. Add members manually if needed.'
 4. **Given** I have created a sprint, **When** I view the sprint details, **Then** I can see all sprint information including name, dates, and participating members
 
 ### Edge Cases
@@ -88,11 +88,17 @@ As a Scrum Master, I want to create a sprint for a specific squad so that I can 
 - **FR-006**: System MUST prevent creation of sprints with overlapping dates for the same squad
 - **FR-007**: System MUST display sprint information including name, dates, and participating members
 - **FR-008**: System MUST allow sprint creation for squads with no active members
+- **FR-009**: System MUST handle squad member status changes during sprint lifecycle (e.g., inactive members remain in sprint but are marked accordingly)
+- **FR-010**: System MUST maintain fixed sprint membership at creation time (sprint members are not automatically updated when squad membership changes during the sprint)
+
+### Non-Functional Requirements
+- **NFR-001**: System MUST respond to sprint creation operations within 500ms under normal load
+- **NFR-002**: System MUST maintain data consistency during concurrent sprint operations
 
 ### Key Entities *(include if feature involves data)*
 - **Sprint**: Represents a work period with name, start/end dates, associated squad, and participating members
 - **Squad**: Group of team members that sprints are created for
-- **Sprint Member**: Individual team member participating in a sprint (defaults to active squad members)
+- **Sprint Member**: Individual team member participating in a sprint (defaults to active squad members). Active status means the member is currently assigned to the squad and available for work.
 
 ---
 

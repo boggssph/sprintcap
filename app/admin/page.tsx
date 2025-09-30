@@ -1,8 +1,7 @@
 "use client"
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import DisplayNameEditor from '@/components/DisplayNameEditor'
 
@@ -32,7 +31,7 @@ export default function AdminPage(){
   const [invites, setInvites] = useState<Invite[]>([])
   const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([])
   const [refreshing, setRefreshing] = useState(false)
-  const router = useRouter()
+  // const router = useRouter() // unused
 
   async function fetchInvites(){
     setRefreshing(true)
@@ -89,11 +88,11 @@ export default function AdminPage(){
     }
   }
 
-  async function handleSubmit(e: any){
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>){
     e.preventDefault()
     setLoading(true)
     setMsg(null)
-    try{
+    try {
       const res = await fetch('/api/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, role }) })
       if (res.ok) {
         const data = await res.json()
@@ -107,8 +106,12 @@ export default function AdminPage(){
         const err = await res.json()
         setMsg('Error: ' + (err.error || 'unknown'))
       }
-    }catch(e:any){
-      setMsg('Error: ' + e.message)
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        setMsg('Error: ' + e.message)
+      } else {
+        setMsg('Error: Unknown error')
+      }
     }
     setLoading(false)
   }
@@ -123,8 +126,12 @@ export default function AdminPage(){
       await navigator.clipboard.writeText(acceptUrl)
       setMsg('Copied accept link to clipboard')
       await fetchInvites()
-    }catch(e:any){
-      setMsg('Error copying link: ' + e.message)
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        setMsg('Error copying link: ' + e.message)
+      } else {
+        setMsg('Error copying link: Unknown error')
+      }
     }
   }
 
@@ -208,7 +215,13 @@ export default function AdminPage(){
                       const e = await r.json()
                       setMsg('Error: ' + (e.error || 'revoke failed'))
                     }
-                  } catch(e:any){ setMsg('Error: ' + e.message) }
+                  } catch (e: unknown) {
+                    if (e instanceof Error) {
+                      setMsg('Error: ' + e.message)
+                    } else {
+                      setMsg('Error: Unknown error')
+                    }
+                  }
                 }}>Revoke</button>
               </div>
             </div>

@@ -37,9 +37,9 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user }) {
-  authLog('signIn_attempt', { provider: (user as any)?.provider || 'unknown', emailHash: hashPII(user?.email || undefined) })
+  authLog('signIn_attempt', { provider: typeof user === 'object' && user !== null && 'provider' in user ? (user as { provider?: string }).provider : 'unknown', emailHash: hashPII(user?.email || undefined) })
         if (!user?.email) {
-          authLog('signIn_failed_no_email', { emailHash: hashPII((user as any)?.email || undefined) })
+          authLog('signIn_failed_no_email', { emailHash: hashPII(typeof user === 'object' && user !== null && 'email' in user ? (user as { email?: string }).email : undefined) })
           return false
         }
 
@@ -47,12 +47,14 @@ export const authOptions: NextAuthOptions = {
         const email = user.email.toLowerCase().trim()
 
         // provider id (e.g., Google sub) may be available on user.id or user.providerId depending on NextAuth provider
-        const providerId = (user as any).id || (user as any).sub || (user as any).providerId || null
+        const providerId = typeof user === 'object' && user !== null
+          ? ((user as { id?: string }).id || (user as { sub?: string }).sub || (user as { providerId?: string }).providerId || null)
+          : null
 
         // Try providerId first to avoid email aliasing issues
         let existing: User | null = null
         if (providerId) {
-          existing = await prisma.user.findFirst({ where: { providerId: { equals: providerId } } as any })
+          existing = await prisma.user.findFirst({ where: { providerId: { equals: providerId } } })
         }
 
         // Fallback to email match
@@ -62,7 +64,7 @@ export const authOptions: NextAuthOptions = {
 
         if (existing) {
           try {
-            const updateData: any = { name: user.name ?? existing.name, image: user.image ?? existing.image }
+            const updateData: Partial<User> = { name: user.name ?? existing.name, image: user.image ?? existing.image }
             // persist providerId when available
             if (providerId && !existing.providerId) updateData.providerId = providerId
             await prisma.user.update({ where: { id: existing.id }, data: updateData })
@@ -88,20 +90,14 @@ export const authOptions: NextAuthOptions = {
           
           authLog('signIn_success', { emailHash: hashPII(email || undefined), userId: existing.id, role: existing.role })
 
-          // Redirect based on role
-          const roleRedirects = {
-            ADMIN: '/admin',
-            SCRUM_MASTER: '/dashboard/scrum-master',
-            MEMBER: '/dashboard/member'
-          }
           // Don't redirect from server-side callback, let client handle it
           return true
         }
 
         // New user: bootstrap the first signer as ADMIN (application admin)
-        const adminCount = await prisma.user.count({ where: { role: 'ADMIN' as unknown as UserRole } })
+  const adminCount = await prisma.user.count({ where: { role: 'ADMIN' as UserRole } })
         if (adminCount === 0) {
-          const created = await prisma.user.create({ data: { email, name: user.name, image: user.image, providerId: providerId ?? undefined, role: 'ADMIN' as unknown as UserRole } })
+          const created = await prisma.user.create({ data: { email, name: user.name, image: user.image, providerId: providerId ?? undefined, role: 'ADMIN' as UserRole } })
           authLog('signIn_bootstrap_admin', { emailHash: hashPII(email || undefined), userId: created.id })
           return true
         }
@@ -109,7 +105,7 @@ export const authOptions: NextAuthOptions = {
         // Otherwise, allow registration only if there's a pending invitation for this email
         const invite = await prisma.invitation.findFirst({ where: { email, status: 'PENDING' } })
         if (invite) {
-          const created = await prisma.user.create({ data: { email, name: user.name, image: user.image, providerId: providerId ?? undefined, role: 'MEMBER' as unknown as UserRole } })
+          const created = await prisma.user.create({ data: { email, name: user.name, image: user.image, providerId: providerId ?? undefined, role: 'MEMBER' as UserRole } })
           try {
             if (invite.squadId) {
               await prisma.squadMember.create({ data: { userId: created.id, squadId: invite.squadId } })
@@ -131,15 +127,19 @@ export const authOptions: NextAuthOptions = {
       // When a user signs in, attach their DB role and display name to the token
       if (user?.email) {
         const dbUser = await prisma.user.findUnique({ where: { email: user.email.toLowerCase() } })
-        ;(token as any).role = dbUser?.role ?? 'MEMBER'
-        ;(token as any).displayName = dbUser?.displayName
+        if (dbUser) {
+          (token as { [key: string]: unknown }).role = dbUser.role ?? 'MEMBER';
+          (token as { [key: string]: unknown }).displayName = dbUser.displayName;
+        }
       }
-      return token
+      return token;
     },
     async session({ session, token }) {
-      ;(session.user as any).role = (token as any).role ?? 'MEMBER'
-      ;(session.user as any).displayName = (token as any).displayName
-      return session
+      if (session.user && typeof session.user === 'object') {
+        (session.user as { [key: string]: unknown }).role = (token as { [key: string]: unknown }).role ?? 'MEMBER';
+        (session.user as { [key: string]: unknown }).displayName = (token as { [key: string]: unknown }).displayName;
+      }
+      return session;
     }
   },
   session: {

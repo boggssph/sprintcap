@@ -211,7 +211,7 @@ export async function listSprints(
   const { squadId, status, limit = 20, offset = 0 } = filters
 
   // Build where clause
-  const where: any = {}
+  const where: Record<string, unknown> = {}
 
   if (squadId) {
     // If specific squad requested, verify ownership
@@ -286,16 +286,15 @@ export async function listSprints(
     skip: offset
   })
 
-  const now = new Date()
   const sprintSummaries: SprintSummary[] = sprints.map(sprint => {
     return {
       id: sprint.id,
       name: sprint.name,
-      squadName: sprint.squad.name,
+      squadName: sprint.squad?.name ?? '',
       startDate: sprint.startDate.toISOString(),
       endDate: sprint.endDate.toISOString(),
-      memberCount: sprint._count.members,
-      status: sprint.status
+      memberCount: sprint._count?.members ?? 0,
+      status: sprint.status as 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
     }
   })
 

@@ -23,7 +23,7 @@ import {
 export default function RequestAccessPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [isOpen, setIsOpen] = useState(true)
+  const [isOpen] = useState(true)
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
   const [image, setImage] = useState('')

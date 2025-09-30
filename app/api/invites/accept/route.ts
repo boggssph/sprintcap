@@ -14,8 +14,12 @@ export async function POST(request: Request) {
 
     const res = await acceptInvite(token, email)
     return NextResponse.json(res)
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.warn('accept error', e)
-    return NextResponse.json({ error: e?.message || 'server error' }, { status: 400 })
+    if (e instanceof Error) {
+      return NextResponse.json({ error: e.message }, { status: 400 })
+    } else {
+      return NextResponse.json({ error: 'server error' }, { status: 400 })
+    }
   }
 }

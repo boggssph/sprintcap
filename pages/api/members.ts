@@ -14,8 +14,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: 'Unauthorized' })
     }
 
-    const user = session.user as any
-    if (user.role !== 'SCRUM_MASTER' && user.role !== 'ADMIN') {
+    const user = session.user
+    if (typeof user !== 'object' || !('role' in user) || (user as { role?: string }).role !== 'SCRUM_MASTER' && (user as { role?: string }).role !== 'ADMIN') {
       return res.status(403).json({ error: 'Forbidden' })
     }
 
@@ -23,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const squadMembers = await prisma.squadMember.findMany({
       where: {
         squad: {
-          scrumMasterId: user.id
+          scrumMasterId: typeof user === 'object' && 'id' in user ? (user as { id: string }).id : ''
         }
       },
       include: {

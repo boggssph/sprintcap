@@ -110,7 +110,9 @@ export default function ProfileSettings() {
     )
   }
 
-  const currentDisplayName = (session?.user as any)?.displayName || profile.name || 'No name set'
+  const currentDisplayName = typeof session?.user === 'object' && session?.user !== null
+    ? ('displayName' in session.user ? (session.user as { displayName?: string }).displayName : undefined) || profile.name || 'No name set'
+    : profile.name || 'No name set'
 
   return (
     <Card>

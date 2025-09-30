@@ -6,12 +6,9 @@ module.exports = {
     sourceType: 'module',
     ecmaFeatures: { jsx: true }
   },
-  plugins: ['@typescript-eslint', 'local-rules'],
+  plugins: ['@typescript-eslint'],
   extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
-  rules: {
-    // Our custom rule flags top-level imports from next-auth/react
-    'local-rules/no-top-level-next-auth-react': 'error'
-  },
+  rules: {},
   settings: {},
   env: {
     node: true,

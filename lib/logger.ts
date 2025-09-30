@@ -5,7 +5,7 @@ export function hashPII(value?: string) {
   return crypto.createHash('sha256').update(value).digest('hex').slice(0, 16)
 }
 
-export function authLog(event: string, info: Record<string, any> = {}) {
+export function authLog(event: string, info: Record<string, unknown> = {}) {
   const out = {
     ts: new Date().toISOString(),
     event,

@@ -13,7 +13,7 @@ export default function Landing() {
     if (status === 'loading') return
     if (session) {
       // Redirect based on role after sign-in
-      const role = (session.user as any)?.role
+      const role = (session.user as { role?: string })?.role
       if (role === 'ADMIN') {
         router.push('/admin')
       } else if (role === 'SCRUM_MASTER') {

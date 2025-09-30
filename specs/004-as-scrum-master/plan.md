@@ -64,7 +64,7 @@ Specify the authoritative technology choices and visual design constraints that 
    - Responsive-first: components must work across small → large viewports; use Tailwind breakpoints consistently.
    - Design tokens: centralize colors, spacing, and typography in Tailwind config and avoid inline styles.
    - Minimal custom CSS: keep component-level overrides to a minimum; prefer shadcn themes/variants.
-   - Motion: subtle, performance-friendly transitions only; avoid large layout-shifting animations.
+   - Motion: transitions must complete in <200ms and avoid transforms on layout elements; no large layout-shifting animations.
    - Testing hooks: include stable selectors (`data-testid`) where tests need deterministic element targeting.
 
 Note: If an exception to any of the above is required, document a short rationale in the feature spec and add it to the constitution check during /plan.

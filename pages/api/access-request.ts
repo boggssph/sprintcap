@@ -54,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         name,
         image,
         providerId,
-        requestedRole: requestedRole as any,
+        requestedRole: requestedRole as 'SCRUM_MASTER' | 'MEMBER',
       }
     })
 

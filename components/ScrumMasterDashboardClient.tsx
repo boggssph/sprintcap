@@ -3,8 +3,6 @@
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import SprintCreationForm from '@/components/SprintCreationForm'
 import SprintList from '@/components/SprintList'
 
@@ -32,7 +30,7 @@ export default function ScrumMasterDashboardClient() {
   }
 
   // Check if user has SCRUM_MASTER role
-  if ((session.user as any)?.role !== 'SCRUM_MASTER') {
+  if (typeof session.user !== 'object' || !('role' in session.user) || (session.user as { role?: string }).role !== 'SCRUM_MASTER') {
     router.push('/auth/no-access')
     return null
   }
@@ -61,19 +59,30 @@ export default function ScrumMasterDashboardClient() {
               <p className="text-gray-600 mb-4">
                 Create and manage sprints for your squads. New sprints are created as inactive by default.
               </p>
-              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="w-full">
-                    + Create New Sprint
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>Create New Sprint</DialogTitle>
-                  </DialogHeader>
-                  <SprintCreationForm onSprintCreated={handleSprintCreated} inDialog={true} />
-                </DialogContent>
-              </Dialog>
+              <button
+                onClick={() => setDialogOpen(true)}
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                + Create New Sprint
+              </button>
+
+              {/* Simple Modal - No Radix UI */}
+              {dialogOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-semibold">Create New Sprint</h3>
+                      <button
+                        onClick={() => setDialogOpen(false)}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <SprintCreationForm onSprintCreated={handleSprintCreated} inDialog={true} />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div>
