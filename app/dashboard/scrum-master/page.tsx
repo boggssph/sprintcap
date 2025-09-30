@@ -87,6 +87,15 @@ export default function ScrumMasterDashboard() {
   const [squadName, setSquadName] = useState('')
   const [selectedSquadId, setSelectedSquadId] = useState<string>('')
 
+  // Sprint creation state
+  const [createSprintDialogOpen, setCreateSprintDialogOpen] = useState(false)
+  const [sprintName, setSprintName] = useState('')
+  const [sprintSquadId, setSprintSquadId] = useState('')
+  const [sprintStartDate, setSprintStartDate] = useState('')
+  const [sprintEndDate, setSprintEndDate] = useState('')
+  const [sprintLoading, setSprintLoading] = useState(false)
+  const [sprintError, setSprintError] = useState('')
+
   useEffect(() => {
     if (status === 'loading') return // Don't do anything while loading
     if (!session) {
@@ -233,6 +242,63 @@ export default function ScrumMasterDashboard() {
       setInviteError('Failed to create squad')
     }
     setInviteLoading(false)
+  }
+
+  const handleCreateSprint = async () => {
+    // Basic validation
+    if (!sprintName.trim()) {
+      setSprintError('Sprint name is required')
+      return
+    }
+    if (!sprintSquadId) {
+      setSprintError('Please select a squad')
+      return
+    }
+    if (!sprintStartDate) {
+      setSprintError('Start date is required')
+      return
+    }
+    if (!sprintEndDate) {
+      setSprintError('End date is required')
+      return
+    }
+    if (new Date(sprintStartDate) >= new Date(sprintEndDate)) {
+      setSprintError('End date must be after start date')
+      return
+    }
+
+    setSprintLoading(true)
+    setSprintError('')
+
+    try {
+      const res = await fetch('/api/sprints', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: sprintName.trim(),
+          squadId: sprintSquadId,
+          startDate: sprintStartDate,
+          endDate: sprintEndDate
+        })
+      })
+
+      if (res.ok) {
+        // Reset form and close dialog
+        setCreateSprintDialogOpen(false)
+        setSprintName('')
+        setSprintSquadId('')
+        setSprintStartDate('')
+        setSprintEndDate('')
+        // Could add a success toast here
+      } else {
+        const data = await res.json()
+        setSprintError(data.error || 'Failed to create sprint')
+      }
+    } catch (error) {
+      console.error('Failed to create sprint:', error)
+      setSprintError('Failed to create sprint')
+    }
+    setSprintLoading(false)
   }
 
   const validateEmails = (emails: string) => {
@@ -709,7 +775,7 @@ export default function ScrumMasterDashboard() {
                   <CardDescription>Create and manage sprints</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button className="w-full">
+                  <Button className="w-full" onClick={() => setCreateSprintDialogOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create New Sprint
                   </Button>
@@ -906,6 +972,113 @@ export default function ScrumMasterDashboard() {
               disabled={inviteLoading || !!validateSquadAlias(squadAlias) || !!validateSquadName(squadName)}
             >
               {inviteLoading ? 'Creating...' : 'Create Squad'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Sprint Dialog */}
+      <Dialog open={createSprintDialogOpen} onOpenChange={setCreateSprintDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Create New Sprint</DialogTitle>
+            <DialogDescription>
+              Create a new sprint for a squad. All active squad members will be automatically added as sprint participants.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="sprintName" className="text-right text-sm font-medium">
+                Sprint Name
+              </label>
+              <input
+                id="sprintName"
+                value={sprintName}
+                onChange={(e) => {
+                  setSprintName(e.target.value)
+                  setSprintError('')
+                }}
+                placeholder="Sprint 2025.10"
+                maxLength={100}
+                className="col-span-3 p-2 border border-gray-300 rounded-md"
+                disabled={sprintLoading}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="sprintSquad" className="text-right text-sm font-medium">
+                Squad
+              </label>
+              <select
+                id="sprintSquad"
+                value={sprintSquadId}
+                onChange={(e) => {
+                  setSprintSquadId(e.target.value)
+                  setSprintError('')
+                }}
+                className="col-span-3 p-2 border border-gray-300 rounded-md"
+                disabled={sprintLoading}
+              >
+                <option value="">Select a squad...</option>
+                {squads.map((squad) => (
+                  <option key={squad.id} value={squad.id}>
+                    {squad.alias} - {squad.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="sprintStartDate" className="text-right text-sm font-medium">
+                Start Date
+              </label>
+              <input
+                id="sprintStartDate"
+                type="datetime-local"
+                value={sprintStartDate}
+                onChange={(e) => {
+                  setSprintStartDate(e.target.value)
+                  setSprintError('')
+                }}
+                className="col-span-3 p-2 border border-gray-300 rounded-md"
+                disabled={sprintLoading}
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="sprintEndDate" className="text-right text-sm font-medium">
+                End Date
+              </label>
+              <input
+                id="sprintEndDate"
+                type="datetime-local"
+                value={sprintEndDate}
+                onChange={(e) => {
+                  setSprintEndDate(e.target.value)
+                  setSprintError('')
+                }}
+                className="col-span-3 p-2 border border-gray-300 rounded-md"
+                disabled={sprintLoading}
+              />
+            </div>
+            {sprintError && (
+              <div className="text-sm text-red-600 bg-red-50 p-2 rounded col-span-4">
+                {sprintError}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setCreateSprintDialogOpen(false)}
+              disabled={sprintLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleCreateSprint}
+              disabled={sprintLoading || !sprintName.trim() || !sprintSquadId || !sprintStartDate || !sprintEndDate}
+            >
+              {sprintLoading ? 'Creating...' : 'Create Sprint'}
             </Button>
           </DialogFooter>
         </DialogContent>
