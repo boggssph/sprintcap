@@ -35,6 +35,7 @@ describe('Sprint Service Methods', () => {
           name: 'Sprint 1',
           startDate: new Date('2025-10-01T09:00:00Z'),
           endDate: new Date('2025-10-15T17:00:00Z'),
+          status: 'INACTIVE',
           createdAt: new Date('2025-09-25T10:00:00Z'),
           squad: {
             id: 'squad-1',
@@ -49,6 +50,7 @@ describe('Sprint Service Methods', () => {
           name: 'Sprint 2',
           startDate: new Date('2025-10-16T09:00:00Z'),
           endDate: new Date('2025-10-30T17:00:00Z'),
+          status: 'INACTIVE',
           createdAt: new Date('2025-10-10T10:00:00Z'),
           squad: {
             id: 'squad-1',
@@ -80,7 +82,7 @@ describe('Sprint Service Methods', () => {
             startDate: '2025-10-01T09:00:00.000Z',
             endDate: '2025-10-15T17:00:00.000Z',
             memberCount: 5,
-            status: 'upcoming'
+            status: 'INACTIVE'
           },
           {
             id: 'sprint-2',
@@ -89,7 +91,7 @@ describe('Sprint Service Methods', () => {
             startDate: '2025-10-16T09:00:00.000Z',
             endDate: '2025-10-30T17:00:00.000Z',
             memberCount: 5,
-            status: 'upcoming'
+            status: 'INACTIVE'
           }
         ],
         total: 2,
@@ -103,12 +105,18 @@ describe('Sprint Service Methods', () => {
             in: ['squad-1']
           }
         },
-        include: {
-          squad: {
-            select: { name: true }
-          },
+        select: {
+          id: true,
+          name: true,
+          startDate: true,
+          endDate: true,
+          status: true,
+          squadId: true,
           _count: {
             select: { members: true }
+          },
+          squad: {
+            select: { name: true }
           }
         },
         orderBy: { startDate: 'desc' },
@@ -185,12 +193,18 @@ describe('Sprint Service Methods', () => {
         where: {
           squadId: 'squad-1'
         },
-        include: {
-          squad: {
-            select: { name: true }
-          },
+        select: {
+          id: true,
+          name: true,
+          startDate: true,
+          endDate: true,
+          status: true,
+          squadId: true,
           _count: {
             select: { members: true }
+          },
+          squad: {
+            select: { name: true }
           }
         },
         orderBy: { startDate: 'desc' },

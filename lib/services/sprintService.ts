@@ -12,6 +12,7 @@ export interface SprintResponse {
   squadName: string
   startDate: string
   endDate: string
+  status: string
   memberCount: number
   createdAt: string
 }
@@ -50,7 +51,7 @@ export interface SprintSummary {
   startDate: string
   endDate: string
   memberCount: number
-  status: 'upcoming' | 'active' | 'completed'
+  status: 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
 }
 
 export class SprintServiceError extends Error {
@@ -159,7 +160,8 @@ export async function createSprint(
         name: data.name,
         squadId: data.squadId,
         startDate,
-        endDate
+        endDate,
+        status: 'INACTIVE'
       }
     })
 
@@ -187,6 +189,7 @@ export async function createSprint(
     squadName: result.squadName,
     startDate: result.sprint.startDate.toISOString(),
     endDate: result.sprint.endDate.toISOString(),
+    status: result.sprint.status,
     memberCount: result.memberCount,
     createdAt: result.sprint.createdAt.toISOString()
   }
@@ -264,7 +267,13 @@ export async function listSprints(
   // Get sprints with squad info
   const sprints = await prisma.sprint.findMany({
     where,
-    include: {
+    select: {
+      id: true,
+      name: true,
+      startDate: true,
+      endDate: true,
+      status: true,
+      squadId: true,
       _count: {
         select: { members: true }
       },
@@ -279,15 +288,6 @@ export async function listSprints(
 
   const now = new Date()
   const sprintSummaries: SprintSummary[] = sprints.map(sprint => {
-    let status: 'upcoming' | 'active' | 'completed'
-    if (sprint.startDate > now) {
-      status = 'upcoming'
-    } else if (sprint.endDate < now) {
-      status = 'completed'
-    } else {
-      status = 'active'
-    }
-
     return {
       id: sprint.id,
       name: sprint.name,
@@ -295,7 +295,7 @@ export async function listSprints(
       startDate: sprint.startDate.toISOString(),
       endDate: sprint.endDate.toISOString(),
       memberCount: sprint._count.members,
-      status
+      status: sprint.status
     }
   })
 

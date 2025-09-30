@@ -139,7 +139,8 @@ describe('Sprint Creation - Happy Path Integration', () => {
         name: 'Sprint 2025.10',
         squadId: 'squad-123',
         startDate: new Date('2025-10-01T09:00:00Z'),
-        endDate: new Date('2025-10-15T17:00:00Z')
+        endDate: new Date('2025-10-15T17:00:00Z'),
+        status: 'INACTIVE'
       }
     })
 

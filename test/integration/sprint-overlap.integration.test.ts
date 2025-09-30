@@ -209,7 +209,8 @@ describe('Sprint Creation - Overlap Prevention Integration', () => {
         name: 'Non-overlapping Sprint',
         squadId: 'squad-123',
         startDate: new Date('2025-10-16T09:00:00Z'),
-        endDate: new Date('2025-10-30T17:00:00Z')
+        endDate: new Date('2025-10-30T17:00:00Z'),
+        status: 'INACTIVE'
       }
     })
 

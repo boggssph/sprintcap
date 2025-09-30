@@ -13,6 +13,7 @@ type Sprint = {
   squadName: string
   startDate: string
   endDate: string
+  status: 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
   memberCount: number
   createdAt: string
 }
@@ -54,16 +55,15 @@ export default function SprintList({ refreshTrigger }: SprintListProps) {
   }
 
   const getSprintStatus = (sprint: Sprint) => {
-    const now = new Date()
-    const start = new Date(sprint.startDate)
-    const end = new Date(sprint.endDate)
-
-    if (now < start) {
-      return { label: 'Upcoming', variant: 'secondary' as const }
-    } else if (now >= start && now <= end) {
-      return { label: 'Active', variant: 'default' as const }
-    } else {
-      return { label: 'Completed', variant: 'outline' as const }
+    switch (sprint.status) {
+      case 'ACTIVE':
+        return { label: 'Active', variant: 'default' as const }
+      case 'INACTIVE':
+        return { label: 'Inactive', variant: 'secondary' as const }
+      case 'COMPLETED':
+        return { label: 'Completed', variant: 'outline' as const }
+      default:
+        return { label: 'Unknown', variant: 'secondary' as const }
     }
   }
 

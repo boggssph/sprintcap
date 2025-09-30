@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import SprintCreationForm from '@/components/SprintCreationForm'
 import SprintList from '@/components/SprintList'
 
@@ -10,6 +12,7 @@ export default function ScrumMasterDashboardClient() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [dialogOpen, setDialogOpen] = useState(false)
 
   // Redirect if not authenticated
   if (status === 'loading') {
@@ -37,6 +40,8 @@ export default function ScrumMasterDashboardClient() {
   const handleSprintCreated = () => {
     // Trigger refresh of sprint list
     setRefreshTrigger(prev => prev + 1)
+    // Close the dialog
+    setDialogOpen(false)
   }
 
   return (
@@ -51,7 +56,25 @@ export default function ScrumMasterDashboardClient() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <div>
-            <SprintCreationForm onSprintCreated={handleSprintCreated} />
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">Sprint Management</h2>
+              <p className="text-gray-600 mb-4">
+                Create and manage sprints for your squads. New sprints are created as inactive by default.
+              </p>
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="w-full">
+                    + Create New Sprint
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Create New Sprint</DialogTitle>
+                  </DialogHeader>
+                  <SprintCreationForm onSprintCreated={handleSprintCreated} inDialog={true} />
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
           <div>
             {/* Placeholder for future sprint management features */}

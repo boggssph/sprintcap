@@ -57,13 +57,14 @@ model SquadMember {
 }
 
 model Sprint {
-  id        String   @id @default(uuid())
+  id        String      @id @default(uuid())
   name      String
   startDate DateTime
   endDate   DateTime
+  status    SprintStatus @default(INACTIVE)
   squadId   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 
   squad     Squad         @relation(fields: [squadId], references: [id])
   members   SprintMember[]
@@ -72,6 +73,12 @@ model Sprint {
   assignments Assignment[]
 
   @@unique([squadId, name]) // Prevent duplicate sprint names within squad
+}
+
+enum SprintStatus {
+  ACTIVE
+  INACTIVE
+  COMPLETED
 }
 
 model SprintMember {

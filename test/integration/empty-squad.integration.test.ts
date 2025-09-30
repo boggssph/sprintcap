@@ -130,7 +130,8 @@ describe('Sprint Creation - Empty Squad Integration', () => {
         name: 'Sprint for Empty Squad',
         squadId: 'empty-squad',
         startDate: new Date('2025-10-01T09:00:00Z'),
-        endDate: new Date('2025-10-15T17:00:00Z')
+        endDate: new Date('2025-10-15T17:00:00Z'),
+        status: 'INACTIVE'
       }
     })
 

@@ -16,9 +16,10 @@ type Squad = {
 
 type SprintCreationFormProps = {
   onSprintCreated?: () => void
+  inDialog?: boolean
 }
 
-export default function SprintCreationForm({ onSprintCreated }: SprintCreationFormProps) {
+export default function SprintCreationForm({ onSprintCreated, inDialog = false }: SprintCreationFormProps) {
   const [squads, setSquads] = useState<Squad[]>([])
   const [loading, setLoading] = useState(false)
   const [loadingSquads, setLoadingSquads] = useState(true)
@@ -146,7 +147,12 @@ export default function SprintCreationForm({ onSprintCreated }: SprintCreationFo
   }
 
   if (loadingSquads) {
-    return (
+    return inDialog ? (
+      <div className="text-center py-4">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto"></div>
+        <p className="mt-2 text-sm text-gray-600">Loading squads...</p>
+      </div>
+    ) : (
       <Card>
         <CardHeader>
           <CardTitle>Create New Sprint</CardTitle>
@@ -156,7 +162,75 @@ export default function SprintCreationForm({ onSprintCreated }: SprintCreationFo
     )
   }
 
-  return (
+  return inDialog ? (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="squad">Squad</Label>
+        <Select value={formData.squadId} onValueChange={(value) => handleInputChange('squadId', value)}>
+          <SelectTrigger className={errors.squadId ? 'border-red-500' : ''}>
+            <SelectValue placeholder="Select a squad" />
+          </SelectTrigger>
+          <SelectContent>
+            {squads.map((squad) => (
+              <SelectItem key={squad.id} value={squad.id}>
+                {squad.name} {squad.alias ? `(${squad.alias})` : ''} - {squad.memberCount} members
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {errors.squadId && <p className="text-sm text-red-500">{errors.squadId}</p>}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="name">Sprint Name</Label>
+        <Input
+          id="name"
+          type="text"
+          placeholder="e.g., Sprint 2025.10"
+          value={formData.name}
+          onChange={(e) => handleInputChange('name', e.target.value)}
+          className={errors.name ? 'border-red-500' : ''}
+        />
+        {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="startDate">Start Date & Time</Label>
+          <Input
+            id="startDate"
+            type="datetime-local"
+            value={formData.startDate}
+            onChange={(e) => handleInputChange('startDate', e.target.value)}
+            className={errors.startDate ? 'border-red-500' : ''}
+          />
+          {errors.startDate && <p className="text-sm text-red-500">{errors.startDate}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="endDate">End Date & Time</Label>
+          <Input
+            id="endDate"
+            type="datetime-local"
+            value={formData.endDate}
+            onChange={(e) => handleInputChange('endDate', e.target.value)}
+            className={errors.endDate ? 'border-red-500' : ''}
+          />
+          {errors.endDate && <p className="text-sm text-red-500">{errors.endDate}</p>}
+        </div>
+      </div>
+
+      {errors.submit && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-sm text-red-600">{errors.submit}</p>
+        </div>
+      )}
+
+      <Button type="submit" disabled={loading} className="w-full">
+        {loading ? 'Creating Sprint...' : 'Create Sprint'}
+      </Button>
+    </form>
+  ) : (
     <Card>
       <CardHeader>
         <CardTitle>Create New Sprint</CardTitle>
@@ -165,12 +239,7 @@ export default function SprintCreationForm({ onSprintCreated }: SprintCreationFo
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {loadingSquads ? (
-          <div className="text-center py-4">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mx-auto"></div>
-            <p className="mt-2 text-sm text-gray-600">Loading squads...</p>
-          </div>
-        ) : squads.length === 0 ? (
+        {squads.length === 0 ? (
           <div className="text-center py-4">
             <p className="text-sm text-gray-600">No squads available. Please contact an administrator to create a squad for you.</p>
           </div>
