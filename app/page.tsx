@@ -43,9 +43,24 @@ export default function Landing() {
   if (session) {
     return (
       <main className="min-h-screen bg-white text-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Redirecting to your dashboard...</p>
+        <div className="max-w-3xl w-full p-10">
+          <header className="mb-12 text-center">
+            <h1 className="text-5xl font-light tracking-tight">Sprint Capacity</h1>
+            <p className="mt-4 text-lg text-gray-600">A minimalist approach to sprint capacity planning.</p>
+          </header>
+
+          <section className="bg-gray-50 rounded-xl p-8 shadow-sm">
+            <p className="text-gray-700 mb-6 text-center">Designed with clarity. Inspired by simple, tactile interfaces.</p>
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+              <p className="mt-2 text-gray-600">Redirecting to your dashboard...</p>
+            </div>
+          </section>
+
+          <footer className="mt-12 text-center text-sm text-gray-500">
+            Built with focus — minimal dependencies.
+            <div className="mt-2 text-xs text-gray-400">v1.0.0 (004-as-scrum-master)</div>
+          </footer>
         </div>
       </main>
     )
