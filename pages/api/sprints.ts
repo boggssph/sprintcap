@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../lib/auth'
 import { createSprint, listSprints } from '../../lib/services/sprintService'
+import { prisma } from '../../lib/prisma'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Allow GET for listing sprints and POST for creating sprints
@@ -29,9 +30,14 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
       if (!session) session = await getServerSession(req, res, authOptions)
       if (!session || typeof session !== 'object' || !('user' in session) || !session.user || typeof session.user !== 'object' || !('email' in session.user) || typeof session.user.email !== 'string') return res.status(401).json({ error: 'unauthenticated' })
 
-    // For now, assume user role - in real implementation, get from database
-    // This would need to be enhanced to get the actual user role from the database
-    const userRole = 'SCRUM_MASTER' // Placeholder - should be fetched from DB
+    // Get the user from database
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    })
+
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' })
+    }
 
     // Extract query parameters
     const { squadId, status, limit, offset } = req.query
@@ -43,8 +49,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
       offset: offset ? parseInt(offset as string, 10) : undefined
     }
 
-      const userId = typeof session.user === 'object' && 'id' in session.user && typeof session.user.id === 'string' ? session.user.id : ''
-      const result = await listSprints(userId, userRole, filters)
+      const result = await listSprints(user.id, user.role, filters)
     return res.status(200).json(result)
 
   } catch (error: unknown) {
@@ -70,8 +75,14 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       if (!session) session = await getServerSession(req, res, authOptions)
       if (!session || typeof session !== 'object' || !('user' in session) || !session.user || typeof session.user !== 'object' || !('email' in session.user) || typeof session.user.email !== 'string') return res.status(401).json({ error: 'unauthenticated' })
 
-    // For now, assume user role - in real implementation, get from database
-    const userRole = 'SCRUM_MASTER' // Placeholder - should be fetched from DB
+    // Get the user from database
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    })
+
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' })
+    }
 
     const body = req.body || {}
 
@@ -80,8 +91,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       return res.status(400).json({ error: 'Missing required fields: name, squadId, startDate, endDate' })
     }
 
-      const userId = typeof session.user === 'object' && 'id' in session.user && typeof session.user.id === 'string' ? session.user.id : ''
-      const result = await createSprint(userId, userRole, {
+      const result = await createSprint(user.id, user.role, {
       name: body.name,
       squadId: body.squadId,
       startDate: body.startDate,

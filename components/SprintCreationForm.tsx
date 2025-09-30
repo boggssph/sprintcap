@@ -24,12 +24,20 @@ export default function SprintCreationForm({ onSprintCreated, inDialog = false }
   const [loading, setLoading] = useState(false)
   const [loadingSquads, setLoadingSquads] = useState(true)
   const [formData, setFormData] = useState({
-    name: '',
+    sprintNumber: '',
     squadId: '',
     startDate: '',
     endDate: ''
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  // Get selected squad
+  const selectedSquad = squads.find(squad => squad.id === formData.squadId)
+  
+  // Compute full sprint name
+  const fullSprintName = selectedSquad?.alias && formData.sprintNumber.trim() 
+    ? `${selectedSquad.alias}-Sprint-${formData.sprintNumber.trim()}`
+    : ''
 
   // Fetch user's squads on component mount
   useEffect(() => {
@@ -57,8 +65,8 @@ export default function SprintCreationForm({ onSprintCreated, inDialog = false }
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Sprint name is required'
+    if (!formData.sprintNumber.trim()) {
+      newErrors.sprintNumber = 'Sprint number is required'
     }
 
     if (!formData.squadId) {
@@ -106,7 +114,7 @@ export default function SprintCreationForm({ onSprintCreated, inDialog = false }
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          name: formData.name.trim(),
+          name: fullSprintName,
           squadId: formData.squadId,
           startDate: formData.startDate,
           endDate: formData.endDate
@@ -118,7 +126,7 @@ export default function SprintCreationForm({ onSprintCreated, inDialog = false }
         console.log('Sprint created successfully:', data)
         // Reset form
         setFormData({
-          name: '',
+          sprintNumber: '',
           squadId: '',
           startDate: '',
           endDate: ''
@@ -182,16 +190,22 @@ export default function SprintCreationForm({ onSprintCreated, inDialog = false }
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="name">Sprint Name</Label>
-        <Input
-          id="name"
-          type="text"
-          placeholder="e.g., Sprint 2025.10"
-          value={formData.name}
-          onChange={(e) => handleInputChange('name', e.target.value)}
-          className={errors.name ? 'border-red-500' : ''}
-        />
-        {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+        <Label htmlFor="sprintNumber">Sprint Number</Label>
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm pointer-events-none">
+            {selectedSquad?.alias ? `${selectedSquad.alias}-Sprint-` : 'Select squad first'}
+          </span>
+          <Input
+            id="sprintNumber"
+            type="text"
+            placeholder={selectedSquad?.alias ? "e.g., 1, 2, 2025.10" : ""}
+            value={formData.sprintNumber}
+            onChange={(e) => handleInputChange('sprintNumber', e.target.value)}
+            className={`pl-32 ${errors.sprintNumber ? 'border-red-500' : ''}`}
+            disabled={!selectedSquad?.alias}
+          />
+        </div>
+        {errors.sprintNumber && <p className="text-sm text-red-500">{errors.sprintNumber}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -246,16 +260,22 @@ export default function SprintCreationForm({ onSprintCreated, inDialog = false }
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Sprint Name</Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="e.g., Sprint 2025.10"
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              className={errors.name ? 'border-red-500' : ''}
-            />
-            {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+            <Label htmlFor="sprintNumber">Sprint Number</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm pointer-events-none">
+                {selectedSquad?.alias ? `${selectedSquad.alias}-Sprint-` : 'Select squad first'}
+              </span>
+              <Input
+                id="sprintNumber"
+                type="text"
+                placeholder={selectedSquad?.alias ? "e.g., 1, 2, 2025.10" : ""}
+                value={formData.sprintNumber}
+                onChange={(e) => handleInputChange('sprintNumber', e.target.value)}
+                className={`pl-32 ${errors.sprintNumber ? 'border-red-500' : ''}`}
+                disabled={!selectedSquad?.alias}
+              />
+            </div>
+            {errors.sprintNumber && <p className="text-sm text-red-500">{errors.sprintNumber}</p>}
           </div>
 
           <div className="space-y-2">

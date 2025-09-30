@@ -13,6 +13,9 @@ vi.mock('next-auth', async () => {
 vi.mock('../../lib/prisma', async () => {
   return {
     prisma: {
+      user: {
+        findUnique: vi.fn()
+      },
       squad: {
         findUnique: vi.fn()
       },
@@ -36,6 +39,7 @@ import { prisma } from '../../lib/prisma'
 describe('Sprint Creation - Date Validation Integration', () => {
   beforeEach(() => {
     ;(getServerSession as any).mockReset()
+    ;(prisma.user.findUnique as any).mockReset()
     ;(prisma.squad.findUnique as any).mockReset()
     ;(prisma.squadMember.findMany as any).mockReset()
     ;(prisma.sprint.findFirst as any).mockReset()
@@ -61,6 +65,13 @@ describe('Sprint Creation - Date Validation Integration', () => {
         email: 'scrum.master@example.com',
         role: 'SCRUM_MASTER'
       }
+    })
+
+    // Mock user lookup
+    ;(prisma.user.findUnique as any).mockResolvedValue({
+      id: 'user-1',
+      email: 'scrum.master@example.com',
+      role: 'SCRUM_MASTER'
     })
 
     // Mock squad ownership

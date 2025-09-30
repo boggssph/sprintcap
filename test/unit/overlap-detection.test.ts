@@ -72,13 +72,17 @@ describe('Sprint Overlap Detection', () => {
         endDate: new Date('2025-10-15T17:00:00Z')
       }
 
-      ;(prisma.sprint.findFirst as any).mockResolvedValue(mockOverlappingSprint)
+      // Mock: first call for uniqueness check (no existing sprint with this name)
+      // second call for overlap check (finds overlapping sprint)
+      ;(prisma.sprint.findFirst as any)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(mockOverlappingSprint)
 
       // Import after mocking
       const { createSprint } = await import('../../lib/services/sprintService')
 
       await expect(createSprint('user-1', 'SCRUM_MASTER', {
-        name: 'New Sprint',
+        name: 'New Sprint 1',
         squadId: 'squad-123',
         startDate: '2025-10-05T09:00:00Z',
         endDate: '2025-10-20T17:00:00Z'
@@ -121,12 +125,16 @@ describe('Sprint Overlap Detection', () => {
         endDate: new Date('2025-10-25T17:00:00Z')
       }
 
-      ;(prisma.sprint.findFirst as any).mockResolvedValue(mockOverlappingSprint)
+      // Mock: first call for uniqueness check (no existing sprint with this name)
+      // second call for overlap check (finds overlapping sprint)
+      ;(prisma.sprint.findFirst as any)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(mockOverlappingSprint)
 
       const { createSprint } = await import('../../lib/services/sprintService')
 
       await expect(createSprint('user-1', 'SCRUM_MASTER', {
-        name: 'New Sprint',
+        name: 'New Sprint 2',
         squadId: 'squad-123',
         startDate: '2025-10-01T09:00:00Z',
         endDate: '2025-10-15T17:00:00Z'
@@ -143,12 +151,16 @@ describe('Sprint Overlap Detection', () => {
         endDate: new Date('2025-10-10T17:00:00Z')
       }
 
-      ;(prisma.sprint.findFirst as any).mockResolvedValue(mockOverlappingSprint)
+      // Mock: first call for uniqueness check (no existing sprint with this name)
+      // second call for overlap check (finds overlapping sprint)
+      ;(prisma.sprint.findFirst as any)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(mockOverlappingSprint)
 
       const { createSprint } = await import('../../lib/services/sprintService')
 
       await expect(createSprint('user-1', 'SCRUM_MASTER', {
-        name: 'New Sprint',
+        name: 'New Sprint 3',
         squadId: 'squad-123',
         startDate: '2025-10-01T09:00:00Z',
         endDate: '2025-10-15T17:00:00Z'
@@ -165,12 +177,16 @@ describe('Sprint Overlap Detection', () => {
         endDate: new Date('2025-10-15T17:00:00Z')
       }
 
-      ;(prisma.sprint.findFirst as any).mockResolvedValue(mockOverlappingSprint)
+      // Mock: first call for uniqueness check (no existing sprint with this name)
+      // second call for overlap check (finds overlapping sprint)
+      ;(prisma.sprint.findFirst as any)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(mockOverlappingSprint)
 
       const { createSprint } = await import('../../lib/services/sprintService')
 
       await expect(createSprint('user-1', 'SCRUM_MASTER', {
-        name: 'New Sprint',
+        name: 'New Sprint 4',
         squadId: 'squad-123',
         startDate: '2025-10-05T09:00:00Z',
         endDate: '2025-10-10T17:00:00Z'
@@ -180,7 +196,9 @@ describe('Sprint Overlap Detection', () => {
     it('should allow non-overlapping sprints', async () => {
       // Existing sprint: 2025-10-01 to 2025-10-15
       // New sprint: 2025-10-16 to 2025-10-30 (starts right after existing ends)
-      ;(prisma.sprint.findFirst as any).mockResolvedValue(null)
+      ;(prisma.sprint.findFirst as any)
+        .mockResolvedValueOnce(null) // No existing sprint with this name
+        .mockResolvedValueOnce(null) // No overlapping sprint
 
       const { createSprint } = await import('../../lib/services/sprintService')
 
@@ -198,8 +216,10 @@ describe('Sprint Overlap Detection', () => {
 
     it('should allow sprints that touch at boundaries (end equals start)', async () => {
       // Existing sprint: 2025-10-01 to 2025-10-15
-      // New sprint: 2025-10-15 to 2025-10-30 (touches at boundary)
-      ;(prisma.sprint.findFirst as any).mockResolvedValue(null)
+      // New sprint: 2025-10-15 to 2025-10-30 (starts exactly when existing ends)
+      ;(prisma.sprint.findFirst as any)
+        .mockResolvedValueOnce(null) // No existing sprint with this name
+        .mockResolvedValueOnce(null) // No overlapping sprint
 
       const { createSprint } = await import('../../lib/services/sprintService')
 
@@ -216,9 +236,11 @@ describe('Sprint Overlap Detection', () => {
     })
 
     it('should detect overlap across different squads independently', async () => {
-      // Sprint in squad-123: 2025-10-01 to 2025-10-15
-      // New sprint in squad-456: 2025-10-05 to 2025-10-20 (same dates, different squad)
-      ;(prisma.sprint.findFirst as any).mockResolvedValue(null) // No overlap in squad-456
+      // Existing sprint in squad-123: 2025-10-01 to 2025-10-15
+      // New sprint in squad-456: 2025-10-05 to 2025-10-20 (overlaps but in different squad)
+      ;(prisma.sprint.findFirst as any)
+        .mockResolvedValueOnce(null) // No existing sprint with this name in squad-456
+        .mockResolvedValueOnce(null) // No overlap in squad-456
 
       // Mock squad-456 ownership
       ;(prisma.squad.findUnique as any).mockResolvedValueOnce({

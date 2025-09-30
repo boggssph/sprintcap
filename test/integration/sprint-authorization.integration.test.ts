@@ -13,6 +13,9 @@ vi.mock('next-auth', async () => {
 vi.mock('../../lib/prisma', async () => {
   return {
     prisma: {
+      user: {
+        findUnique: vi.fn()
+      },
       sprint: {
         create: vi.fn(),
         findFirst: vi.fn()
@@ -36,6 +39,7 @@ import { prisma } from '../../lib/prisma'
 describe('Sprint Creation - Authorization Integration', () => {
   beforeEach(() => {
     ;(getServerSession as any).mockReset()
+    ;(prisma.user.findUnique as any).mockReset()
     ;(prisma.squad.findUnique as any).mockReset()
     ;(prisma.sprint.create as any).mockReset()
     ;(prisma.sprint.findFirst as any).mockReset()
@@ -56,6 +60,13 @@ describe('Sprint Creation - Authorization Integration', () => {
         email: 'scrum.master@example.com',
         role: 'SCRUM_MASTER'
       }
+    })
+
+    // Mock user lookup
+    ;(prisma.user.findUnique as any).mockResolvedValue({
+      id: 'user-1',
+      email: 'scrum.master@example.com',
+      role: 'SCRUM_MASTER'
     })
 
     // Mock squad ownership
@@ -129,6 +140,13 @@ describe('Sprint Creation - Authorization Integration', () => {
       }
     })
 
+    // Mock user lookup
+    ;(prisma.user.findUnique as any).mockResolvedValue({
+      id: 'user-2',
+      email: 'regular.member@example.com',
+      role: 'MEMBER'
+    })
+
     // Mock squad exists but user doesn't own it
     ;(prisma.squad.findUnique as any).mockResolvedValue({
       id: 'some-squad',
@@ -156,7 +174,7 @@ describe('Sprint Creation - Authorization Integration', () => {
 
     expect(res._getStatusCode()).toBe(403)
     const responseData = JSON.parse(res._getData())
-    expect(responseData.error).toContain('Access denied')
+    expect(responseData.error).toContain('Only Scrum Masters can create sprints')
   })
 
   it('should deny Scrum Master from creating sprint for unowned squad', async () => {
@@ -167,6 +185,13 @@ describe('Sprint Creation - Authorization Integration', () => {
         email: 'scrum.master@example.com',
         role: 'SCRUM_MASTER'
       }
+    })
+
+    // Mock user lookup
+    ;(prisma.user.findUnique as any).mockResolvedValue({
+      id: 'user-1',
+      email: 'scrum.master@example.com',
+      role: 'SCRUM_MASTER'
     })
 
     // Mock squad ownership by different Scrum Master
@@ -241,6 +266,13 @@ describe('Sprint Creation - Authorization Integration', () => {
       }
     })
 
+    // Mock user lookup
+    ;(prisma.user.findUnique as any).mockResolvedValue({
+      id: 'user-1',
+      email: 'scrum.master@example.com',
+      role: 'SCRUM_MASTER'
+    })
+
     // Mock squad not found
     ;(prisma.squad.findUnique as any).mockResolvedValue(null)
 
@@ -265,5 +297,62 @@ describe('Sprint Creation - Authorization Integration', () => {
     expect(res._getStatusCode()).toBe(404)
     const responseData = JSON.parse(res._getData())
     expect(responseData.error).toContain('not found')
+  })
+
+  it('should deny creation of sprint with duplicate name in same squad', async () => {
+    // Mock authenticated Scrum Master
+    ;(getServerSession as any).mockResolvedValue({
+      user: {
+        id: 'user-1',
+        email: 'scrum.master@example.com',
+        role: 'SCRUM_MASTER'
+      }
+    })
+
+    // Mock user lookup
+    ;(prisma.user.findUnique as any).mockResolvedValue({
+      id: 'user-1',
+      email: 'scrum.master@example.com',
+      role: 'SCRUM_MASTER'
+    })
+
+    // Mock squad ownership
+    ;(prisma.squad.findUnique as any).mockResolvedValue({
+      id: 'owned-squad',
+      name: 'Owned Squad',
+      scrumMasterId: 'user-1' // User owns this squad
+    })
+
+    const requestBody = {
+      name: 'FMBS-Sprint-111',
+      squadId: 'owned-squad',
+      startDate: '2025-10-01T09:00:00Z',
+      endDate: '2025-10-15T17:00:00Z'
+    }
+
+    // Mock existing sprint with same name in the squad (first call for uniqueness check)
+    // and no overlapping sprints (second call for date overlap check)
+    ;(prisma.sprint.findFirst as any)
+      .mockResolvedValueOnce({
+        id: 'existing-sprint',
+        name: 'FMBS-Sprint-111',
+        squadId: 'owned-squad'
+      })
+      .mockResolvedValueOnce(null)
+
+    const { req, res } = createMocks({
+      method: 'POST',
+      body: requestBody,
+      headers: {
+        'content-type': 'application/json'
+      }
+    })
+
+    const handler = await import('../../pages/api/sprints')
+    await handler.default(req as any, res as any)
+
+    expect(res._getStatusCode()).toBe(409)
+    const responseData = JSON.parse(res._getData())
+    expect(responseData.error).toContain("A sprint with the name 'FMBS-Sprint-111' already exists in this squad")
   })
 })

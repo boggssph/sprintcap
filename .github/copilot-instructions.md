@@ -40,6 +40,7 @@ TypeScript 5.9: Follow standard conventions
 - 003-i-want-this: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
 
 <!-- MANUAL ADDITIONS START -->
+Whenever troubleshooting, circumspection is required and avoid making knee-jerk changes that could introduce new issues.
 <!-- MANUAL ADDITIONS END -->
 
 <!-- MANUAL ADDITIONS START -->

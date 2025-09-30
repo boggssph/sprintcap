@@ -96,6 +96,21 @@ export async function createSprint(
     throw new SprintServiceError('Access denied: You do not own this squad', 'PERMISSION_DENIED')
   }
 
+  // Check for duplicate sprint name within the squad
+  const existingSprint = await prisma.sprint.findFirst({
+    where: {
+      squadId: data.squadId,
+      name: data.name
+    }
+  })
+
+  if (existingSprint) {
+    throw new SprintServiceError(
+      `A sprint with the name '${data.name}' already exists in this squad`,
+      'CONFLICT'
+    )
+  }
+
   const startDate = new Date(data.startDate)
   const endDate = new Date(data.endDate)
 
