@@ -1,3 +1,4 @@
 {
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "buildCommand": "NEXT_PUBLIC_VERSION=$(git describe --always --tags --dirty) npm run build"
 }

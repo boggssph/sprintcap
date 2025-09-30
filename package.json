@@ -6,7 +6,6 @@
     "dev": "next dev",
     "dev:auth": "node ./tools/check-dev-auth-env.js && next dev",
     "validate:env": "node ./tools/validate-env.js",
-    "prebuild": "echo \"NEXT_PUBLIC_VERSION=$(git describe --always --tags --dirty)\" > .env.local",
     "build": "npm run validate:env && npm run check:next-auth-imports && prisma generate && next build",
     "start": "next start",
     "prisma": "prisma",
