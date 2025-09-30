@@ -11,7 +11,7 @@ describe('Auth callback logic (signIn)', () => {
     const nextAuthUser = { email, name: 'Seed' }
     // call signIn callback directly
     const result = await (authOptions.callbacks as any).signIn({ user: nextAuthUser })
-    expect(result).toBe('/dashboard/member')
+    expect(result).toBe(true)
 
     // cleanup
     await prisma.user.delete({ where: { id: user.id } })

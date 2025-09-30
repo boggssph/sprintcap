@@ -20,7 +20,10 @@ describe('GET /api/sprints/[id] - Contract Test', () => {
 
     const { req, res } = createMocks({
       method: 'GET',
-      query: { id: sprintId }
+      query: { id: sprintId },
+      headers: {
+        'x-test-user': 'test@example.com'
+      }
     })
 
     // Mock successful response with members
@@ -51,22 +54,17 @@ describe('GET /api/sprints/[id] - Contract Test', () => {
       updatedAt: '2025-09-26T10:00:00Z'
     })
 
-    try {
-      const handler = await import('../../pages/api/sprints/[id]')
-      await handler.default(req as any, res as any)
+    const handler = await import('../../pages/api/sprints/[id]')
+    await handler.default(req as any, res as any)
 
-      expect(res._getStatusCode()).toBe(200)
-      const responseData = JSON.parse(res._getData())
-      expect(responseData).toHaveProperty('id', sprintId)
-      expect(responseData).toHaveProperty('name', 'Sprint 2025.10')
-      expect(responseData).toHaveProperty('members')
-      expect(responseData.members).toHaveLength(2)
-      expect(responseData.members[0]).toHaveProperty('displayName', 'John Doe')
-      expect(responseData.members[1]).toHaveProperty('email', 'jane@example.com')
-    } catch (error) {
-      // Expected to fail until endpoint is implemented
-      expect(error.message).toContain('Cannot find module')
-    }
+    expect(res._getStatusCode()).toBe(200)
+    const responseData = JSON.parse(res._getData())
+    expect(responseData).toHaveProperty('id', sprintId)
+    expect(responseData).toHaveProperty('name', 'Sprint 2025.10')
+    expect(responseData).toHaveProperty('members')
+    expect(responseData.members).toHaveLength(2)
+    expect(responseData.members[0]).toHaveProperty('displayName', 'John Doe')
+    expect(responseData.members[1]).toHaveProperty('email', 'jane@example.com')
   })
 
   it('should return 404 for non-existent sprint', async () => {
@@ -74,25 +72,23 @@ describe('GET /api/sprints/[id] - Contract Test', () => {
 
     const { req, res } = createMocks({
       method: 'GET',
-      query: { id: sprintId }
+      query: { id: sprintId },
+      headers: {
+        'x-test-user': 'test@example.com'
+      }
     })
 
     // Mock not found error
-    ;(sprintService.getSprint as any).mockRejectedValue(
-      new Error('Sprint not found')
-    )
+    const notFoundError = new Error('Sprint not found')
+    ;(notFoundError as any).code = 'NOT_FOUND'
+    ;(sprintService.getSprint as any).mockRejectedValue(notFoundError)
 
-    try {
-      const handler = await import('../../pages/api/sprints/[id]')
-      await handler.default(req as any, res as any)
+    const handler = await import('../../pages/api/sprints/[id]')
+    await handler.default(req as any, res as any)
 
-      expect(res._getStatusCode()).toBe(404)
-      const responseData = JSON.parse(res._getData())
-      expect(responseData).toHaveProperty('error', 'Sprint not found')
-    } catch (error) {
-      // Expected to fail until endpoint is implemented
-      expect(error.message).toContain('Cannot find module')
-    }
+    expect(res._getStatusCode()).toBe(404)
+    const responseData = JSON.parse(res._getData())
+    expect(responseData).toHaveProperty('error', 'Sprint not found')
   })
 
   it('should return sprint with empty members list', async () => {
@@ -100,7 +96,10 @@ describe('GET /api/sprints/[id] - Contract Test', () => {
 
     const { req, res } = createMocks({
       method: 'GET',
-      query: { id: sprintId }
+      query: { id: sprintId },
+      headers: {
+        'x-test-user': 'test@example.com'
+      }
     })
 
     // Mock sprint with no members
@@ -116,17 +115,12 @@ describe('GET /api/sprints/[id] - Contract Test', () => {
       updatedAt: '2025-09-26T10:00:00Z'
     })
 
-    try {
-      const handler = await import('../../pages/api/sprints/[id]')
-      await handler.default(req as any, res as any)
+    const handler = await import('../../pages/api/sprints/[id]')
+    await handler.default(req as any, res as any)
 
-      expect(res._getStatusCode()).toBe(200)
-      const responseData = JSON.parse(res._getData())
-      expect(responseData).toHaveProperty('members')
-      expect(responseData.members).toHaveLength(0)
-    } catch (error) {
-      // Expected to fail until endpoint is implemented
-      expect(error.message).toContain('Cannot find module')
-    }
+    expect(res._getStatusCode()).toBe(200)
+    const responseData = JSON.parse(res._getData())
+    expect(responseData).toHaveProperty('members')
+    expect(responseData.members).toHaveLength(0)
   })
 })

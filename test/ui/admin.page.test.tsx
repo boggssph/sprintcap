@@ -1,6 +1,7 @@
 import React from 'react'
 import { vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { SessionProvider } from 'next-auth/react'
 
 // make React available globally for JSX runtime in test environment
 ;(globalThis as any).React = React
@@ -24,7 +25,11 @@ describe('AdminPage UI', () => {
   })
 
   it('renders form and inputs', async () => {
-    render(<AdminPage />)
+    render(
+      <SessionProvider session={null}>
+        <AdminPage />
+      </SessionProvider>
+    )
     expect(await screen.findByText(/Admin - Create Invite/i)).toBeInTheDocument()
   // The form labels in the component are not linked via htmlFor/id,
   // so query by role instead: a textbox for email and multiple comboboxes.

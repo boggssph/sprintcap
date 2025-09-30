@@ -18,7 +18,10 @@ describe('GET /api/sprints - Contract Test', () => {
   it('should return list of sprints for authenticated user', async () => {
     const { req, res } = createMocks({
       method: 'GET',
-      query: {}
+      query: {},
+      headers: {
+        'x-test-user': 'test@example.com'
+      }
     })
 
     // Mock successful response
@@ -68,7 +71,10 @@ describe('GET /api/sprints - Contract Test', () => {
   it('should filter sprints by squad ID', async () => {
     const { req, res } = createMocks({
       method: 'GET',
-      query: { squadId: 'squad-uuid-123' }
+      query: { squadId: 'squad-uuid-123' },
+      headers: {
+        'x-test-user': 'test@example.com'
+      }
     })
 
     // Mock filtered response
@@ -106,7 +112,10 @@ describe('GET /api/sprints - Contract Test', () => {
   it('should filter sprints by status', async () => {
     const { req, res } = createMocks({
       method: 'GET',
-      query: { status: 'active' }
+      query: { status: 'active' },
+      headers: {
+        'x-test-user': 'test@example.com'
+      }
     })
 
     // Mock status-filtered response
@@ -144,7 +153,10 @@ describe('GET /api/sprints - Contract Test', () => {
   it('should support pagination', async () => {
     const { req, res } = createMocks({
       method: 'GET',
-      query: { limit: '10', offset: '5' }
+      query: { limit: '10', offset: '5' },
+      headers: {
+        'x-test-user': 'test@example.com'
+      }
     })
 
     // Mock paginated response

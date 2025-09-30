@@ -1,8 +1,20 @@
 
 # Implementation Plan: Sprint Creation for Squads
 
-**Branch**: `004-as-scrum-master` | **Date**: September 28, 2025 | **Spec**: /Users/fseguerra/Projects/sprintCap/specs/004-as-scrum-master/spec.md
-**Input**: Feature specification from `/specs/004-as-scrum-master/spec.md`
+**Branch**: `004-as-scrum-master` | **Date**: September 29, 2025 | **Spec**: /Users/fseguerra/Projects/sprintCap/specs/004-as-scrum-master/spec.md
+**Input**: Feature specification from `/specs/004-as-scrum-m**Phase Status**:
+- [x] Phase 0: Research complete (/plan command)
+- [x] Phase 1: Design complete (/plan command)
+- [x] Phase 2: Task planning complete (/plan command - describe approach only)
+- [ ] Phase 3: Tasks generated (/tasks command)
+- [ ] Phase 4: Implementation complete
+- [ ] Phase 5: Validation passed
+
+**Gate Status**:
+- [x] Initial Constitution Check: PASS
+- [x] Post-Design Constitution Check: PASS
+- [x] All NEEDS CLARIFICATION resolved
+- [ ] Complexity deviations documented`
 
 ## Execution Flow (/plan command scope)
 ```
@@ -64,7 +76,7 @@ Specify the authoritative technology choices and visual design constraints that 
    - Responsive-first: components must work across small → large viewports; use Tailwind breakpoints consistently.
    - Design tokens: centralize colors, spacing, and typography in Tailwind config and avoid inline styles.
    - Minimal custom CSS: keep component-level overrides to a minimum; prefer shadcn themes/variants.
-   - Motion: transitions must complete in <200ms and avoid transforms on layout elements; no large layout-shifting animations.
+   - Motion: subtle, performance-friendly transitions only; avoid large layout-shifting animations.
    - Testing hooks: include stable selectors (`data-testid`) where tests need deterministic element targeting.
 
 Note: If an exception to any of the above is required, document a short rationale in the feature spec and add it to the constitution check during /plan.
@@ -96,6 +108,19 @@ specs/[###-feature]/
 └── tasks.md             # Phase 2 output (/tasks command - NOT created by /plan)
 ```
 
+## Project Structure
+
+### Documentation (this feature)
+```
+specs/004-as-scrum-master/
+├── plan.md              # This file (/plan command output)
+├── research.md          # Phase 0 output (/plan command)
+├── data-model.md        # Phase 1 output (/plan command)
+├── quickstart.md        # Phase 1 output (/plan command)
+├── contracts/           # Phase 1 output (/plan command)
+└── tasks.md             # Phase 2 output (/tasks command - NOT created by /plan)
+```
+
 ### Source Code (repository root)
 ```
 app/
@@ -117,6 +142,39 @@ components/
 ```
 
 **Structure Decision**: Web application structure using Next.js App Router. Sprint creation UI will be added to the existing Scrum Master dashboard, with new API endpoints for sprint management. Database schema will be extended with Sprint and SprintMember models.
+├── cli/
+└── lib/
+
+tests/
+├── contract/
+├── integration/
+└── unit/
+
+# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
+backend/
+├── src/
+│   ├── models/
+│   ├── services/
+│   └── api/
+└── tests/
+
+frontend/
+├── src/
+│   ├── components/
+│   ├── pages/
+│   └── services/
+└── tests/
+
+# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
+api/
+└── [same as backend above]
+
+ios/ or android/
+└── [platform-specific structure: feature modules, UI flows, platform tests]
+```
+
+**Structure Decision**: [Document the selected structure and reference the real
+directories captured above]
 
 ## Phase 0: Outline & Research
 1. **Extract unknowns from Technical Context** above:
@@ -215,7 +273,7 @@ components/
 - [x] Phase 0: Research complete (/plan command)
 - [x] Phase 1: Design complete (/plan command)
 - [x] Phase 2: Task planning complete (/plan command - describe approach only)
-- [x] Phase 3: Tasks generated (/tasks command)
+- [ ] Phase 3: Tasks generated (/tasks command)
 - [ ] Phase 4: Implementation complete
 - [ ] Phase 5: Validation passed
 
@@ -224,59 +282,6 @@ components/
 - [x] Post-Design Constitution Check: PASS
 - [x] All NEEDS CLARIFICATION resolved
 - [ ] Complexity deviations documented
-
-## Phase 2: Task Generation Approach
-
-**Objective**: Generate actionable implementation tasks from the design artifacts created in Phase 1.
-
-**Input Sources**:
-- `spec.md`: Functional requirements and acceptance criteria
-- `data-model.md`: Database schema and entity relationships
-- `contracts/sprints-api.yaml`: API contract specifications
-- `quickstart.md`: Test scenarios and validation criteria
-- `research.md`: Technical decisions and implementation constraints
-
-**Task Generation Strategy**:
-
-1. **Database Layer Tasks**:
-   - Create Prisma schema migrations for Sprint and SprintMember models
-   - Generate and run database migrations
-   - Update Prisma client types
-
-2. **API Layer Tasks**:
-   - Implement POST `/api/sprints` endpoint with validation
-   - Implement GET `/api/sprints` endpoint with filtering
-   - Implement GET `/api/sprints/{id}` endpoint
-   - Add authentication and authorization middleware
-   - Implement overlap detection logic
-
-3. **Business Logic Tasks**:
-   - Create sprint service with member population logic
-   - Implement date validation and overlap checking
-   - Add squad ownership verification
-
-4. **Frontend Tasks**:
-   - Create sprint creation form component
-   - Add sprint list component to Scrum Master dashboard
-   - Implement form validation and error handling
-   - Add success/error notifications
-
-5. **Testing Tasks**:
-   - Create unit tests for API endpoints
-   - Create integration tests for sprint creation flow
-   - Create E2E tests using Playwright
-   - Add test data seeding for development
-
-6. **Documentation Tasks**:
-   - Update API documentation
-   - Add user-facing help text
-   - Update Scrum Master dashboard documentation
-
-**Task Granularity**: Each task should be implementable in 1-2 hours by a single developer, with clear acceptance criteria and dependencies.
-
-**Dependencies**: Tasks will be ordered to ensure database changes precede API implementation, API precedes frontend, and core functionality precedes testing.
-
-**Validation**: Each task will include specific acceptance criteria that can be verified through automated tests or manual testing following the quickstart scenarios.
 
 ---
 *Based on Constitution v2.2.0 - See `/memory/constitution.md`*

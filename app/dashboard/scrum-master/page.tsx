@@ -89,7 +89,7 @@ export default function ScrumMasterDashboard() {
 
   // Sprint creation state
   const [createSprintDialogOpen, setCreateSprintDialogOpen] = useState(false)
-  const [sprintName, setSprintName] = useState('')
+  const [sprintNumber, setSprintNumber] = useState('')
   const [sprintSquadId, setSprintSquadId] = useState('')
   const [sprintStartDate, setSprintStartDate] = useState('')
   const [sprintEndDate, setSprintEndDate] = useState('')
@@ -246,8 +246,8 @@ export default function ScrumMasterDashboard() {
 
   const handleCreateSprint = async () => {
     // Basic validation
-    if (!sprintName.trim()) {
-      setSprintError('Sprint name is required')
+    if (!sprintNumber.trim()) {
+      setSprintError('Sprint number is required')
       return
     }
     if (!sprintSquadId) {
@@ -267,6 +267,16 @@ export default function ScrumMasterDashboard() {
       return
     }
 
+    // Find the selected squad to get the alias
+    const selectedSquad = squads.find(squad => squad.id === sprintSquadId)
+    if (!selectedSquad) {
+      setSprintError('Selected squad not found')
+      return
+    }
+
+    // Construct the full sprint name
+    const fullSprintName = `${selectedSquad.alias} Sprint ${sprintNumber.trim()}`
+
     setSprintLoading(true)
     setSprintError('')
 
@@ -275,7 +285,7 @@ export default function ScrumMasterDashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: sprintName.trim(),
+          name: fullSprintName,
           squadId: sprintSquadId,
           startDate: sprintStartDate,
           endDate: sprintEndDate
@@ -285,7 +295,7 @@ export default function ScrumMasterDashboard() {
       if (res.ok) {
         // Reset form and close dialog
         setCreateSprintDialogOpen(false)
-        setSprintName('')
+        setSprintNumber('')
         setSprintSquadId('')
         setSprintStartDate('')
         setSprintEndDate('')
@@ -988,23 +998,6 @@ export default function ScrumMasterDashboard() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="sprintName" className="text-right text-sm font-medium">
-                Sprint Name
-              </label>
-              <input
-                id="sprintName"
-                value={sprintName}
-                onChange={(e) => {
-                  setSprintName(e.target.value)
-                  setSprintError('')
-                }}
-                placeholder="Sprint 2025.10"
-                maxLength={100}
-                className="col-span-3 p-2 border border-gray-300 rounded-md"
-                disabled={sprintLoading}
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
               <label htmlFor="sprintSquad" className="text-right text-sm font-medium">
                 Squad
               </label>
@@ -1025,6 +1018,23 @@ export default function ScrumMasterDashboard() {
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <label htmlFor="sprintNumber" className="text-right text-sm font-medium">
+                Sprint Number
+              </label>
+              <input
+                id="sprintNumber"
+                value={sprintNumber}
+                onChange={(e) => {
+                  setSprintNumber(e.target.value)
+                  setSprintError('')
+                }}
+                placeholder="2025.10"
+                maxLength={20}
+                className="col-span-3 p-2 border border-gray-300 rounded-md"
+                disabled={sprintLoading}
+              />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <label htmlFor="sprintStartDate" className="text-right text-sm font-medium">
@@ -1076,7 +1086,7 @@ export default function ScrumMasterDashboard() {
             <Button
               type="button"
               onClick={handleCreateSprint}
-              disabled={sprintLoading || !sprintName.trim() || !sprintSquadId || !sprintStartDate || !sprintEndDate}
+              disabled={sprintLoading || !sprintNumber.trim() || !sprintSquadId || !sprintStartDate || !sprintEndDate}
             >
               {sprintLoading ? 'Creating...' : 'Create Sprint'}
             </Button>

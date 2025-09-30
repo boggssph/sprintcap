@@ -43,7 +43,8 @@ describe('POST /api/sprints - Contract Test', () => {
       method: 'POST',
       body: requestBody,
       headers: {
-        'content-type': 'application/json'
+        'content-type': 'application/json',
+        'x-test-user': 'test@example.com'
       }
     })
 
@@ -83,7 +84,8 @@ describe('POST /api/sprints - Contract Test', () => {
       method: 'POST',
       body: requestBody,
       headers: {
-        'content-type': 'application/json'
+        'content-type': 'application/json',
+        'x-test-user': 'test@example.com'
       }
     })
 
@@ -112,7 +114,8 @@ describe('POST /api/sprints - Contract Test', () => {
       method: 'POST',
       body: requestBody,
       headers: {
-        'content-type': 'application/json'
+        'content-type': 'application/json',
+        'x-test-user': 'test@example.com'
       }
     })
 

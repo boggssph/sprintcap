@@ -66,10 +66,12 @@ When creating this spec from a user prompt:
 As a Scrum Master, I want to create a sprint for a specific squad so that I can organize work periods and track team progress. I need to specify the sprint name, start date and time, and end date and time. The sprint should automatically include all active members of the selected squad as sprint participants.
 
 ### Acceptance Scenarios
-1. **Given** I am a Scrum Master with access to multiple squads, **When** I select a squad and create a sprint with name, start/end dates, **Then** the sprint is created and all active squad members are automatically added as sprint participants
-2. **Given** I am creating a sprint, **When** I enter invalid dates (end before start), **Then** the system prevents creation and shows an inline error message: 'End date must be after start date.'
-3. **Given** I am creating a sprint, **When** I select a squad with no active members, **Then** the sprint is created but shows a toast warning: 'Sprint created with no members. Add members manually if needed.'
-4. **Given** I have created a sprint, **When** I view the sprint details, **Then** I can see all sprint information including name, dates, and participating members
+1. **Given** I am a Scrum Master with access to multiple squads, **When** I select a squad from the dropdown, enter a sprint number, and set start/end dates with times, **Then** the sprint is created with name format "SquadAlias Sprint [number]" and all active squad members are automatically added as sprint participants
+2. **Given** I am creating a sprint, **When** I select a squad and enter a sprint number, **Then** the system constructs the full sprint name as "SquadAlias Sprint [number]" when the form is submitted
+3. **Given** I am creating a sprint, **When** I enter invalid dates (end before start), **Then** the system prevents creation and shows an inline error message: 'End date must be after start date.'
+4. **Given** I am creating a sprint, **When** I select a squad with no active members, **Then** the sprint is created but shows a toast warning: 'Sprint created with no members. Add members manually if needed.'
+5. **Given** I am creating a sprint, **When** I select start and end dates, **Then** I can choose times using a 12-hour format time picker
+6. **Given** I have created a sprint, **When** I view the sprint details, **Then** I can see all sprint information including name, dates, and participating members
 
 ### Edge Cases
 - What happens when a squad member becomes inactive after sprint creation?
@@ -81,15 +83,19 @@ As a Scrum Master, I want to create a sprint for a specific squad so that I can 
 
 ### Functional Requirements
 - **FR-001**: Scrum Masters MUST be able to create sprints for squads they own
-- **FR-002**: System MUST require sprint name, start date/time, and end date/time during creation
-- **FR-003**: System MUST validate that end date/time is after start date/time
-- **FR-004**: System MUST automatically include all active squad members as sprint participants
-- **FR-005**: System MUST associate sprints with specific squads
-- **FR-006**: System MUST prevent creation of sprints with overlapping dates for the same squad
-- **FR-007**: System MUST display sprint information including name, dates, and participating members
-- **FR-008**: System MUST allow sprint creation for squads with no active members
-- **FR-009**: System MUST handle squad member status changes during sprint lifecycle (e.g., inactive members remain in sprint but are marked accordingly)
-- **FR-010**: System MUST maintain fixed sprint membership at creation time (sprint members are not automatically updated when squad membership changes during the sprint)
+- **FR-002**: System MUST display squad selection dropdown as the first field in sprint creation form
+- **FR-003**: System MUST auto-populate sprint name field with "SquadAlias Sprint " when squad is selected
+- **FR-004**: System MUST allow Scrum Masters to enter only the sprint number (e.g., "111") which gets combined with squad alias to form complete name "SquadAlias Sprint 111"
+- **FR-005**: System MUST require sprint number, start date/time, and end date/time during creation
+- **FR-006**: System MUST provide datetime picker for start and end date/time selection using HTML5 datetime-local input
+- **FR-007**: System MUST validate that end date/time is after start date/time
+- **FR-008**: System MUST automatically include all active squad members as sprint participants
+- **FR-009**: System MUST associate sprints with specific squads
+- **FR-010**: System MUST prevent creation of sprints with overlapping dates for the same squad
+- **FR-011**: System MUST display sprint information including name, dates, and participating members
+- **FR-012**: System MUST allow sprint creation for squads with no active members
+- **FR-013**: System MUST handle squad member status changes during sprint lifecycle (e.g., inactive members remain in sprint but are marked accordingly)
+- **FR-014**: System MUST maintain fixed sprint membership at creation time (sprint members are not automatically updated when squad membership changes during the sprint)
 
 ### Non-Functional Requirements
 - **NFR-001**: System MUST respond to sprint creation operations within 500ms under normal load
