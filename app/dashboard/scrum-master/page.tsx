@@ -32,6 +32,7 @@ import {
 } from 'lucide-react'
 import ProfileSettings from '@/components/ProfileSettings'
 import DisplayNameEditor from '@/components/DisplayNameEditor'
+import { getVersionDisplayText } from '@/lib/version'
 
 type TeamMember = {
   id: string
@@ -909,6 +910,10 @@ export default function ScrumMasterDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <footer className="mt-8 text-center text-xs text-gray-400">
+        {getVersionDisplayText()}
+      </footer>
     </div>
   )
 }
