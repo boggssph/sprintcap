@@ -1,9 +1,10 @@
 "use client"
 
 import './globals.css'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
+import { getVersionDisplayText } from '../lib/version'
 
 export default function Landing() {
   const { data: session, status } = useSession()
@@ -29,6 +30,10 @@ export default function Landing() {
     await signIn('google')
   }
 
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: '/' })
+  }
+
   if (status === 'loading') {
     return (
       <main className="min-h-screen bg-white text-gray-900 flex items-center justify-center">
@@ -52,14 +57,17 @@ export default function Landing() {
           <section className="bg-gray-50 rounded-xl p-8 shadow-sm">
             <p className="text-gray-700 mb-6 text-center">Designed with clarity. Inspired by simple, tactile interfaces.</p>
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-              <p className="mt-2 text-gray-600">Redirecting to your dashboard...</p>
+              <button onClick={handleSignOut} className="px-6 py-3 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">
+                Sign Out
+              </button>
+              <div className="mt-2 text-[6px] sm:text-[8px] md:text-[10px] text-gray-400">
+                {getVersionDisplayText()}
+              </div>
             </div>
           </section>
 
           <footer className="mt-12 text-center text-sm text-gray-500">
             Built with focus — minimal dependencies.
-            <div className="mt-2 text-xs text-gray-400">v1.0.0 (004-as-scrum-master)</div>
           </footer>
         </div>
       </main>
@@ -81,7 +89,12 @@ export default function Landing() {
           </div>
         </section>
 
-        <footer className="mt-12 text-center text-sm text-gray-500">Built with focus — minimal dependencies.</footer>
+        <footer className="mt-12 text-center text-sm text-gray-500">
+          Built with focus — minimal dependencies.
+          <div className="mt-2 text-[6px] sm:text-[8px] md:text-[10px] text-gray-400">
+            {getVersionDisplayText()}
+          </div>
+        </footer>
       </div>
     </main>
   )
