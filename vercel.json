@@ -1,4 +1,4 @@
 {
   "framework": "nextjs",
-  "buildCommand": "NEXT_PUBLIC_VERSION=$(git describe --always --tags --dirty) npm run build"
+  "buildCommand": "bash -c 'export NEXT_PUBLIC_VERSION=$(git describe --always --tags --dirty) && npm run build'"
 }
