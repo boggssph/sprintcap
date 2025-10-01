@@ -6,6 +6,7 @@ export const metadata = {
 }
 
 import Providers from "../components/providers"
+import Footer from "../components/Footer"
 
 export default function RootLayout({
   children,
@@ -14,8 +15,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className="min-h-screen flex flex-col">
         <Providers>{children}</Providers>
+        <Footer />
       </body>
     </html>
   )
