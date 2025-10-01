@@ -6,7 +6,7 @@
     "dev": "next dev",
     "dev:auth": "node ./tools/check-dev-auth-env.js && next dev",
     "validate:env": "node ./tools/validate-env.js",
-    "build": "npm run validate:env && npm run check:next-auth-imports && prisma generate && next build",
+    "build": "NEXT_PUBLIC_VERSION=$(git describe --always --tags --dirty) npm run validate:env && npm run check:next-auth-imports && prisma generate && next build",
     "start": "next start",
     "prisma": "prisma",
     "test": "vitest",
