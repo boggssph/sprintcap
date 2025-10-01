@@ -13,7 +13,8 @@ export interface VersionInfo {
  * Falls back to a default message if version is not available
  */
 export function getVersionInfo(): VersionInfo {
-  const version = process.env.NEXT_PUBLIC_VERSION;
+  // For debugging: temporarily hardcode a version to test display
+  const version = "DEBUG-v0.1.0-7-g99ade90";
 
   if (version && version.trim()) {
     return {
