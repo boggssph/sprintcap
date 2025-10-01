@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import DisplayNameEditor from '@/components/DisplayNameEditor'
-import { getVersionDisplayText } from '@/lib/version'
 
 type Invite = {
   id: string
@@ -266,7 +265,6 @@ export default function AdminPage(){
       </section>
 
       <footer className="mt-8 text-center text-xs text-gray-400">
-        {getVersionDisplayText()}
       </footer>
     </main>
   )

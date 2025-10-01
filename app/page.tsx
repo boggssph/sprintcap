@@ -4,7 +4,6 @@ import './globals.css'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { getVersionDisplayText } from '../lib/version'
 
 export default function Landing() {
   const { data: session, status } = useSession()
@@ -60,9 +59,6 @@ export default function Landing() {
               <button onClick={handleSignOut} className="px-6 py-3 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">
                 Sign Out
               </button>
-              <div className="mt-2 text-[6px] sm:text-[8px] md:text-[10px] text-gray-400">
-                {getVersionDisplayText()}
-              </div>
             </div>
           </section>
 
@@ -91,9 +87,6 @@ export default function Landing() {
 
         <footer className="mt-12 text-center text-sm text-gray-500">
           Built with focus — minimal dependencies.
-          <div className="mt-2 text-[6px] sm:text-[8px] md:text-[10px] text-gray-400">
-            {getVersionDisplayText()}
-          </div>
         </footer>
       </div>
     </main>

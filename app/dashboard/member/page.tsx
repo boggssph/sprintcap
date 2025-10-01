@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import ProfileSettings from '@/components/ProfileSettings'
 import DisplayNameEditor from '@/components/DisplayNameEditor'
-import { getVersionDisplayText } from '@/lib/version'
 
 export default function MemberDashboard() {
   const { data: session, status } = useSession()
@@ -115,7 +114,6 @@ export default function MemberDashboard() {
       </main>
 
       <footer className="mt-8 text-center text-xs text-gray-400">
-        {getVersionDisplayText()}
       </footer>
     </div>
   )
