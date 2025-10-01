@@ -8,11 +8,9 @@ export class VersionService {
   private apiToken: string;
 
   private constructor() {
-    const token = process.env.VERCEL_ACCESS_TOKEN;
-    if (!token) {
-      throw new Error('VERCEL_ACCESS_TOKEN environment variable is required');
-    }
-    this.apiToken = token;
+    // During build time, environment variables might not be available
+    // We'll handle this gracefully in the service methods
+    this.apiToken = process.env.VERCEL_ACCESS_TOKEN || '';
   }
 
   public static getInstance(): VersionService {
@@ -63,6 +61,10 @@ export class VersionService {
    * Fetch the latest deployment from Vercel API
    */
   private async fetchLatestDeployment(): Promise<VercelDeployment> {
+    if (!this.apiToken) {
+      throw new VercelApiError('VERCEL_ACCESS_TOKEN environment variable is required', 'CONFIG_ERROR');
+    }
+
     const projectId = process.env.VERCEL_PROJECT_ID;
     if (!projectId) {
       throw new VercelApiError('VERCEL_PROJECT_ID environment variable is required', 'CONFIG_ERROR');
