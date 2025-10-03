@@ -413,8 +413,12 @@ export default function ScrumMasterDashboard() {
 
   // Filter team members by selected squad
   const selectedSquad = squads.find(squad => squad.id === selectedSquadId)
-  const filteredMembers = selectedSquadId 
-    ? teamMembers.filter(member => member.squadAlias === selectedSquad?.alias)
+  const filteredMembers = selectedSquadId
+    ? teamMembers.filter(member => {
+        const matches = member.squadAlias?.trim() === selectedSquad?.alias?.trim()
+        console.log('Debug - member:', member.displayName, 'squadAlias:', member.squadAlias, 'selectedSquad alias:', selectedSquad?.alias, 'matches:', matches)
+        return matches
+      })
     : []
 
   return (
@@ -723,6 +727,8 @@ export default function ScrumMasterDashboard() {
                 <div className="space-y-4">
                   {!selectedSquadId ? (
                     <p className="text-center text-slate-500 py-8">Select a squad above to view its members.</p>
+                  ) : teamMembers.length === 0 ? (
+                    <p className="text-center text-slate-500 py-8">Loading members...</p>
                   ) : filteredMembers.length === 0 ? (
                     <p className="text-center text-slate-500 py-8">No members in this squad yet. Send invites to get started.</p>
                   ) : (
