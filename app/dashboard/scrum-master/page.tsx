@@ -415,10 +415,14 @@ export default function ScrumMasterDashboard() {
   const selectedSquad = squads.find(squad => squad.id === selectedSquadId)
   const filteredMembers = selectedSquadId && selectedSquad
     ? teamMembers.filter(member => {
-        // Match by squad alias (case-insensitive, trimmed)
+        // Try multiple matching strategies
         const memberAlias = member.squadAlias?.trim().toLowerCase()
+        const memberName = member.squadName?.trim().toLowerCase()
         const squadAlias = selectedSquad.alias?.trim().toLowerCase()
-        return memberAlias === squadAlias
+        const squadName = selectedSquad.name?.trim().toLowerCase()
+
+        // Match by alias or name
+        return memberAlias === squadAlias || memberName === squadName || memberAlias === squadName || memberName === squadAlias
       })
     : teamMembers // Show all members if no squad selected
 
