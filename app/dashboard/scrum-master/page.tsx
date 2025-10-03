@@ -161,24 +161,32 @@ export default function ScrumMasterDashboard() {
     loadSquads()
   }, [session, selectedSquadId])
 
-  // Load team members on component mount
+  // Load team members when selected squad changes
   useEffect(() => {
     const loadTeamMembers = async () => {
-      if (!session) return
+      if (!session || !selectedSquadId) {
+        setTeamMembers([])
+        return
+      }
 
       try {
-        const res = await fetch('/api/members')
+        // Use the squad-specific members API instead of loading all members
+        const res = await fetch(`/api/squads/${selectedSquadId}/members`)
         if (res.ok) {
           const data = await res.json()
           setTeamMembers(data.members || [])
+        } else {
+          console.error('Failed to load team members:', res.status, res.statusText)
+          setTeamMembers([])
         }
       } catch (error) {
         console.error('Failed to load team members:', error)
+        setTeamMembers([])
       }
     }
 
     loadTeamMembers()
-  }, [session])
+  }, [session, selectedSquadId])
 
   const handleSignOut = async () => {
     const { signOut } = await import('next-auth/react')
@@ -411,22 +419,8 @@ export default function ScrumMasterDashboard() {
   const sprintProgress = (currentSprint.usedCapacity / currentSprint.totalCapacity) * 100
   const taskCompletion = (currentSprint.completedTasks / currentSprint.totalTasks) * 100
 
-  // Filter team members by selected squad
-  const selectedSquad = squads.find(squad => squad.id === selectedSquadId)
-  const filteredMembers = selectedSquadId
-    ? teamMembers.filter(member => {
-        // Try multiple matching strategies
-        const aliasMatch = member.squadAlias?.trim().toLowerCase() === selectedSquad?.alias?.trim().toLowerCase()
-        const nameMatch = member.squadName?.trim().toLowerCase() === selectedSquad?.name?.trim().toLowerCase()
-        const matches = aliasMatch || nameMatch
-        if (!matches) {
-          console.log('Debug - NO MATCH - member:', member.displayName, 'member.squadAlias:', member.squadAlias, 'member.squadName:', member.squadName, 'selectedSquad.alias:', selectedSquad?.alias, 'selectedSquad.name:', selectedSquad?.name)
-        } else {
-          console.log('Debug - MATCH - member:', member.displayName, 'matches squad:', selectedSquad?.name)
-        }
-        return matches
-      })
-    : []
+  // No need to filter since we load members for the specific squad
+  const filteredMembers = teamMembers
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -734,10 +728,6 @@ export default function ScrumMasterDashboard() {
                 <div className="space-y-4">
                   {!selectedSquadId ? (
                     <p className="text-center text-slate-500 py-8">Select a squad above to view its members.</p>
-                  ) : teamMembers.length === 0 ? (
-                    <p className="text-center text-slate-500 py-8">Loading members...</p>
-                  ) : filteredMembers.length === 0 ? (
-                    <p className="text-center text-slate-500 py-8">No members in this squad yet. Send invites to get started.</p>
                   ) : (
                     filteredMembers.map((member) => (
                       <div key={member.id} className="flex items-center justify-between p-4 rounded-lg border border-slate-200">
