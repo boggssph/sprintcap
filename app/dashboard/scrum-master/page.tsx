@@ -148,10 +148,10 @@ export default function ScrumMasterDashboard() {
         if (res.ok) {
           const data = await res.json()
           setSquads(data.squads || [])
-          // Set default selected squad if available
-          if (data.squads && data.squads.length > 0 && !selectedSquadId) {
-            setSelectedSquadId(data.squads[0].id)
-          }
+          // Don't auto-select first squad - let user choose
+          // if (data.squads && data.squads.length > 0 && !selectedSquadId) {
+          //   setSelectedSquadId(data.squads[0].id)
+          // }
         }
       } catch (error) {
         console.error('Failed to load squads:', error)
@@ -161,32 +161,24 @@ export default function ScrumMasterDashboard() {
     loadSquads()
   }, [session, selectedSquadId])
 
-  // Load team members when selected squad changes
+  // Load team members on component mount (all members from all owned squads)
   useEffect(() => {
     const loadTeamMembers = async () => {
-      if (!session || !selectedSquadId) {
-        setTeamMembers([])
-        return
-      }
+      if (!session) return
 
       try {
-        // Use the squad-specific members API instead of loading all members
-        const res = await fetch(`/api/squads/${selectedSquadId}/members`)
+        const res = await fetch('/api/members')
         if (res.ok) {
           const data = await res.json()
           setTeamMembers(data.members || [])
-        } else {
-          console.error('Failed to load team members:', res.status, res.statusText)
-          setTeamMembers([])
         }
       } catch (error) {
         console.error('Failed to load team members:', error)
-        setTeamMembers([])
       }
     }
 
     loadTeamMembers()
-  }, [session, selectedSquadId])
+  }, [session])
 
   const handleSignOut = async () => {
     const { signOut } = await import('next-auth/react')
@@ -419,8 +411,16 @@ export default function ScrumMasterDashboard() {
   const sprintProgress = (currentSprint.usedCapacity / currentSprint.totalCapacity) * 100
   const taskCompletion = (currentSprint.completedTasks / currentSprint.totalTasks) * 100
 
-  // No need to filter since we load members for the specific squad
-  const filteredMembers = teamMembers
+  // Filter team members by selected squad (or show all if no squad selected)
+  const selectedSquad = squads.find(squad => squad.id === selectedSquadId)
+  const filteredMembers = selectedSquadId && selectedSquad
+    ? teamMembers.filter(member => {
+        // Match by squad alias (case-insensitive, trimmed)
+        const memberAlias = member.squadAlias?.trim().toLowerCase()
+        const squadAlias = selectedSquad.alias?.trim().toLowerCase()
+        return memberAlias === squadAlias
+      })
+    : teamMembers // Show all members if no squad selected
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -721,13 +721,18 @@ export default function ScrumMasterDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-indigo-600" />
-                  Members {selectedSquadId && `(${filteredMembers.length})`}
+                  Members {selectedSquadId ? `(${filteredMembers.length})` : `(${teamMembers.length})`}
                 </CardTitle>
+                <CardDescription>
+                  {selectedSquadId ? `Members of ${selectedSquad?.name || 'selected squad'}` : 'All members from your squads'}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {!selectedSquadId ? (
-                    <p className="text-center text-slate-500 py-8">Select a squad above to view its members.</p>
+                  {teamMembers.length === 0 ? (
+                    <p className="text-center text-slate-500 py-8">
+                      {selectedSquadId ? 'No members in this squad yet. Send invites to get started.' : 'Loading members...'}
+                    </p>
                   ) : (
                     filteredMembers.map((member) => (
                       <div key={member.id} className="flex items-center justify-between p-4 rounded-lg border border-slate-200">
