@@ -411,6 +411,12 @@ export default function ScrumMasterDashboard() {
   const sprintProgress = (currentSprint.usedCapacity / currentSprint.totalCapacity) * 100
   const taskCompletion = (currentSprint.completedTasks / currentSprint.totalTasks) * 100
 
+  // Filter team members by selected squad
+  const selectedSquad = squads.find(squad => squad.id === selectedSquadId)
+  const filteredMembers = selectedSquadId 
+    ? teamMembers.filter(member => member.squadAlias === selectedSquad?.alias)
+    : []
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Modern Header */}
@@ -710,15 +716,17 @@ export default function ScrumMasterDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-indigo-600" />
-                  Members
+                  Members {selectedSquadId && `(${filteredMembers.length})`}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {teamMembers.length === 0 ? (
-                    <p className="text-center text-slate-500 py-8">No squad members yet. Invite members to get started.</p>
+                  {!selectedSquadId ? (
+                    <p className="text-center text-slate-500 py-8">Select a squad above to view its members.</p>
+                  ) : filteredMembers.length === 0 ? (
+                    <p className="text-center text-slate-500 py-8">No members in this squad yet. Send invites to get started.</p>
                   ) : (
-                    teamMembers.map((member) => (
+                    filteredMembers.map((member) => (
                       <div key={member.id} className="flex items-center justify-between p-4 rounded-lg border border-slate-200">
                         <div className="flex items-center space-x-4">
                           <Avatar className="h-10 w-10">
