@@ -186,4 +186,180 @@ describe('SprintCreationForm - Formatted Name Input', () => {
       })
     })
   })
+
+  describe('Member Display Logic', () => {
+    it('should display loading state when fetching members for selected squad', async () => {
+      // Mock successful squads fetch
+      const mockSquads = [
+        {
+          id: 'squad-1',
+          name: 'Frontend Team',
+          alias: 'FE',
+          memberCount: 3
+        }
+      ]
+
+      fetchMock.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ squads: mockSquads })
+      })
+
+      render(<SprintCreationForm />)
+
+      // Wait for squads to load and select one
+      await waitFor(() => {
+        expect(screen.getByText('Frontend Team (FE) - 3 members')).toBeInTheDocument()
+      })
+
+      // Select the squad using the combobox
+      const squadSelect = screen.getByRole('combobox')
+      fireEvent.click(squadSelect)
+
+      // Find and click the option in the dropdown
+      const option = screen.getByRole('option', { name: /Frontend Team \(FE\) - 3 members/ })
+      fireEvent.click(option)
+
+      // Should show loading state
+      await waitFor(() => {
+        expect(screen.getByText('Loading members...')).toBeInTheDocument()
+      })
+    })
+
+    it('should display filtered members when squad is selected', async () => {
+      // Mock successful squads fetch
+      const mockSquads = [
+        {
+          id: 'squad-1',
+          name: 'Frontend Team',
+          alias: 'FE',
+          memberCount: 2
+        }
+      ]
+
+      // Mock members fetch
+      const mockMembersResponse = {
+        members: [
+          { id: 'user-1', email: 'john@example.com', name: 'John Doe' },
+          { id: 'user-2', email: 'jane@example.com', name: 'Jane Smith' }
+        ]
+      }
+
+      fetchMock
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ squads: mockSquads })
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockMembersResponse)
+        })
+
+      render(<SprintCreationForm />)
+
+      // Wait for squads to load
+      await waitFor(() => {
+        expect(screen.getByText('Frontend Team (FE) - 2 members')).toBeInTheDocument()
+      })
+
+      // Select the squad
+      const squadSelect = screen.getByRole('combobox')
+      fireEvent.click(squadSelect)
+
+      const option = screen.getByRole('option', { name: /Frontend Team \(FE\) - 2 members/ })
+      fireEvent.click(option)
+
+      // Should display members
+      await waitFor(() => {
+        expect(screen.getByText('Members (2)')).toBeInTheDocument()
+        expect(screen.getByText('John Doe')).toBeInTheDocument()
+        expect(screen.getByText('Jane Smith')).toBeInTheDocument()
+      })
+    })
+
+    it('should show "No Members Found" for empty squad', async () => {
+      // Mock successful squads fetch
+      const mockSquads = [
+        {
+          id: 'empty-squad',
+          name: 'Empty Squad',
+          alias: 'ES',
+          memberCount: 0
+        }
+      ]
+
+      // Mock empty members response
+      const mockEmptyMembersResponse = {
+        members: []
+      }
+
+      fetchMock
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ squads: mockSquads })
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockEmptyMembersResponse)
+        })
+
+      render(<SprintCreationForm />)
+
+      // Wait for squads to load
+      await waitFor(() => {
+        expect(screen.getByText('Empty Squad (ES) - 0 members')).toBeInTheDocument()
+      })
+
+      // Select the empty squad
+      const squadSelect = screen.getByRole('combobox')
+      fireEvent.click(squadSelect)
+
+      const option = screen.getByRole('option', { name: /Empty Squad \(ES\) - 0 members/ })
+      fireEvent.click(option)
+
+      // Should show "No members found" message
+      await waitFor(() => {
+        expect(screen.getByText('Members (0)')).toBeInTheDocument()
+        expect(screen.getByText('No members found in this squad.')).toBeInTheDocument()
+      })
+    })
+
+    it('should show error message when member fetch fails', async () => {
+      // Mock successful squads fetch
+      const mockSquads = [
+        {
+          id: 'squad-1',
+          name: 'Frontend Team',
+          alias: 'FE',
+          memberCount: 2
+        }
+      ]
+
+      fetchMock
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ squads: mockSquads })
+        })
+        .mockRejectedValueOnce(new Error('Network error'))
+
+      render(<SprintCreationForm />)
+
+      // Wait for squads to load
+      await waitFor(() => {
+        expect(screen.getByText('Frontend Team (FE) - 2 members')).toBeInTheDocument()
+      })
+
+      // Select the squad
+      const squadSelect = screen.getByRole('combobox')
+      fireEvent.click(squadSelect)
+
+      const option = screen.getByRole('option', { name: /Frontend Team \(FE\) - 2 members/ })
+      fireEvent.click(option)
+
+      // Should show empty state when fetch fails (members array is empty)
+      await waitFor(() => {
+        expect(screen.getByText('Members (0)')).toBeInTheDocument()
+        expect(screen.getByText('No members found in this squad.')).toBeInTheDocument()
+      })
+    })
+  })
 })

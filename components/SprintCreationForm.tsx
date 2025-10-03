@@ -6,12 +6,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
 
 type Squad = {
   id: string
   name: string
   alias?: string
   memberCount: number
+}
+
+type Member = {
+  id: string
+  email: string
+  name: string
 }
 
 type SprintCreationFormProps = {
@@ -21,8 +28,10 @@ type SprintCreationFormProps = {
 
 export default function SprintCreationForm({ onSprintCreated, inDialog = false }: SprintCreationFormProps) {
   const [squads, setSquads] = useState<Squad[]>([])
+  const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(false)
   const [loadingSquads, setLoadingSquads] = useState(true)
+  const [loadingMembers, setLoadingMembers] = useState(false)
   const [formData, setFormData] = useState({
     sprintNumber: '',
     squadId: '',
@@ -61,6 +70,35 @@ export default function SprintCreationForm({ onSprintCreated, inDialog = false }
       setLoadingSquads(false)
     }
   }
+
+  const fetchMembers = async (squadId: string) => {
+    if (!squadId) {
+      setMembers([])
+      return
+    }
+
+    setLoadingMembers(true)
+    try {
+      const res = await fetch(`/api/squads/${squadId}/members`)
+      if (res.ok) {
+        const data = await res.json()
+        setMembers(data.members || [])
+      } else {
+        console.error('Failed to fetch members:', res.status, res.statusText)
+        setMembers([])
+      }
+    } catch (error) {
+      console.error('Failed to fetch members:', error)
+      setMembers([])
+    } finally {
+      setLoadingMembers(false)
+    }
+  }
+
+  // Fetch members when squad changes
+  useEffect(() => {
+    fetchMembers(formData.squadId)
+  }, [formData.squadId])
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -189,6 +227,33 @@ export default function SprintCreationForm({ onSprintCreated, inDialog = false }
         {errors.squadId && <p className="text-sm text-red-500">{errors.squadId}</p>}
       </div>
 
+      {formData.squadId && (
+        <div className="space-y-2">
+          <Label>Members ({members.length})</Label>
+          <div className="border rounded-md p-3 bg-gray-50 min-h-[100px]">
+            {loadingMembers ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900 mr-2"></div>
+                <span className="text-sm text-gray-600">Loading members...</span>
+              </div>
+            ) : members.length > 0 ? (
+              <div className="space-y-1">
+                {members.map((member) => (
+                  <div key={member.id} className="flex items-center justify-between text-sm">
+                    <span>{member.name || member.email}</span>
+                    <Badge variant="secondary" className="text-xs">Active</Badge>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-gray-500">No members found in this squad.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label htmlFor="sprintNumber">Sprint Number</Label>
         <div className="relative">
@@ -294,6 +359,33 @@ export default function SprintCreationForm({ onSprintCreated, inDialog = false }
             </Select>
             {errors.squadId && <p className="text-sm text-red-500">{errors.squadId}</p>}
           </div>
+
+          {formData.squadId && (
+            <div className="space-y-2">
+              <Label>Members ({members.length})</Label>
+              <div className="border rounded-md p-3 bg-gray-50 min-h-[100px]">
+                {loadingMembers ? (
+                  <div className="flex items-center justify-center py-4">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900 mr-2"></div>
+                    <span className="text-sm text-gray-600">Loading members...</span>
+                  </div>
+                ) : members.length > 0 ? (
+                  <div className="space-y-1">
+                    {members.map((member) => (
+                      <div key={member.id} className="flex items-center justify-between text-sm">
+                        <span>{member.name || member.email}</span>
+                        <Badge variant="secondary" className="text-xs">Active</Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-gray-500">No members found in this squad.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

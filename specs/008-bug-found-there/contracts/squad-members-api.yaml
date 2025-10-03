@@ -1,0 +1,155 @@
+openapi: 3.0.3
+info:
+  title: Squad Members API
+  description: API for retrieving members of a specific squad
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+  - url: https://sprintcap.com/api
+    description: Production server
+
+paths:
+  /squads/{squadId}/members:
+    get:
+      summary: Get members of a squad
+      description: Retrieves all active members belonging to the specified squad
+      operationId: getSquadMembers
+      tags:
+        - Squads
+        - Members
+
+      parameters:
+        - name: squadId
+          in: path
+          required: true
+          description: Unique identifier of the squad
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+
+      responses:
+        '200':
+          description: Successful response with squad members
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  members:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Member'
+                    description: List of active members in the squad
+                  squad:
+                    $ref: '#/components/schemas/SquadSummary'
+                required:
+                  - members
+                  - squad
+              example:
+                members:
+                  - id: "660e8400-e29b-41d4-a716-446655440001"
+                    email: "john.doe@company.com"
+                    name: "John Doe"
+                  - id: "660e8400-e29b-41d4-a716-446655440002"
+                    email: "jane.smith@company.com"
+                    name: "Jane Smith"
+                squad:
+                  id: "550e8400-e29b-41d4-a716-446655440000"
+                  name: "Frontend Team"
+                  alias: "FE"
+
+        '401':
+          description: Unauthorized - User not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Authentication required"
+
+        '403':
+          description: Forbidden - User doesn't own the squad
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Access denied: You do not own this squad"
+
+        '404':
+          description: Squad not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Squad not found"
+
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Internal server error"
+
+components:
+  schemas:
+    Member:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the member
+        email:
+          type: string
+          format: email
+          description: Email address (unique across system)
+        name:
+          type: string
+          description: Display name of the member
+      required:
+        - id
+        - email
+        - name
+
+    SquadSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the squad
+        name:
+          type: string
+          description: Full name of the squad
+        alias:
+          type: string
+          description: Short alias/code for the squad
+      required:
+        - id
+        - name
+        - alias
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+      required:
+        - error
+
+security:
+  - bearerAuth: []
+
+securitySchemes:
+  bearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
