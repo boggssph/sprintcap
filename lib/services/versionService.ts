@@ -4,26 +4,7 @@ import { versionCache } from './versionCache';
 const VERCEL_API_BASE = 'https://api.vercel.com';
 
 export class VersionService {
-  private static instance: VersionService;
-  private apiToken: string;
-
-  private constructor() {
-    // During build time, environment variables might not be available
-    // We'll handle this gracefully in the service methods
-    this.apiToken = process.env.VERCEL_ACCESS_TOKEN || '';
-  }
-
-  public static getInstance(): VersionService {
-    if (!VersionService.instance) {
-      VersionService.instance = new VersionService();
-    }
-    return VersionService.instance;
-  }
-
-  // Test-only method to create a fresh instance
-  public static createTestInstance(): VersionService {
-    return new VersionService();
-  }
+  public constructor() {}
 
   /**
    * Get the latest deployment version information
@@ -61,7 +42,8 @@ export class VersionService {
    * Fetch the latest deployment from Vercel API
    */
   private async fetchLatestDeployment(): Promise<VercelDeployment> {
-    if (!this.apiToken) {
+    const apiToken = process.env.VERCEL_ACCESS_TOKEN;
+    if (!apiToken) {
       throw new VercelApiError('VERCEL_ACCESS_TOKEN environment variable is required', 'CONFIG_ERROR');
     }
 
@@ -74,7 +56,7 @@ export class VersionService {
 
     const response = await fetch(url, {
       headers: {
-        'Authorization': `Bearer ${this.apiToken}`,
+        'Authorization': `Bearer ${apiToken}`,
         'Content-Type': 'application/json',
       },
     });
@@ -132,4 +114,4 @@ export class VersionService {
 }
 
 // Export singleton instance
-export const versionService = VersionService.getInstance();
+// No default export; tests and app should instantiate as needed

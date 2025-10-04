@@ -1,6 +1,5 @@
 "use client"
 
-import './globals.css'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
@@ -35,7 +34,7 @@ export default function Landing() {
 
   if (status === 'loading') {
     return (
-      <main className="min-h-screen bg-white text-gray-900 flex items-center justify-center">
+      <main className="flex-1 bg-white text-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
           <p className="mt-2 text-gray-600">Signing you in...</p>
@@ -46,7 +45,7 @@ export default function Landing() {
 
   if (session) {
     return (
-      <main className="min-h-screen bg-white text-gray-900 flex items-center justify-center">
+      <main className="flex-1 bg-white text-gray-900 flex items-center justify-center">
         <div className="max-w-3xl w-full p-10">
           <header className="mb-12 text-center">
             <h1 className="text-5xl font-light tracking-tight">Sprint Capacity</h1>
@@ -61,17 +60,13 @@ export default function Landing() {
               </button>
             </div>
           </section>
-
-          <footer className="mt-12 text-center text-sm text-gray-500">
-            Built with focus — minimal dependencies.
-          </footer>
         </div>
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen bg-white text-gray-900 flex items-center justify-center">
+    <main className="flex-1 bg-white text-gray-900 flex items-center justify-center">
       <div className="max-w-3xl w-full p-10">
         <header className="mb-12 text-center">
           <h1 className="text-5xl font-light tracking-tight">Sprint Capacity</h1>
@@ -84,10 +79,6 @@ export default function Landing() {
             <button onClick={handleGoogle} className="px-6 py-3 bg-black text-white rounded-md">Continue with Google</button>
           </div>
         </section>
-
-        <footer className="mt-12 text-center text-sm text-gray-500">
-          Built with focus — minimal dependencies.
-        </footer>
       </div>
     </main>
   )

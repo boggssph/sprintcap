@@ -14,7 +14,11 @@ describe('Auth callback logic (signIn)', () => {
     expect(result).toBe(true)
 
     // cleanup
-    await prisma.user.delete({ where: { id: user.id } })
+    try {
+      await prisma.user.delete({ where: { id: user.id } })
+    } catch (e) {
+      // ignore cleanup errors
+    }
   })
 
   it('should redirect unknown users to access request page', async () => {

@@ -99,8 +99,8 @@ export default function AdminPage(){
         setMsg('Invite created: ' + data.id)
         setEmail('')
         // show accept token link for immediate copy
-        const acceptUrl = `${window.location.origin}/accept-invite?token=${data.token}`
-        navigator.clipboard?.writeText(acceptUrl)
+  const acceptUrl = typeof window !== 'undefined' ? `${window.location.origin}/accept-invite?token=${data.token}` : ''
+  if (acceptUrl) navigator.clipboard?.writeText(acceptUrl)
         await fetchInvites()
       } else {
         const err = await res.json()
@@ -122,8 +122,8 @@ export default function AdminPage(){
       const res = await fetch('/api/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'regenerate', inviteId: invite.id }) })
       if (!res.ok) throw new Error('failed to regenerate')
       const data = await res.json()
-      const acceptUrl = `${window.location.origin}/accept-invite?token=${data.token}`
-      await navigator.clipboard.writeText(acceptUrl)
+  const acceptUrl = typeof window !== 'undefined' ? `${window.location.origin}/accept-invite?token=${data.token}` : ''
+  if (acceptUrl) await navigator.clipboard.writeText(acceptUrl)
       setMsg('Copied accept link to clipboard')
       await fetchInvites()
     } catch (e: unknown) {
@@ -136,7 +136,7 @@ export default function AdminPage(){
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center bg-white p-8">
+    <main className="flex-1 flex flex-col items-center bg-white p-8">
       <header className="w-full max-w-2xl flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
         <DisplayNameEditor />
@@ -264,8 +264,7 @@ export default function AdminPage(){
         </div>
       </section>
 
-      <footer className="mt-8 text-center text-xs text-gray-400">
-      </footer>
+  {/* Footer removed, handled globally */}
     </main>
   )
 }

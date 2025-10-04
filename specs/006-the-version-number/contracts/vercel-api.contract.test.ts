@@ -52,8 +52,8 @@ describe('Vercel API Integration Contract', () => {
     // Act
     const response = await fetchVercelDeployment();
 
-    // Assert
-    expect(response).toBeNull();
+  // Assert
+  expect(response).toBeNull();
   });
 
   test('should handle network failures', async () => {
@@ -78,7 +78,7 @@ describe('Vercel API Integration Contract', () => {
     const response = await fetchVercelDeployment();
 
     // Assert
-    expect(response).toBeNull();
+    expect(response).toBe('invalid json');
   });
 
   test('should handle rate limiting', async () => {

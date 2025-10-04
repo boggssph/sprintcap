@@ -38,14 +38,21 @@ import { prisma } from '../../lib/prisma'
 
 describe('Sprint Creation - Date Validation Integration', () => {
   beforeEach(() => {
-    ;(getServerSession as any).mockReset()
-    ;(prisma.user.findUnique as any).mockReset()
-    ;(prisma.squad.findUnique as any).mockReset()
-    ;(prisma.squadMember.findMany as any).mockReset()
-    ;(prisma.sprint.findFirst as any).mockReset()
-    ;(prisma.sprint.create as any).mockReset()
-    ;(prisma.sprintMember.createMany as any).mockReset()
-    ;(prisma.$transaction as any).mockReset()
+     ;(getServerSession as any).mockReset()
+     ;(prisma.user.findUnique as any).mockReset()
+     ;(prisma.squad.findUnique as any).mockReset()
+     ;(prisma.squadMember.findMany as any).mockReset()
+     ;(prisma.sprint.findFirst as any).mockReset()
+     ;(prisma.sprint.create as any).mockReset()
+     ;(prisma.sprintMember.createMany as any).mockReset()
+     ;(prisma.$transaction as any).mockReset()
+
+     // Mock user lookup to return a valid Scrum Master
+     ;(prisma.user.findUnique as any).mockResolvedValue({
+      id: 'user-1',
+      email: 'scrum.master@example.com',
+      role: 'SCRUM_MASTER'
+     })
 
     // Mock $transaction to execute the callback
     ;(prisma.$transaction as any).mockImplementation(async (callback) => {

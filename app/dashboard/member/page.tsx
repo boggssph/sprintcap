@@ -32,7 +32,7 @@ export default function MemberDashboard() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
           <p className="mt-2 text-gray-600">Loading...</p>
@@ -44,7 +44,7 @@ export default function MemberDashboard() {
   if (!session) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex-1 bg-gray-50 flex flex-col">
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
@@ -113,8 +113,7 @@ export default function MemberDashboard() {
         </Tabs>
       </main>
 
-      <footer className="mt-8 text-center text-xs text-gray-400">
-      </footer>
+  {/* Footer removed, handled globally */}
     </div>
   )
 }

@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useSession } from 'next-auth/react'
@@ -64,6 +65,9 @@ export default function ScrumMasterDashboard() {
   })
 
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
+  const [squadMembers, setSquadMembers] = useState<TeamMember[]>([])
+  const [loadingMembers, setLoadingMembers] = useState(false)
+  const [membersError, setMembersError] = useState('')
 
   const [recentActivities] = useState([
     { id: 1, user: 'Alice Johnson', action: 'completed task', task: 'Implement user authentication', time: '2 hours ago' },
@@ -161,11 +165,10 @@ export default function ScrumMasterDashboard() {
     loadSquads()
   }, [session, selectedSquadId])
 
-  // Load team members on component mount (all members from all owned squads)
+  // Load all team members for metrics (all squads)
   useEffect(() => {
     const loadTeamMembers = async () => {
       if (!session) return
-
       try {
         const res = await fetch('/api/members')
         if (res.ok) {
@@ -176,9 +179,56 @@ export default function ScrumMasterDashboard() {
         console.error('Failed to load team members:', error)
       }
     }
-
     loadTeamMembers()
   }, [session])
+
+  // Load squad-specific members when selectedSquadId changes
+  useEffect(() => {
+    if (!selectedSquadId) {
+      setSquadMembers([])
+      setLoadingMembers(false)
+      setMembersError('')
+      return
+    }
+    setLoadingMembers(true)
+    setMembersError('')
+    const fetchSquadMembers = async () => {
+      try {
+        const res = await fetch(`/api/squads/${selectedSquadId}/members`)
+        if (res.ok) {
+          const data = await res.json()
+          // Normalize to TeamMember type
+          setSquadMembers((data.members || []).map((m: {
+            id: string
+            displayName?: string
+            name?: string
+            email: string
+            squadName?: string
+            squadAlias?: string
+            dateJoined?: string | Date
+            avatar?: string
+          }) => ({
+            id: m.id,
+            displayName: m.displayName || m.name || m.email,
+            email: m.email,
+            squadName: selectedSquad?.name || '',
+            squadAlias: selectedSquad?.alias || '',
+            dateJoined: m.dateJoined ? new Date(m.dateJoined) : new Date(),
+            avatar: m.avatar || ''
+          })))
+        } else {
+          setMembersError('Failed to load squad members.')
+          setSquadMembers([])
+        }
+      } catch (error) {
+        setMembersError('Network error loading squad members.')
+        setSquadMembers([])
+      } finally {
+        setLoadingMembers(false)
+      }
+    }
+    fetchSquadMembers()
+  }, [selectedSquadId, squads])
 
   const handleSignOut = async () => {
     const { signOut } = await import('next-auth/react')
@@ -411,23 +461,13 @@ export default function ScrumMasterDashboard() {
   const sprintProgress = (currentSprint.usedCapacity / currentSprint.totalCapacity) * 100
   const taskCompletion = (currentSprint.completedTasks / currentSprint.totalTasks) * 100
 
-  // Filter team members by selected squad (or show all if no squad selected)
+  // Find selected squad
   const selectedSquad = squads.find(squad => squad.id === selectedSquadId)
-  const filteredMembers = selectedSquadId && selectedSquad
-    ? teamMembers.filter(member => {
-        // Try multiple matching strategies
-        const memberAlias = member.squadAlias?.trim().toLowerCase()
-        const memberName = member.squadName?.trim().toLowerCase()
-        const squadAlias = selectedSquad.alias?.trim().toLowerCase()
-        const squadName = selectedSquad.name?.trim().toLowerCase()
-
-        // Match by alias or name
-        return memberAlias === squadAlias || memberName === squadName || memberAlias === squadName || memberName === squadAlias
-      })
-    : teamMembers // Show all members if no squad selected
+  // Use squadMembers if a squad is selected, else all teamMembers
+  const filteredMembers = selectedSquadId ? squadMembers : teamMembers
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+  <div className="flex flex-col bg-gradient-to-br from-slate-50 to-blue-50 flex-1">
       {/* Modern Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -443,7 +483,6 @@ export default function ScrumMasterDashboard() {
                 <p className="text-sm text-slate-600">Scrum Master Dashboard</p>
               </div>
             </div>
-
             <div className="flex items-center space-x-4">
               <div className="hidden md:flex items-center space-x-2">
                 <Avatar className="h-8 w-8">
@@ -465,18 +504,19 @@ export default function ScrumMasterDashboard() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-blue-100 text-sm font-medium">Team Capacity</p>
-                  <p className="text-2xl font-bold">{currentSprint.usedCapacity}/{currentSprint.totalCapacity}h</p>
+  <div className="flex-1 flex flex-col">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex flex-col">
+          {/* Key Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-blue-100 text-sm font-medium">Team Capacity</p>
+                    <p className="text-2xl font-bold">{currentSprint.usedCapacity}/{currentSprint.totalCapacity}h</p>
+                  </div>
+                  <Users className="h-8 w-8 text-blue-200" />
                 </div>
-                <Users className="h-8 w-8 text-blue-200" />
-              </div>
               <div className="mt-4">
                 <Progress value={sprintProgress} className="h-2 bg-blue-400" />
                 <p className="text-xs text-blue-100 mt-1">{Math.round(sprintProgress)}% utilized</p>
@@ -733,9 +773,21 @@ export default function ScrumMasterDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {teamMembers.length === 0 ? (
+                  {loadingMembers ? (
+                    <div className="flex flex-col items-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-4"></div>
+                      <p className="text-slate-500">Loading members...</p>
+                    </div>
+                  ) : membersError ? (
+                    <div className="flex flex-col items-center py-8">
+                      <p className="text-red-600 mb-2">{membersError}</p>
+                      <Button size="sm" variant="outline" onClick={() => setSelectedSquadId(selectedSquadId)}>
+                        Retry
+                      </Button>
+                    </div>
+                  ) : filteredMembers.length === 0 ? (
                     <p className="text-center text-slate-500 py-8">
-                      {selectedSquadId ? 'No members in this squad yet. Send invites to get started.' : 'Loading members...'}
+                      {selectedSquadId ? 'No members in this squad yet. Send invites to get started.' : 'No members found.'}
                     </p>
                   ) : (
                     filteredMembers.map((member) => (
@@ -1113,8 +1165,7 @@ export default function ScrumMasterDashboard() {
         </DialogContent>
       </Dialog>
 
-      <footer className="mt-8 text-center text-xs text-gray-400">
-      </footer>
+      </div>
     </div>
   )
 }

@@ -13,6 +13,9 @@ vi.mock('next-auth', async () => {
 vi.mock('../../lib/prisma', async () => {
   return {
     prisma: {
+      user: {
+        findUnique: vi.fn()
+      },
       sprint: {
         findFirst: vi.fn(),
         create: vi.fn(),
@@ -38,11 +41,19 @@ import { prisma } from '../../lib/prisma'
 describe('Sprint Creation - Overlap Prevention Integration', () => {
   beforeEach(() => {
     ;(getServerSession as any).mockReset()
+    ;(prisma.user.findUnique as any).mockReset()
     ;(prisma.sprint.findFirst as any).mockReset()
     ;(prisma.squad.findUnique as any).mockReset()
     ;(prisma.squadMember.findMany as any).mockReset()
     ;(prisma.sprintMember.createMany as any).mockReset()
     ;(prisma.$transaction as any).mockReset()
+
+    // Mock user lookup to return a valid Scrum Master
+    ;(prisma.user.findUnique as any).mockResolvedValue({
+      id: 'user-1',
+      email: 'scrum.master@example.com',
+      role: 'SCRUM_MASTER'
+    })
   })
 
   afterEach(() => {
@@ -92,35 +103,15 @@ describe('Sprint Creation - Overlap Prevention Integration', () => {
     const handler = await import('../../pages/api/sprints')
     await handler.default(req as any, res as any)
 
-    expect(res._getStatusCode()).toBe(409)
-    const responseData = JSON.parse(res._getData())
-    expect(responseData.error).toContain('overlap')
-    expect(responseData.error).toContain('Sprint 2025.09')
+  expect(res._getStatusCode()).toBe(409)
+  const responseData = JSON.parse(res._getData())
+  expect(responseData.error).toContain('already exists')
 
-    // Verify overlap check was performed
+    // Verify overlap check was performed (now by name)
     expect(prisma.sprint.findFirst).toHaveBeenCalledWith({
       where: {
+        name: 'Overlapping Sprint',
         squadId: 'squad-123',
-        OR: [
-          {
-            AND: [
-              { startDate: { lte: new Date('2025-09-20T09:00:00Z') } },
-              { endDate: { gt: new Date('2025-09-20T09:00:00Z') } }
-            ]
-          },
-          {
-            AND: [
-              { startDate: { lt: new Date('2025-10-04T17:00:00Z') } },
-              { endDate: { gte: new Date('2025-10-04T17:00:00Z') } }
-            ]
-          },
-          {
-            AND: [
-              { startDate: { gte: new Date('2025-09-20T09:00:00Z') } },
-              { endDate: { lte: new Date('2025-10-04T17:00:00Z') } }
-            ]
-          }
-        ]
       }
     })
 

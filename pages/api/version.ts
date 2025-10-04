@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { versionService } from '../../lib/services/versionService';
+import { VersionService } from '../../lib/services/versionService';
 
 export default async function handler(
   req: NextApiRequest,
@@ -10,6 +10,7 @@ export default async function handler(
   }
 
   try {
+    const versionService = new VersionService();
     const versionInfo = await versionService.getVersion();
     return res.status(200).json(versionInfo);
   } catch (error) {

@@ -8,22 +8,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
+  const session = await getServerSession(req, res, authOptions)
+  if (!session?.user?.email) {
+    return res.status(401).json({ error: 'Unauthorized' })
+  }
+
+  // Get the user from database
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email }
+  })
+
+  if (!user) {
+    return res.status(401).json({ error: 'User not found' })
+  }
+
+  if (user.role !== 'SCRUM_MASTER' && user.role !== 'ADMIN') {
+    return res.status(403).json({ error: 'Forbidden' })
+  }
+
   try {
-    const session = await getServerSession(req, res, authOptions)
-    if (!session?.user) {
-      return res.status(401).json({ error: 'Unauthorized' })
-    }
-
-    const user = session.user
-    if (typeof user !== 'object' || !('role' in user) || (user as { role?: string }).role !== 'SCRUM_MASTER' && (user as { role?: string }).role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Forbidden' })
-    }
-
     // Get all squad members for squads owned by this Scrum Master
     const squadMembers = await prisma.squadMember.findMany({
       where: {
         squad: {
-          scrumMasterId: typeof user === 'object' && 'id' in user ? (user as { id: string }).id : ''
+          scrumMasterId: user.id
         }
       },
       include: {

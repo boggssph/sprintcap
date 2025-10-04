@@ -92,7 +92,7 @@ export default function RequestAccessPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+    <div className="flex-1 bg-white flex items-center justify-center p-4">
       <Dialog open={isOpen} onOpenChange={() => {}}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

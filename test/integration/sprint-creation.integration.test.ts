@@ -13,6 +13,9 @@ vi.mock('next-auth', async () => {
 vi.mock('../../lib/prisma', async () => {
   return {
     prisma: {
+      user: {
+        findUnique: vi.fn()
+      },
       sprint: {
         create: vi.fn(),
         findMany: vi.fn(),
@@ -37,6 +40,7 @@ import { prisma } from '../../lib/prisma'
 describe('Sprint Creation - Happy Path Integration', () => {
   beforeEach(() => {
     ;(getServerSession as any).mockReset()
+    ;(prisma.user.findUnique as any).mockReset()
     ;(prisma.sprint.create as any).mockReset()
     ;(prisma.sprintMember.createMany as any).mockReset()
     ;(prisma.squadMember.findMany as any).mockReset()
@@ -46,6 +50,13 @@ describe('Sprint Creation - Happy Path Integration', () => {
     // Mock $transaction to execute the callback
     ;(prisma.$transaction as any).mockImplementation(async (callback) => {
       return await callback(prisma)
+    })
+
+    // Mock user lookup to return a valid Scrum Master
+    ;(prisma.user.findUnique as any).mockResolvedValue({
+      id: 'user-1',
+      email: 'scrum.master@example.com',
+      role: 'SCRUM_MASTER'
     })
   })
 

@@ -43,7 +43,7 @@ export default function AcceptInvitePage(){
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-white p-8">
+    <main className="flex-1 flex items-center justify-center bg-white p-8">
       <div className="max-w-xl w-full bg-gray-50 p-6 rounded">
         <h2 className="text-xl mb-4">Accept Invite</h2>
         <p className="mb-4 text-sm">Token: <code>{token}</code></p>
