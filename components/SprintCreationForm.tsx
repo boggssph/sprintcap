@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -43,7 +44,7 @@ export default function SprintCreationForm({ onSprintCreated, inDialog = false }
   // Get selected squad
   const selectedSquad = squads.find(squad => squad.id === formData.squadId)
   
-  // Compute full sprint name
+  // Compute full sprint name (format: 'SquadAlias-Sprint-[number]')
   const fullSprintName = selectedSquad?.alias && formData.sprintNumber.trim() 
     ? `${selectedSquad.alias}-Sprint-${formData.sprintNumber.trim()}`
     : ''
@@ -162,6 +163,9 @@ export default function SprintCreationForm({ onSprintCreated, inDialog = false }
       if (res.ok) {
         const data = await res.json()
         console.log('Sprint created successfully:', data)
+        if (data.warning) {
+          toast.warning(data.warning)
+        }
         // Reset form
         setFormData({
           sprintNumber: '',

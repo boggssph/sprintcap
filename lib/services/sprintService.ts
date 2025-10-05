@@ -15,6 +15,7 @@ export interface SprintResponse {
   status: string
   memberCount: number
   createdAt: string
+  warning?: string
 }
 
 export interface SprintDetailResponse {
@@ -96,17 +97,18 @@ export async function createSprint(
     throw new SprintServiceError('Access denied: You do not own this squad', 'PERMISSION_DENIED')
   }
 
-  // Check for duplicate sprint name within the squad
+  // Check for duplicate sprint name within the squad (normalize to spec format)
+  const expectedName = data.name.trim();
   const existingSprint = await prisma.sprint.findFirst({
     where: {
       squadId: data.squadId,
-      name: data.name
+      name: expectedName
     }
   })
 
   if (existingSprint) {
     throw new SprintServiceError(
-      `A sprint with the name '${data.name}' already exists in this squad`,
+      `A sprint with the name '${expectedName}' already exists in this squad`,
       'CONFLICT'
     )
   }
@@ -123,7 +125,7 @@ export async function createSprint(
     )
   }
 
-  // Check for overlapping sprints
+  // Check for overlapping sprints (name format already normalized above)
   const overlappingSprint = await prisma.sprint.findFirst({
     where: {
       squadId: data.squadId,
@@ -167,6 +169,12 @@ export async function createSprint(
     }
   })
 
+  // If no members, set a warning to be returned in the API response
+  let warning: string | undefined = undefined;
+  if (squadMembers.length === 0) {
+    warning = 'Sprint created with no members. Add members manually if needed.';
+  }
+
   // Create sprint in transaction
   const result = await prisma.$transaction(async (tx) => {
     // Create the sprint
@@ -206,7 +214,8 @@ export async function createSprint(
     endDate: result.sprint.endDate.toISOString(),
     status: result.sprint.status,
     memberCount: result.memberCount,
-    createdAt: result.sprint.createdAt.toISOString()
+    createdAt: result.sprint.createdAt.toISOString(),
+    warning
   }
 }
 
