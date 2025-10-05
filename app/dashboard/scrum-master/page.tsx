@@ -8,8 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Target, BarChart3, Users, Settings, Plus } from "lucide-react";
 import SprintCreationForm from "@/components/SprintCreationForm";
 
+
 export default function ScrumMasterDashboard() {
   const { data: session } = useSession();
+  const [view, setView] = useState<'overview' | 'squad' | 'sprint' | 'settings'>("overview");
+  const [squadMenuOpen, setSquadMenuOpen] = useState(false);
+  const [sprintMenuOpen, setSprintMenuOpen] = useState(false);
   const [showSprintForm, setShowSprintForm] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -31,26 +35,71 @@ export default function ScrumMasterDashboard() {
           </SidebarHeader>
           <SidebarContent>
             <SidebarMenu>
+              {/* Overview */}
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => setShowSprintForm(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Sprint
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
+                <SidebarMenuButton
+                  className={view === 'overview' ? 'bg-indigo-50 text-indigo-700' : ''}
+                  onClick={() => setView('overview')}
+                >
                   <BarChart3 className="h-4 w-4 mr-2" />
-                  Reports
+                  Overview
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              {/* Squad with submenu */}
               <SidebarMenuItem>
-                <SidebarMenuButton>
+                <SidebarMenuButton
+                  className={view === 'squad' ? 'bg-indigo-50 text-indigo-700' : ''}
+                  onClick={() => {
+                    setView('squad');
+                    setSquadMenuOpen((open) => !open);
+                  }}
+                  aria-expanded={squadMenuOpen}
+                >
                   <Users className="h-4 w-4 mr-2" />
                   Squad
                 </SidebarMenuButton>
+                {squadMenuOpen && (
+                  <div className="ml-8 mt-1 space-y-1">
+                    <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => {/* TODO: open create squad dialog */}}>
+                      + Create Squad
+                    </Button>
+                    <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => {/* TODO: open edit squad dialog */}}>
+                      ! Edit Squad
+                    </Button>
+                    <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => {/* TODO: open invite member dialog */}}>
+                      Invite Members
+                    </Button>
+                  </div>
+                )}
               </SidebarMenuItem>
+              {/* Sprint with submenu */}
               <SidebarMenuItem>
-                <SidebarMenuButton>
+                <SidebarMenuButton
+                  className={view === 'sprint' ? 'bg-indigo-50 text-indigo-700' : ''}
+                  onClick={() => {
+                    setView('sprint');
+                    setSprintMenuOpen((open) => !open);
+                  }}
+                  aria-expanded={sprintMenuOpen}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Sprint
+                </SidebarMenuButton>
+                {sprintMenuOpen && (
+                  <div className="ml-8 mt-1 space-y-1">
+                    <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setShowSprintForm(true)}>
+                      + Create Sprint
+                    </Button>
+                    {/* Add more sprint actions here */}
+                  </div>
+                )}
+              </SidebarMenuItem>
+              {/* Settings */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  className={view === 'settings' ? 'bg-indigo-50 text-indigo-700' : ''}
+                  onClick={() => setView('settings')}
+                >
                   <Settings className="h-4 w-4 mr-2" />
                   Settings
                 </SidebarMenuButton>
@@ -94,8 +143,19 @@ export default function ScrumMasterDashboard() {
                 <SprintCreationForm />
               </div>
             )}
-            {/* Main dashboard content placeholder */}
-            <div className="text-slate-700 text-lg">Welcome to your Scrum Master Dashboard.</div>
+            {/* Main dashboard content by view */}
+            {view === 'overview' && (
+              <div className="text-slate-700 text-lg">Overview content goes here.</div>
+            )}
+            {view === 'squad' && (
+              <div className="text-slate-700 text-lg">Squad list and actions go here.</div>
+            )}
+            {view === 'sprint' && (
+              <div className="text-slate-700 text-lg">Sprint actions and list go here.</div>
+            )}
+            {view === 'settings' && (
+              <div className="text-slate-700 text-lg">Settings and profile actions go here.</div>
+            )}
           </main>
         </SidebarInset>
       </div>
