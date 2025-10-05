@@ -340,4 +340,5 @@ export default function ScrumMasterDashboard() {
       </div>
     </SidebarProvider>
   </>
+}
 
