@@ -1,12 +1,6 @@
-  // Simple validation for squad name
-  const validateSquadName = (name: string) => {
-    if (!name.trim()) return 'Squad name is required';
-    if (name.length > 200) return 'Squad name must be 200 characters or less';
-    return null;
-  }
+"use client";
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset } from '@/components/ui/sidebar';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
-"use client"
 
 import { useSession } from 'next-auth/react'
 import { useEffect, useState } from 'react'
@@ -169,6 +163,13 @@ export default function ScrumMasterDashboard() {
       setInviteError('Failed to create squad')
     }
     setInviteLoading(false)
+  }
+
+  // Simple validation for squad name
+  const validateSquadName = (name: string) => {
+    if (!name.trim()) return 'Squad name is required';
+    if (name.length > 200) return 'Squad name must be 200 characters or less';
+    return null;
   }
 
   const validateEmails = (emails: string) => {
