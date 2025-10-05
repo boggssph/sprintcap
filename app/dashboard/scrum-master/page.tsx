@@ -4,6 +4,9 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset } from '@/components/ui/sidebar';
+import { Drawer, DrawerTrigger, DrawerContent } from '@/components/ui/drawer';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -90,6 +93,9 @@ export default function ScrumMasterDashboard() {
       return
     }
   if ((session.user as { role?: string })?.role !== 'SCRUM_MASTER' && (session.user as { role?: string })?.role !== 'ADMIN') {
+    const isMobile = useIsMobile();
+    const [showSprintDrawer, setShowSprintDrawer] = useState(false);
+
       router.push('/auth/no-access')
       return
     }
