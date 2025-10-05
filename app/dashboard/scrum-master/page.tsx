@@ -1,3 +1,5 @@
+import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset } from '@/components/ui/sidebar';
+import { Drawer, DrawerContent } from '@/components/ui/drawer';
 "use client"
 
 import { useSession } from 'next-auth/react'
@@ -44,6 +46,7 @@ type Squad = {
 }
 
 export default function ScrumMasterDashboard() {
+  const [showSprintDrawer, setShowSprintDrawer] = useState(false);
   const { data: session, status } = useSession()
   const [currentSprint] = useState({
     name: 'Sprint 2025.09',
@@ -127,20 +130,6 @@ export default function ScrumMasterDashboard() {
     if (alias.length > 10) return 'Squad alias must be 10 characters or less'
     if (!/^[A-Z0-9]+$/.test(alias)) return 'Squad alias can only contain uppercase letters and numbers'
     return null
-  }
-
-  const validateSquadName = (name: string) => {
-    if (!name.trim()) return 'Squad name is required'
-    if (name.length > 200) return 'Squad name must be 200 characters or less'
-    return null
-  }
-
-  const handleCreateSquad = async () => {
-    const aliasError = validateSquadAlias(squadAlias)
-    if (aliasError) {
-      setInviteError(aliasError) // Reuse invite error for now
-      return
-    }
 
     const nameError = validateSquadName(squadName)
     if (nameError) {
@@ -287,597 +276,66 @@ export default function ScrumMasterDashboard() {
   const filteredMembers = squadMembers
 
   return (
-  <div className="flex flex-col bg-gradient-to-br from-slate-50 to-blue-50 flex-1">
-      {/* Modern Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <div className="bg-gradient-to-r from-indigo-600 to-blue-600 p-2 rounded-lg">
-                <Target className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                  Sprint Capacity
-                </h1>
-                <p className="text-sm text-slate-600">Scrum Master Dashboard</p>
-              </div>
+  <>
+    <SidebarProvider>
+      <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        <Sidebar className="bg-white border-r border-slate-200/60">
+          <SidebarHeader>
+            <div className="flex items-center gap-2 p-2">
+              <Target className="h-6 w-6 text-indigo-600" />
+              <span className="font-bold text-lg text-slate-800">SprintCap</span>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="hidden md:flex items-center space-x-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={(session.user as { image?: string })?.image} />
-                  <AvatarFallback className="bg-indigo-100 text-indigo-700">
-                    {(session.user as { displayName?: string, name?: string })?.displayName?.charAt(0) || (session.user as { name?: string })?.name?.charAt(0) || session.user?.email?.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="text-right">
-                  <DisplayNameEditor />
-                  <p className="text-xs text-slate-500">Scrum Master</p>
-                </div>
-              </div>
-              <Button onClick={handleSignOut} variant="outline" size="sm" className="border-slate-300">
-                Sign Out
-              </Button>
-            </div>
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => setShowSprintDrawer(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Sprint
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton>
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Reports
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton>
+                  <Users className="h-4 w-4 mr-2" />
+                  Squad
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarContent>
+        </Sidebar>
+        <SidebarInset>
+        {/* Header */}
+        <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 sticky top-0 z-50 flex flex-col md:flex-row md:items-center md:justify-between px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={(session.user as { image?: string })?.image} />
+              <AvatarFallback className="bg-indigo-100 text-indigo-700">
+                {(session.user as { displayName?: string, name?: string })?.displayName?.charAt(0) || (session.user as { name?: string })?.name?.charAt(0) || session.user?.email?.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
           </div>
-        </div>
-      </header>
-
-  <div className="flex-1 flex flex-col">
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex flex-col">
-          {/* Key Metrics */}
-          <div className="mb-8">
-            <SprintCreationForm />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-blue-100 text-sm font-medium">Team Capacity</p>
-                      <p className="text-2xl font-bold">{currentSprint.usedCapacity}/{currentSprint.totalCapacity}h</p>
-                    </div>
-                    <Users className="h-8 w-8 text-blue-200" />
-                  </div>
-                <div className="mt-4">
-                  <Progress value={sprintProgress} className="h-2 bg-blue-400" />
-                  <p className="text-xs text-blue-100 mt-1">{Math.round(sprintProgress)}% utilized</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-green-100 text-sm font-medium">Tasks Completed</p>
-                    <p className="text-2xl font-bold">{currentSprint.completedTasks}/{currentSprint.totalTasks}</p>
-                  </div>
-                  <CheckCircle className="h-8 w-8 text-green-200" />
-                </div>
-                <div className="mt-4">
-                  <Progress value={taskCompletion} className="h-2 bg-green-400" />
-                  <p className="text-xs text-green-100 mt-1">{Math.round(taskCompletion)}% complete</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-purple-100 text-sm font-medium">Active Sprint</p>
-                    <p className="text-2xl font-bold">{currentSprint.name}</p>
-                  </div>
-                  <Calendar className="h-8 w-8 text-purple-200" />
-                </div>
-                <p className="text-xs text-purple-100 mt-4">
-                  {new Date(currentSprint.startDate).toLocaleDateString()} - {new Date(currentSprint.endDate).toLocaleDateString()}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-orange-100 text-sm font-medium">Team Members</p>
-                    <p className="text-2xl font-bold">{squadMembers.length}</p>
-                  </div>
-                  <Activity className="h-8 w-8 text-orange-200" />
-                </div>
-                <p className="text-xs text-orange-100 mt-4">4 active, 0 on leave</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
+          <Button onClick={handleSignOut} variant="outline" size="sm" className="border-slate-300 mt-2 md:mt-0">
+            Sign Out
+          </Button>
+        </header>
         {/* Main Dashboard Content */}
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-white border border-slate-200">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700">
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="squad" className="data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700">
-              Squad
-            </TabsTrigger>
-            <TabsTrigger value="sprints" className="data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700">
-              Sprints
-            </TabsTrigger>
-            <TabsTrigger value="reports" className="data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700">
-              Reports
-            </TabsTrigger>
-            <TabsTrigger value="profile" className="data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700">
-              Profile
-            </TabsTrigger>
-          </TabsList>
+        <main className="w-full max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 flex-1 flex flex-col">
+          <div>Dashboard</div>
+        </main>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
+  </>
 
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Current Sprint Overview */}
-              <Card className="bg-white border-slate-200">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="h-5 w-5 text-indigo-600" />
-                    Current Sprint Overview
-                  </CardTitle>
-                  <CardDescription>
-                    {currentSprint.name} • {Math.ceil((new Date(currentSprint.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days remaining
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Capacity Used</span>
-                      <span className="font-medium">{currentSprint.usedCapacity}h / {currentSprint.totalCapacity}h</span>
-                    </div>
-                    <Progress value={sprintProgress} className="h-3" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Tasks Completed</span>
-                      <span className="font-medium">{currentSprint.completedTasks} / {currentSprint.totalTasks}</span>
-                    </div>
-                    <Progress value={taskCompletion} className="h-3" />
-                  </div>
-
-                  <Separator />
-
-                  <div className="flex gap-2">
-                    <Button size="sm" className="flex-1">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Task
-                    </Button>
-                    <Button size="sm" variant="outline" className="flex-1">
-                      <BarChart3 className="h-4 w-4 mr-2" />
-                      View Details
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Recent Activity */}
-              <Card className="bg-white border-slate-200">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="h-5 w-5 text-indigo-600" />
-                    Recent Activity
-                  </CardTitle>
-                  <CardDescription>Latest updates from your team</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {recentActivities.map((activity) => (
-                      <div key={activity.id} className="flex items-start space-x-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className="bg-slate-100 text-slate-600 text-xs">
-                            {activity.user.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm">
-                            <span className="font-medium text-slate-900">{activity.user}</span>
-                            {' '}
-                            <span className="text-slate-600">{activity.action}</span>
-                            {' '}
-                            <span className="font-medium text-slate-900">"{activity.task}"</span>
-                          </p>
-                          <p className="text-xs text-slate-500">{activity.time}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="squad" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-slate-900">Squad Management</h2>
-              <div className="flex gap-2">
-                <Button onClick={() => setCreateSquadDialogOpen(true)} variant="outline" className="border-indigo-300 text-indigo-700 hover:bg-indigo-50">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Squad
-                </Button>
-                <Button onClick={() => setInviteDialogOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Invite Members
-                </Button>
-              </div>
-            </div>
-
-            {/* Existing Squads */}
-            {squads.length > 0 && (
-              <Card className="bg-white border-slate-200">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-indigo-600" />
-                    Your Squads
-                  </CardTitle>
-                  <CardDescription>Manage your development squads</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {squads.map((squad) => (
-                      <div key={squad.id} className="p-4 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-colors">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold text-slate-900">{squad.alias}</h3>
-                          <Badge variant="secondary">{squad.memberCount} members</Badge>
-                        </div>
-                        <p className="text-sm text-slate-600 mb-3">{squad.name}</p>
-                        <Button 
-                          size="sm" 
-                          variant={selectedSquadId === squad.id ? "default" : "outline"}
-                          onClick={() => setSelectedSquadId(squad.id)}
-                          className="w-full"
-                        >
-                          {selectedSquadId === squad.id ? 'Selected for Invites' : 'Select for Invites'}
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* No Squads Message */}
-            {squads.length === 0 && (
-              <Card className="bg-white border-slate-200">
-                <CardContent className="text-center py-12">
-                  <Users className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-slate-900 mb-2">No Squads Yet</h3>
-                  <p className="text-slate-600 mb-4">Create your first squad to start inviting team members.</p>
-                  <Button onClick={() => setCreateSquadDialogOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Your First Squad
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Timezone Settings */}
-            <Card className="bg-white border-slate-200">
-              <CardHeader>
-                <CardTitle className="text-lg">Timezone Settings</CardTitle>
-                <CardDescription>Set your local timezone for displaying timestamps</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-4">
-                  <label htmlFor="timezone" className="text-sm font-medium">Timezone:</label>
-                  <select
-                    id="timezone"
-                    value={timezone}
-                    onChange={(e) => setTimezone(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="America/New_York">Eastern Time (ET)</option>
-                    <option value="America/Chicago">Central Time (CT)</option>
-                    <option value="America/Denver">Mountain Time (MT)</option>
-                    <option value="America/Los_Angeles">Pacific Time (PT)</option>
-                    <option value="Europe/London">London (GMT)</option>
-                    <option value="Europe/Paris">Paris (CET)</option>
-                    <option value="Asia/Tokyo">Tokyo (JST)</option>
-                    <option value="Australia/Sydney">Sydney (AEDT)</option>
-                  </select>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-white border-slate-200">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-indigo-600" />
-                  Members ({filteredMembers.length})
-                </CardTitle>
-                <CardDescription>
-                  {selectedSquadId ? `Members of ${selectedSquad?.name || 'selected squad'}` : 'All members from your squads'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {loadingMembers ? (
-                    <div className="flex flex-col items-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-4"></div>
-                      <p className="text-slate-500">Loading members...</p>
-                    </div>
-                  ) : membersError ? (
-                    <div className="flex flex-col items-center py-8">
-                      <p className="text-red-600 mb-2">{membersError}</p>
-                      <Button size="sm" variant="outline" onClick={() => setSelectedSquadId(selectedSquadId)}>
-                        Retry
-                      </Button>
-                    </div>
-                  ) : filteredMembers.length === 0 ? (
-                    <p className="text-center text-slate-500 py-8">
-                      {selectedSquadId ? 'No members in this squad yet. Send invites to get started.' : 'No members found.'}
-                    </p>
-                  ) : (
-                    filteredMembers.map((member) => (
-                      <div key={member.id} className="flex items-center justify-between p-4 rounded-lg border border-slate-200">
-                        <div className="flex items-center space-x-4">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={member.avatar} />
-                            <AvatarFallback className="bg-indigo-100 text-indigo-700">
-                              {member.displayName.split(' ').map((n: string) => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium text-slate-900">{member.displayName}</p>
-                            <p className="text-sm text-slate-600">{member.email}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                          <div className="text-right">
-                            <p className="text-sm font-medium text-slate-900">{member.squadName}</p>
-                            <p className="text-xs text-slate-500">
-                              Joined {new Date(member.dateJoined).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Sent Invites */}
-            {sentInvites.length > 0 && (
-              <Card className="bg-white border-slate-200">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Mail className="h-5 w-5 text-indigo-600" />
-                    Sent Invites
-                  </CardTitle>
-                  <CardDescription>Recently sent invitations</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {sentInvites.map((invite, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-slate-50">
-                        <div className="flex items-center space-x-3">
-                          <Mail className="h-4 w-4 text-slate-500" />
-                          <span className="font-medium text-slate-900">{invite.email}</span>
-                        </div>
-                        <div className="text-sm text-slate-600">
-                          Invite sent on: {formatTimestamp(invite.timestamp)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          <TabsContent value="sprints" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="bg-white border-slate-200">
-                <CardHeader>
-                  <CardTitle>Sprint Management</CardTitle>
-                  <CardDescription>Create and manage sprints</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Create Sprint Button removed; SprintCreationForm is always visible */}
-                  <Button variant="outline" className="w-full">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Configure Sprint Settings
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white border-slate-200">
-                <CardHeader>
-                  <CardTitle>Capacity Planning</CardTitle>
-                  <CardDescription>Plan team capacity for upcoming sprints</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Button className="w-full" variant="outline">
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    View Capacity Trends
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Schedule Planning Meeting
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="reports" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="bg-white border-slate-200">
-                <CardHeader>
-                  <CardTitle>Burndown Chart</CardTitle>
-                  <CardDescription>Track sprint progress</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button className="w-full" variant="outline">
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                    View Burndown
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white border-slate-200">
-                <CardHeader>
-                  <CardTitle>Velocity Report</CardTitle>
-                  <CardDescription>Team performance metrics</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button className="w-full" variant="outline">
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Generate Report
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white border-slate-200">
-                <CardHeader>
-                  <CardTitle>Team Analytics</CardTitle>
-                  <CardDescription>Detailed team insights</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button className="w-full" variant="outline">
-                    <Activity className="h-4 w-4 mr-2" />
-                    View Analytics
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="profile" className="space-y-6">
-            <ProfileSettings />
-          </TabsContent>
-        </Tabs>
-      </main>
-    </div>
-
-    {/* Invite Dialog */}
-    <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Invite Squad Members</DialogTitle>
-          <DialogDescription>
-            Enter Gmail email addresses separated by commas (max 10 addresses).
-            Only Gmail addresses are allowed.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-start gap-4">
-            <label htmlFor="emails" className="text-right text-sm font-medium pt-2">
-              Emails
-            </label>
-            <textarea
-              id="emails"
-              value={inviteEmails}
-              onChange={(e) => {
-                setInviteEmails(e.target.value)
-                setInviteError('')
-              }}
-              placeholder="user1@gmail.com, user2@gmail.com, user3@gmail.com"
-              className="col-span-3 min-h-[100px] p-2 border border-gray-300 rounded-md resize-none"
-              disabled={inviteLoading}
-            />
-          </div>
-          {inviteError && (
-            <div className="text-sm text-red-600 bg-red-50 p-2 rounded col-span-4">
-              {inviteError}
-            </div>
-          )}
-        </div>
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setInviteDialogOpen(false)}
-            disabled={inviteLoading}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            onClick={handleInviteSubmit}
-            disabled={inviteLoading || !!validateEmails(inviteEmails)}
-          >
-            {inviteLoading ? 'Sending...' : 'Send Invites'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-
-    {/* Create Squad Dialog */}
-    <Dialog open={createSquadDialogOpen} onOpenChange={setCreateSquadDialogOpen}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Create New Squad</DialogTitle>
-          <DialogDescription>
-            Create a new development squad. The alias should be unique and contain only uppercase letters and numbers.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <label htmlFor="squadAlias" className="text-right text-sm font-medium">
-              Squad Alias
-            </label>
-            <input
-              id="squadAlias"
-              value={squadAlias}
-              onChange={(e) => {
-                setSquadAlias(e.target.value.toUpperCase())
-                setInviteError('')
-              }}
-              placeholder="FMWB"
-              maxLength={10}
-              className="col-span-3 p-2 border border-gray-300 rounded-md uppercase"
-              disabled={inviteLoading}
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <label htmlFor="squadName" className="text-right text-sm font-medium">
-              Squad Name
-            </label>
-            <input
-              id="squadName"
-              value={squadName}
-              onChange={(e) => {
-                setSquadName(e.target.value)
-                setInviteError('')
-              }}
-              placeholder="Browse & Shop Squad"
-              maxLength={200}
-              className="col-span-3 p-2 border border-gray-300 rounded-md"
-              disabled={inviteLoading}
-            />
-          </div>
-          {inviteError && (
-            <div className="text-sm text-red-600 bg-red-50 p-2 rounded col-span-4">
-              {inviteError}
-            </div>
-          )}
-        </div>
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setCreateSquadDialogOpen(false)}
-            disabled={inviteLoading}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            onClick={handleCreateSquad}
-            disabled={inviteLoading || !!validateSquadAlias(squadAlias) || !!validateSquadName(squadName)}
-          >
-            {inviteLoading ? 'Creating...' : 'Create Squad'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  </div>
-  );
-}
