@@ -1,3 +1,9 @@
+  // Simple validation for squad name
+  const validateSquadName = (name: string) => {
+    if (!name.trim()) return 'Squad name is required';
+    if (name.length > 200) return 'Squad name must be 200 characters or less';
+    return null;
+  }
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset } from '@/components/ui/sidebar';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
 "use client"
@@ -125,12 +131,8 @@ export default function ScrumMasterDashboard() {
     await signOut({ callbackUrl: '/' })
   }
 
-  const validateSquadAlias = (alias: string) => {
-    if (!alias.trim()) return 'Squad alias is required'
-    if (alias.length > 10) return 'Squad alias must be 10 characters or less'
-    if (!/^[A-Z0-9]+$/.test(alias)) return 'Squad alias can only contain uppercase letters and numbers'
-    return null
 
+  const handleCreateSquad = async () => {
     const nameError = validateSquadName(squadName)
     if (nameError) {
       setInviteError(nameError)
