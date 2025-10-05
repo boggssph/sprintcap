@@ -79,7 +79,7 @@ export default function ScrumMasterDashboardClient() {
                         ✕
                       </button>
                     </div>
-                    <SprintCreationForm onSprintCreated={handleSprintCreated} inDialog={true} />
+                    <SprintCreationForm onSprintCreated={handleSprintCreated} />
                   </div>
                 </div>
               )}

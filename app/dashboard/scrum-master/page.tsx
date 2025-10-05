@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useSession } from 'next-auth/react'
@@ -11,14 +10,6 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import {
   Users,
   Target,
@@ -33,6 +24,8 @@ import {
 } from 'lucide-react'
 import ProfileSettings from '@/components/ProfileSettings'
 import DisplayNameEditor from '@/components/DisplayNameEditor'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import SprintCreationForm from '@/components/SprintCreationForm';
 
 type TeamMember = {
   id: string
@@ -89,15 +82,6 @@ export default function ScrumMasterDashboard() {
   const [squadAlias, setSquadAlias] = useState('')
   const [squadName, setSquadName] = useState('')
   const [selectedSquadId, setSelectedSquadId] = useState<string>('')
-
-  // Sprint creation state
-  const [createSprintDialogOpen, setCreateSprintDialogOpen] = useState(false)
-  const [sprintNumber, setSprintNumber] = useState('')
-  const [sprintSquadId, setSprintSquadId] = useState('')
-  const [sprintStartDate, setSprintStartDate] = useState('')
-  const [sprintEndDate, setSprintEndDate] = useState('')
-  const [sprintLoading, setSprintLoading] = useState(false)
-  const [sprintError, setSprintError] = useState('')
 
   useEffect(() => {
     if (status === 'loading') return // Don't do anything while loading
@@ -293,73 +277,6 @@ export default function ScrumMasterDashboard() {
     setInviteLoading(false)
   }
 
-  const handleCreateSprint = async () => {
-    // Basic validation
-    if (!sprintNumber.trim()) {
-      setSprintError('Sprint number is required')
-      return
-    }
-    if (!sprintSquadId) {
-      setSprintError('Please select a squad')
-      return
-    }
-    if (!sprintStartDate) {
-      setSprintError('Start date is required')
-      return
-    }
-    if (!sprintEndDate) {
-      setSprintError('End date is required')
-      return
-    }
-    if (new Date(sprintStartDate) >= new Date(sprintEndDate)) {
-      setSprintError('End date must be after start date')
-      return
-    }
-
-    // Find the selected squad to get the alias
-    const selectedSquad = squads.find(squad => squad.id === sprintSquadId)
-    if (!selectedSquad) {
-      setSprintError('Selected squad not found')
-      return
-    }
-
-    // Construct the full sprint name
-    const fullSprintName = `${selectedSquad.alias} Sprint ${sprintNumber.trim()}`
-
-    setSprintLoading(true)
-    setSprintError('')
-
-    try {
-      const res = await fetch('/api/sprints', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: fullSprintName,
-          squadId: sprintSquadId,
-          startDate: sprintStartDate,
-          endDate: sprintEndDate
-        })
-      })
-
-      if (res.ok) {
-        // Reset form and close dialog
-        setCreateSprintDialogOpen(false)
-        setSprintNumber('')
-        setSprintSquadId('')
-        setSprintStartDate('')
-        setSprintEndDate('')
-        // Could add a success toast here
-      } else {
-        const data = await res.json()
-        setSprintError(data.error || 'Failed to create sprint')
-      }
-    } catch (error) {
-      console.error('Failed to create sprint:', error)
-      setSprintError('Failed to create sprint')
-    }
-    setSprintLoading(false)
-  }
-
   const validateEmails = (emails: string) => {
     if (!emails.trim()) {
       return 'Please enter at least one email address'
@@ -507,66 +424,69 @@ export default function ScrumMasterDashboard() {
   <div className="flex-1 flex flex-col">
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 flex flex-col">
           {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0">
+          <div className="mb-8">
+            <SprintCreationForm />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-blue-100 text-sm font-medium">Team Capacity</p>
+                      <p className="text-2xl font-bold">{currentSprint.usedCapacity}/{currentSprint.totalCapacity}h</p>
+                    </div>
+                    <Users className="h-8 w-8 text-blue-200" />
+                  </div>
+                <div className="mt-4">
+                  <Progress value={sprintProgress} className="h-2 bg-blue-400" />
+                  <p className="text-xs text-blue-100 mt-1">{Math.round(sprintProgress)}% utilized</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-blue-100 text-sm font-medium">Team Capacity</p>
-                    <p className="text-2xl font-bold">{currentSprint.usedCapacity}/{currentSprint.totalCapacity}h</p>
+                    <p className="text-green-100 text-sm font-medium">Tasks Completed</p>
+                    <p className="text-2xl font-bold">{currentSprint.completedTasks}/{currentSprint.totalTasks}</p>
                   </div>
-                  <Users className="h-8 w-8 text-blue-200" />
+                  <CheckCircle className="h-8 w-8 text-green-200" />
                 </div>
-              <div className="mt-4">
-                <Progress value={sprintProgress} className="h-2 bg-blue-400" />
-                <p className="text-xs text-blue-100 mt-1">{Math.round(sprintProgress)}% utilized</p>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="mt-4">
+                  <Progress value={taskCompletion} className="h-2 bg-green-400" />
+                  <p className="text-xs text-green-100 mt-1">{Math.round(taskCompletion)}% complete</p>
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-green-100 text-sm font-medium">Tasks Completed</p>
-                  <p className="text-2xl font-bold">{currentSprint.completedTasks}/{currentSprint.totalTasks}</p>
+            <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-100 text-sm font-medium">Active Sprint</p>
+                    <p className="text-2xl font-bold">{currentSprint.name}</p>
+                  </div>
+                  <Calendar className="h-8 w-8 text-purple-200" />
                 </div>
-                <CheckCircle className="h-8 w-8 text-green-200" />
-              </div>
-              <div className="mt-4">
-                <Progress value={taskCompletion} className="h-2 bg-green-400" />
-                <p className="text-xs text-green-100 mt-1">{Math.round(taskCompletion)}% complete</p>
-              </div>
-            </CardContent>
-          </Card>
+                <p className="text-xs text-purple-100 mt-4">
+                  {new Date(currentSprint.startDate).toLocaleDateString()} - {new Date(currentSprint.endDate).toLocaleDateString()}
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-purple-100 text-sm font-medium">Active Sprint</p>
-                  <p className="text-2xl font-bold">{currentSprint.name}</p>
+            <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-orange-100 text-sm font-medium">Team Members</p>
+                    <p className="text-2xl font-bold">{teamMembers.length}</p>
+                  </div>
+                  <Activity className="h-8 w-8 text-orange-200" />
                 </div>
-                <Calendar className="h-8 w-8 text-purple-200" />
-              </div>
-              <p className="text-xs text-purple-100 mt-4">
-                {new Date(currentSprint.startDate).toLocaleDateString()} - {new Date(currentSprint.endDate).toLocaleDateString()}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-orange-100 text-sm font-medium">Team Members</p>
-                  <p className="text-2xl font-bold">{teamMembers.length}</p>
-                </div>
-                <Activity className="h-8 w-8 text-orange-200" />
-              </div>
-              <p className="text-xs text-orange-100 mt-4">4 active, 0 on leave</p>
-            </CardContent>
-          </Card>
+                <p className="text-xs text-orange-100 mt-4">4 active, 0 on leave</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Main Dashboard Content */}
@@ -856,10 +776,7 @@ export default function ScrumMasterDashboard() {
                   <CardDescription>Create and manage sprints</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button className="w-full" onClick={() => setCreateSprintDialogOpen(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create New Sprint
-                  </Button>
+                  {/* Create Sprint Button removed; SprintCreationForm is always visible */}
                   <Button variant="outline" className="w-full">
                     <Settings className="h-4 w-4 mr-2" />
                     Configure Sprint Settings
@@ -934,238 +851,130 @@ export default function ScrumMasterDashboard() {
           </TabsContent>
         </Tabs>
       </main>
-
-      {/* Invite Dialog */}
-      <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Invite Squad Members</DialogTitle>
-            <DialogDescription>
-              Enter Gmail email addresses separated by commas (max 10 addresses).
-              Only Gmail addresses are allowed.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-start gap-4">
-              <label htmlFor="emails" className="text-right text-sm font-medium pt-2">
-                Emails
-              </label>
-              <textarea
-                id="emails"
-                value={inviteEmails}
-                onChange={(e) => {
-                  setInviteEmails(e.target.value)
-                  setInviteError('')
-                }}
-                placeholder="user1@gmail.com, user2@gmail.com, user3@gmail.com"
-                className="col-span-3 min-h-[100px] p-2 border border-gray-300 rounded-md resize-none"
-                disabled={inviteLoading}
-              />
-            </div>
-            {inviteError && (
-              <div className="text-sm text-red-600 bg-red-50 p-2 rounded col-span-4">
-                {inviteError}
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setInviteDialogOpen(false)}
-              disabled={inviteLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={handleInviteSubmit}
-              disabled={inviteLoading || !!validateEmails(inviteEmails)}
-            >
-              {inviteLoading ? 'Sending...' : 'Send Invites'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Create Squad Dialog */}
-      <Dialog open={createSquadDialogOpen} onOpenChange={setCreateSquadDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Create New Squad</DialogTitle>
-            <DialogDescription>
-              Create a new development squad. The alias should be unique and contain only uppercase letters and numbers.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="squadAlias" className="text-right text-sm font-medium">
-                Squad Alias
-              </label>
-              <input
-                id="squadAlias"
-                value={squadAlias}
-                onChange={(e) => {
-                  setSquadAlias(e.target.value.toUpperCase())
-                  setInviteError('')
-                }}
-                placeholder="FMWB"
-                maxLength={10}
-                className="col-span-3 p-2 border border-gray-300 rounded-md uppercase"
-                disabled={inviteLoading}
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="squadName" className="text-right text-sm font-medium">
-                Squad Name
-              </label>
-              <input
-                id="squadName"
-                value={squadName}
-                onChange={(e) => {
-                  setSquadName(e.target.value)
-                  setInviteError('')
-                }}
-                placeholder="Browse & Shop Squad"
-                maxLength={200}
-                className="col-span-3 p-2 border border-gray-300 rounded-md"
-                disabled={inviteLoading}
-              />
-            </div>
-            {inviteError && (
-              <div className="text-sm text-red-600 bg-red-50 p-2 rounded col-span-4">
-                {inviteError}
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setCreateSquadDialogOpen(false)}
-              disabled={inviteLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={handleCreateSquad}
-              disabled={inviteLoading || !!validateSquadAlias(squadAlias) || !!validateSquadName(squadName)}
-            >
-              {inviteLoading ? 'Creating...' : 'Create Squad'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Create Sprint Dialog */}
-      <Dialog open={createSprintDialogOpen} onOpenChange={setCreateSprintDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Create New Sprint</DialogTitle>
-            <DialogDescription>
-              Create a new sprint for a squad. All active squad members will be automatically added as sprint participants.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="sprintSquad" className="text-right text-sm font-medium">
-                Squad
-              </label>
-              <select
-                id="sprintSquad"
-                value={sprintSquadId}
-                onChange={(e) => {
-                  setSprintSquadId(e.target.value)
-                  setSprintError('')
-                }}
-                className="col-span-3 p-2 border border-gray-300 rounded-md"
-                disabled={sprintLoading}
-              >
-                <option value="">Select a squad...</option>
-                {squads.map((squad) => (
-                  <option key={squad.id} value={squad.id}>
-                    {squad.alias} - {squad.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="sprintNumber" className="text-right text-sm font-medium">
-                Sprint Number
-              </label>
-              <input
-                id="sprintNumber"
-                value={sprintNumber}
-                onChange={(e) => {
-                  setSprintNumber(e.target.value)
-                  setSprintError('')
-                }}
-                placeholder="2025.10"
-                maxLength={20}
-                className="col-span-3 p-2 border border-gray-300 rounded-md"
-                disabled={sprintLoading}
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="sprintStartDate" className="text-right text-sm font-medium">
-                Start Date
-              </label>
-              <input
-                id="sprintStartDate"
-                type="datetime-local"
-                value={sprintStartDate}
-                onChange={(e) => {
-                  setSprintStartDate(e.target.value)
-                  setSprintError('')
-                }}
-                className="col-span-3 p-2 border border-gray-300 rounded-md"
-                disabled={sprintLoading}
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="sprintEndDate" className="text-right text-sm font-medium">
-                End Date
-              </label>
-              <input
-                id="sprintEndDate"
-                type="datetime-local"
-                value={sprintEndDate}
-                onChange={(e) => {
-                  setSprintEndDate(e.target.value)
-                  setSprintError('')
-                }}
-                className="col-span-3 p-2 border border-gray-300 rounded-md"
-                disabled={sprintLoading}
-              />
-            </div>
-            {sprintError && (
-              <div className="text-sm text-red-600 bg-red-50 p-2 rounded col-span-4">
-                {sprintError}
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setCreateSprintDialogOpen(false)}
-              disabled={sprintLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={handleCreateSprint}
-              disabled={sprintLoading || !sprintNumber.trim() || !sprintSquadId || !sprintStartDate || !sprintEndDate}
-            >
-              {sprintLoading ? 'Creating...' : 'Create Sprint'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      </div>
     </div>
-  )
+
+    {/* Invite Dialog */}
+    <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Invite Squad Members</DialogTitle>
+          <DialogDescription>
+            Enter Gmail email addresses separated by commas (max 10 addresses).
+            Only Gmail addresses are allowed.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-start gap-4">
+            <label htmlFor="emails" className="text-right text-sm font-medium pt-2">
+              Emails
+            </label>
+            <textarea
+              id="emails"
+              value={inviteEmails}
+              onChange={(e) => {
+                setInviteEmails(e.target.value)
+                setInviteError('')
+              }}
+              placeholder="user1@gmail.com, user2@gmail.com, user3@gmail.com"
+              className="col-span-3 min-h-[100px] p-2 border border-gray-300 rounded-md resize-none"
+              disabled={inviteLoading}
+            />
+          </div>
+          {inviteError && (
+            <div className="text-sm text-red-600 bg-red-50 p-2 rounded col-span-4">
+              {inviteError}
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setInviteDialogOpen(false)}
+            disabled={inviteLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            onClick={handleInviteSubmit}
+            disabled={inviteLoading || !!validateEmails(inviteEmails)}
+          >
+            {inviteLoading ? 'Sending...' : 'Send Invites'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* Create Squad Dialog */}
+    <Dialog open={createSquadDialogOpen} onOpenChange={setCreateSquadDialogOpen}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Create New Squad</DialogTitle>
+          <DialogDescription>
+            Create a new development squad. The alias should be unique and contain only uppercase letters and numbers.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="squadAlias" className="text-right text-sm font-medium">
+              Squad Alias
+            </label>
+            <input
+              id="squadAlias"
+              value={squadAlias}
+              onChange={(e) => {
+                setSquadAlias(e.target.value.toUpperCase())
+                setInviteError('')
+              }}
+              placeholder="FMWB"
+              maxLength={10}
+              className="col-span-3 p-2 border border-gray-300 rounded-md uppercase"
+              disabled={inviteLoading}
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="squadName" className="text-right text-sm font-medium">
+              Squad Name
+            </label>
+            <input
+              id="squadName"
+              value={squadName}
+              onChange={(e) => {
+                setSquadName(e.target.value)
+                setInviteError('')
+              }}
+              placeholder="Browse & Shop Squad"
+              maxLength={200}
+              className="col-span-3 p-2 border border-gray-300 rounded-md"
+              disabled={inviteLoading}
+            />
+          </div>
+          {inviteError && (
+            <div className="text-sm text-red-600 bg-red-50 p-2 rounded col-span-4">
+              {inviteError}
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setCreateSquadDialogOpen(false)}
+            disabled={inviteLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            onClick={handleCreateSquad}
+            disabled={inviteLoading || !!validateSquadAlias(squadAlias) || !!validateSquadName(squadName)}
+          >
+            {inviteLoading ? 'Creating...' : 'Create Squad'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </div>
+  );
 }

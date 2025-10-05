@@ -6,9 +6,12 @@ import SprintCreationForm from '@/components/SprintCreationForm'
 // make React available globally for JSX runtime in test environment
 globalThis.React = React
 
-// Mock fetch globally
+
+// Mock fetch globally for all tests
 const fetchMock = vi.fn()
-global.fetch = fetchMock
+beforeAll(() => {
+  global.fetch = fetchMock
+})
 
 describe('SprintCreationForm - Formatted Name Input', () => {
   beforeEach(() => {
@@ -197,33 +200,37 @@ describe('SprintCreationForm - Formatted Name Input', () => {
           alias: 'FE',
           memberCount: 3
         }
-      ]
+      ];
 
+      // First call: squads fetch, resolves immediately
       fetchMock.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ squads: mockSquads })
-      })
+      });
 
-      render(<SprintCreationForm />)
+      // Second call: members fetch, never resolves (pending promise)
+      fetchMock.mockImplementationOnce(() => new Promise(() => {}));
+
+      render(<SprintCreationForm />);
 
       // Wait for squads to load and select one
       await waitFor(() => {
-        expect(screen.getByText('Frontend Team (FE) - 3 members')).toBeInTheDocument()
-      })
+        expect(screen.getByText('Frontend Team (FE) - 3 members')).toBeInTheDocument();
+      });
 
       // Select the squad using the combobox
-      const squadSelect = screen.getByRole('combobox')
-      fireEvent.click(squadSelect)
+      const squadSelect = screen.getByRole('combobox');
+      fireEvent.click(squadSelect);
 
       // Find and click the option in the dropdown
-      const option = screen.getByRole('option', { name: /Frontend Team \(FE\) - 3 members/ })
-      fireEvent.click(option)
+      const option = screen.getByRole('option', { name: /Frontend Team \(FE\) - 3 members/ });
+      fireEvent.click(option);
 
       // Should show loading state
       await waitFor(() => {
-        expect(screen.getByText('Loading members...')).toBeInTheDocument()
-      })
-    })
+        expect(screen.getByText('Loading members...')).toBeInTheDocument();
+      });
+    });
 
     it('should display filtered members when squad is selected', async () => {
       // Mock successful squads fetch
