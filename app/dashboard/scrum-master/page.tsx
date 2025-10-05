@@ -1,12 +1,8 @@
 "use client"
 
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset } from '@/components/ui/sidebar';
-import { Drawer, DrawerTrigger, DrawerContent } from '@/components/ui/drawer';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -49,7 +45,6 @@ type Squad = {
 
 export default function ScrumMasterDashboard() {
   const { data: session, status } = useSession()
-  const router = useRouter()
   const [currentSprint] = useState({
     name: 'Sprint 2025.09',
     startDate: '2025-09-23',
@@ -60,7 +55,6 @@ export default function ScrumMasterDashboard() {
     totalTasks: 32
   })
 
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [squadMembers, setSquadMembers] = useState<TeamMember[]>([])
   const [loadingMembers, setLoadingMembers] = useState(false)
   const [membersError, setMembersError] = useState('')
@@ -87,125 +81,28 @@ export default function ScrumMasterDashboard() {
   const [selectedSquadId, setSelectedSquadId] = useState<string>('')
 
   useEffect(() => {
-    if (status === 'loading') return // Don't do anything while loading
-    if (!session) {
-      router.push('/')
-      return
-    }
-  if ((session.user as { role?: string })?.role !== 'SCRUM_MASTER' && (session.user as { role?: string })?.role !== 'ADMIN') {
-    const isMobile = useIsMobile();
-    const [showSprintDrawer, setShowSprintDrawer] = useState(false);
-
-      router.push('/auth/no-access')
-      return
-    }
-  }, [session, status, router])
-
-  // Load recent invites on component mount
-  useEffect(() => {
-    const loadRecentInvites = async () => {
-      if (!session) return
-      
-      try {
-        const res = await fetch('/api/invite?limit=20')
-        if (res.ok) {
-          const data = await res.json()
-          // Convert database invites to the format expected by sentInvites
-          const recentInvites = data.invites
-            .filter((invite: { createdAt: string }) => {
-              // Only show invites from the last 24 hours
-              const inviteTime = new Date(invite.createdAt)
-              const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
-              return inviteTime > oneDayAgo
-            })
-            .map((invite: { email: string, createdAt: string }) => ({
-              email: invite.email,
-              timestamp: new Date(invite.createdAt)
-            }))
-          setSentInvites(recentInvites)
-        }
-      } catch (error) {
-        console.error('Failed to load recent invites:', error)
-      }
-    }
-
-    loadRecentInvites()
-  }, [session])
-
-  // Load squads on component mount
-  useEffect(() => {
-    const loadSquads = async () => {
-      if (!session) return
-      
-      try {
-        const res = await fetch('/api/squads')
-        if (res.ok) {
-          const data = await res.json()
-          setSquads(data.squads || [])
-          // Don't auto-select first squad - let user choose
-          // if (data.squads && data.squads.length > 0 && !selectedSquadId) {
-          //   setSelectedSquadId(data.squads[0].id)
-          // }
-        }
-      } catch (error) {
-        console.error('Failed to load squads:', error)
-      }
-    }
-
-    loadSquads()
-  }, [session, selectedSquadId])
-
-  // Load all team members for metrics (all squads)
-  useEffect(() => {
-    const loadTeamMembers = async () => {
-      if (!session) return
-      try {
-        const res = await fetch('/api/members')
-        if (res.ok) {
-          const data = await res.json()
-          setTeamMembers(data.members || [])
-        }
-      } catch (error) {
-        console.error('Failed to load team members:', error)
-      }
-    }
-    loadTeamMembers()
-  }, [session])
-
-  // Load squad-specific members when selectedSquadId changes
-  useEffect(() => {
     if (!selectedSquadId) {
       setSquadMembers([])
       setLoadingMembers(false)
       setMembersError('')
-      return
+      return;
     }
-    setLoadingMembers(true)
-    setMembersError('')
+    setLoadingMembers(true);
+    setMembersError('');
     const fetchSquadMembers = async () => {
       try {
-        const res = await fetch(`/api/squads/${selectedSquadId}/members`)
+        const res = await fetch(`/api/squads/${selectedSquadId}/members`);
         if (res.ok) {
-          const data = await res.json()
-          // Normalize to TeamMember type
-          setSquadMembers((data.members || []).map((m: {
-            id: string
-            displayName?: string
-            name?: string
-            email: string
-            squadName?: string
-            squadAlias?: string
-            dateJoined?: string | Date
-            avatar?: string
-          }) => ({
+          const data = await res.json();
+          setSquadMembers((data.members || []).map((m: TeamMember) => ({
             id: m.id,
-            displayName: m.displayName || m.name || m.email,
+            displayName: m.displayName || m.email,
             email: m.email,
-            squadName: selectedSquad?.name || '',
-            squadAlias: selectedSquad?.alias || '',
+            squadName: squads.find(sq => sq.id === selectedSquadId)?.name || '',
+            squadAlias: squads.find(sq => sq.id === selectedSquadId)?.alias || '',
             dateJoined: m.dateJoined ? new Date(m.dateJoined) : new Date(),
             avatar: m.avatar || ''
-          })))
+          })));
         } else {
           setMembersError('Failed to load squad members.')
           setSquadMembers([])
@@ -216,9 +113,9 @@ export default function ScrumMasterDashboard() {
       } finally {
         setLoadingMembers(false)
       }
-    }
-    fetchSquadMembers()
-  }, [selectedSquadId, squads])
+    };
+    fetchSquadMembers();
+  }, [selectedSquadId, squads]);
 
   const handleSignOut = async () => {
     const { signOut } = await import('next-auth/react')
@@ -387,7 +284,7 @@ export default function ScrumMasterDashboard() {
   // Find selected squad
   const selectedSquad = squads.find(squad => squad.id === selectedSquadId)
   // Use squadMembers if a squad is selected, else all teamMembers
-  const filteredMembers = selectedSquadId ? squadMembers : teamMembers
+  const filteredMembers = squadMembers
 
   return (
   <div className="flex flex-col bg-gradient-to-br from-slate-50 to-blue-50 flex-1">
@@ -485,7 +382,7 @@ export default function ScrumMasterDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-orange-100 text-sm font-medium">Team Members</p>
-                    <p className="text-2xl font-bold">{teamMembers.length}</p>
+                    <p className="text-2xl font-bold">{squadMembers.length}</p>
                   </div>
                   <Activity className="h-8 w-8 text-orange-200" />
                 </div>
@@ -691,7 +588,7 @@ export default function ScrumMasterDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-indigo-600" />
-                  Members {selectedSquadId ? `(${filteredMembers.length})` : `(${teamMembers.length})`}
+                  Members ({filteredMembers.length})
                 </CardTitle>
                 <CardDescription>
                   {selectedSquadId ? `Members of ${selectedSquad?.name || 'selected squad'}` : 'All members from your squads'}
