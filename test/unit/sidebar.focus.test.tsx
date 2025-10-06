@@ -17,9 +17,12 @@ describe('Sidebar submenu focus', () => {
   it('focuses first submenu item when opened', async () => {
     const { container } = render(<ScrumMasterDashboard />)
 
-    // Open squad menu by clicking the Squad button
-    const squadButton = await screen.findByRole('button', { name: /Squad/i })
-    fireEvent.click(squadButton)
+  // Open squad menu by clicking the Squad menu button.
+  // There may be other buttons that include the word "Squad" (eg. "+ Create Squad").
+  // Click the explicit squad menu button by id to open the submenu
+  const squadButton = container.querySelector('#squad-menu-button') as HTMLElement | null
+  if (!squadButton) throw new Error('squad menu button not found')
+  fireEvent.click(squadButton)
 
     // The first submenu item should receive focus
     await waitFor(() => {

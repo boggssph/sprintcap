@@ -362,10 +362,9 @@ describe('SprintCreationForm - Formatted Name Input', () => {
       const option = screen.getByRole('option', { name: /Frontend Team \(FE\) - 2 members/ })
       fireEvent.click(option)
 
-      // Should show empty state when fetch fails (members array is empty)
+      // Should show specific error message when member fetch fails
       await waitFor(() => {
-        expect(screen.getByText('Members (0)')).toBeInTheDocument()
-        expect(screen.getByText('No members found in this squad.')).toBeInTheDocument()
+        expect(screen.getByText('Failed to load members. Please try again.')).toBeInTheDocument()
       })
     })
   })

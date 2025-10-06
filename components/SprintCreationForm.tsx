@@ -33,6 +33,9 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
   }
   const [squads, setSquads] = useState<SprintFormSquad[]>(squadsProp || []);
   const [loading, setLoading] = useState(false);
+  const [members, setMembers] = useState<Array<{ id: string; name?: string; email?: string }>>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+  const [membersError, setMembersError] = useState<string | null>(null);
 
 
 
@@ -48,6 +51,43 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
 
   // members list is not shown in the creation UI; omit fetching to simplify UX
 
+  // Fetch members when a squad is selected
+  useEffect(() => {
+    let mounted = true
+    async function fetchMembers(squadId: string) {
+      setMembers([])
+      setMembersError(null)
+      setMembersLoading(true)
+      try {
+        const res = await fetch(`/api/squads/${squadId}/members`)
+        if (!mounted) return
+        if (res.ok) {
+          const data = await res.json()
+          setMembers(data.members || [])
+        } else {
+          setMembers([])
+          setMembersError('Failed to load members')
+        }
+      } catch (err) {
+        setMembers([])
+        setMembersError('Failed to load members')
+      } finally {
+        if (mounted) setMembersLoading(false)
+      }
+    }
+
+    if (formData.squadId) {
+      // kick off member fetch for selected squad
+      fetchMembers(formData.squadId)
+    } else {
+      // clear members when no squad selected
+      setMembers([])
+      setMembersLoading(false)
+      setMembersError(null)
+    }
+
+    return () => { mounted = false }
+  }, [formData.squadId])
   // --- Move validateForm and handleSubmit inside the component ---
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -197,7 +237,30 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
               </Select>
               {errors.squadId && <p className="text-sm text-red-500">{errors.squadId}</p>}
             </div>
-            {/* Members list removed: not needed in this UI */}
+            {/* Members list - tests expect loading / members / empty / error states */}
+            <div className="space-y-2">
+                {membersLoading ? (
+                  <div className="text-sm text-gray-600">Loading members...</div>
+                ) : formData.squadId ? (
+                  members.length > 0 ? (
+                    <div>
+                      <div className="text-sm font-medium">Members ({members.length})</div>
+                      <ul className="mt-2 space-y-1">
+                        {members.map(m => (
+                          <li key={m.id} className="text-sm">{m.name || m.email}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : membersError ? (
+                    <div role="alert" className="text-sm text-red-600">Failed to load members. Please try again.</div>
+                  ) : (
+                    <div>
+                      <div className="text-sm font-medium">Members (0)</div>
+                      <div className="text-sm text-gray-600">No members found in this squad.</div>
+                    </div>
+                  )
+                ) : null}
+            </div>
             {/* Sprint number input with prefix */}
             <div className="space-y-2">
               <Label htmlFor="sprintNumber">Sprint Number</Label>

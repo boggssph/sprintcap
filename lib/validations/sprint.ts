@@ -17,11 +17,12 @@ export interface SprintValidationError {
 /**
  * Validates a sprint creation request
  */
-export function validateCreateSprintRequest(data: CreateSprintRequest): SprintValidationError[] {
+export function validateCreateSprintRequest(data: unknown): SprintValidationError[] {
+  const obj = (typeof data === 'object' && data !== null) ? data as Record<string, unknown> : {} as Record<string, unknown>;
   const errors: SprintValidationError[] = []
 
   // Validate name
-  const name = typeof data.name === 'string' ? data.name : '';
+  const name = typeof obj.name === 'string' ? obj.name : '';
   if (!name) {
     errors.push({ field: 'name', message: 'Name is required and must be a string' })
   } else if (name.trim().length === 0) {
@@ -31,13 +32,13 @@ export function validateCreateSprintRequest(data: CreateSprintRequest): SprintVa
   }
 
   // Validate squadId
-  const squadId = typeof data.squadId === 'string' ? data.squadId : '';
+  const squadId = typeof obj.squadId === 'string' ? obj.squadId : '';
   if (!squadId) {
     errors.push({ field: 'squadId', message: 'Squad ID is required and must be a string' })
   }
 
   // Validate dates
-  const startDateStr = typeof data.startDate === 'string' ? data.startDate : '';
+  const startDateStr = typeof obj.startDate === 'string' ? obj.startDate : '';
   if (!startDateStr) {
     errors.push({ field: 'startDate', message: 'Start date is required and must be a string' })
   } else {
@@ -47,7 +48,7 @@ export function validateCreateSprintRequest(data: CreateSprintRequest): SprintVa
     }
   }
 
-  const endDateStr = typeof data.endDate === 'string' ? data.endDate : '';
+  const endDateStr = typeof obj.endDate === 'string' ? obj.endDate : '';
   if (!endDateStr) {
     errors.push({ field: 'endDate', message: 'End date is required and must be a string' })
   } else {
@@ -104,16 +105,16 @@ export function validateSprintDates(startDate: Date, endDate: Date): SprintValid
 /**
  * Type guard to check if data is a valid CreateSprintRequest
  */
-export function isCreateSprintRequest(data: Record<string, unknown>): boolean {
+export function isCreateSprintRequest(data: unknown): boolean {
+  if (typeof data !== 'object' || data === null) return false;
+  const d = data as Record<string, unknown>;
   const isValid = (
-    typeof data === 'object' &&
-    data !== null &&
-    typeof data.name === 'string' &&
-    typeof data.squadId === 'string' &&
-    typeof data.startDate === 'string' &&
-    typeof data.endDate === 'string'
+    typeof d.name === 'string' &&
+    typeof d.squadId === 'string' &&
+    typeof d.startDate === 'string' &&
+    typeof d.endDate === 'string'
   );
   if (!isValid) return false;
-  // Cast to unknown first, then to CreateSprintRequest
-  return validateCreateSprintRequest(data as unknown as CreateSprintRequest).length === 0;
+  // Now call validateCreateSprintRequest with the raw object
+  return validateCreateSprintRequest(d).length === 0;
 }

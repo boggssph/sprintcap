@@ -114,4 +114,5 @@ export class VersionService {
 }
 
 // Export singleton instance
-// No default export; tests and app should instantiate as needed
+// Provide a singleton for convenience (tests expect `versionService` named export)
+export const versionService = new VersionService();
