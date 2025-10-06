@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createMocks } from 'node-mocks-http'
+import type { NextApiRequest, NextApiResponse } from 'next'
 
 // Mock the sprint service (will be created later)
 vi.mock('../../lib/services/sprintService', async () => {
@@ -12,7 +13,7 @@ import * as sprintService from '../../lib/services/sprintService'
 
 describe('GET /api/sprints - Contract Test', () => {
   beforeEach(() => {
-    ;(sprintService.listSprints as any).mockReset()
+    vi.mocked(sprintService.listSprints as unknown as ReturnType<typeof vi.fn>).mockReset()
   })
 
   it('should return list of sprints for authenticated user', async () => {
@@ -25,7 +26,7 @@ describe('GET /api/sprints - Contract Test', () => {
     })
 
     // Mock successful response
-    ;(sprintService.listSprints as any).mockResolvedValue({
+  vi.mocked(sprintService.listSprints as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       sprints: [
         {
           id: 'sprint-1',
@@ -52,8 +53,8 @@ describe('GET /api/sprints - Contract Test', () => {
     })
 
     try {
-      const handler = await import('../../pages/api/sprints')
-      await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
       expect(res._getStatusCode()).toBe(200)
       const responseData = JSON.parse(res._getData())
@@ -78,7 +79,7 @@ describe('GET /api/sprints - Contract Test', () => {
     })
 
     // Mock filtered response
-    ;(sprintService.listSprints as any).mockResolvedValue({
+  vi.mocked(sprintService.listSprints as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       sprints: [
         {
           id: 'sprint-1',
@@ -96,8 +97,8 @@ describe('GET /api/sprints - Contract Test', () => {
     })
 
     try {
-      const handler = await import('../../pages/api/sprints')
-      await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
       expect(res._getStatusCode()).toBe(200)
       const responseData = JSON.parse(res._getData())
@@ -119,7 +120,7 @@ describe('GET /api/sprints - Contract Test', () => {
     })
 
     // Mock status-filtered response
-    ;(sprintService.listSprints as any).mockResolvedValue({
+  vi.mocked(sprintService.listSprints as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       sprints: [
         {
           id: 'sprint-active',
@@ -137,8 +138,8 @@ describe('GET /api/sprints - Contract Test', () => {
     })
 
     try {
-      const handler = await import('../../pages/api/sprints')
-      await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
       expect(res._getStatusCode()).toBe(200)
       const responseData = JSON.parse(res._getData())
@@ -160,7 +161,7 @@ describe('GET /api/sprints - Contract Test', () => {
     })
 
     // Mock paginated response
-    ;(sprintService.listSprints as any).mockResolvedValue({
+  vi.mocked(sprintService.listSprints as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       sprints: [], // Empty for this test
       total: 25,
       limit: 10,
@@ -168,8 +169,8 @@ describe('GET /api/sprints - Contract Test', () => {
     })
 
     try {
-      const handler = await import('../../pages/api/sprints')
-      await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
       expect(res._getStatusCode()).toBe(200)
       const responseData = JSON.parse(res._getData())

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createMocks } from 'node-mocks-http'
+import type { NextApiRequest, NextApiResponse } from 'next'
 
 // Mock next-auth
 vi.mock('next-auth', async () => {
@@ -20,8 +21,8 @@ import * as sprintService from '../../lib/services/sprintService'
 
 describe('POST /api/sprints - Contract Test', () => {
   beforeEach(() => {
-    ;(sprintService.createSprint as any).mockReset()
-    ;(getServerSession as any).mockResolvedValue({
+    vi.mocked(sprintService.createSprint as unknown as ReturnType<typeof vi.fn>).mockReset()
+    vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: {
         id: 'test-user-id',
         email: 'test@example.com',
@@ -49,7 +50,7 @@ describe('POST /api/sprints - Contract Test', () => {
     })
 
     // Mock successful creation
-    ;(sprintService.createSprint as any).mockResolvedValue({
+  vi.mocked(sprintService.createSprint as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'sprint-uuid',
       name: 'Sprint 2025.10',
       squadId: 'squad-uuid-123',
@@ -61,8 +62,8 @@ describe('POST /api/sprints - Contract Test', () => {
     })
 
     // Import and test the handler
-    const handler = await import('../../pages/api/sprints')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(201)
     const responseData = JSON.parse(res._getData())
@@ -90,12 +91,12 @@ describe('POST /api/sprints - Contract Test', () => {
     })
 
     // Mock validation error
-    ;(sprintService.createSprint as any).mockRejectedValue(
+    vi.mocked(sprintService.createSprint as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
       Object.assign(new Error('End date must be after start date'), { code: 'VALIDATION_ERROR' })
     )
 
-    const handler = await import('../../pages/api/sprints')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(400)
     const responseData = JSON.parse(res._getData())
@@ -120,12 +121,12 @@ describe('POST /api/sprints - Contract Test', () => {
     })
 
     // Mock overlap error
-    ;(sprintService.createSprint as any).mockRejectedValue(
+    vi.mocked(sprintService.createSprint as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
       Object.assign(new Error('Sprint dates overlap with existing sprint \'Sprint 2025.09\''), { code: 'CONFLICT' })
     )
 
-    const handler = await import('../../pages/api/sprints')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(409)
     const responseData = JSON.parse(res._getData())

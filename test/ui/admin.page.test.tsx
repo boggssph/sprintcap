@@ -4,7 +4,7 @@ import { render, screen } from '@testing-library/react'
 import { SessionProvider } from 'next-auth/react'
 
 // make React available globally for JSX runtime in test environment
-;(globalThis as any).React = React
+;(globalThis as unknown as { React?: typeof React }).React = React
 
 // mock next/navigation's useRouter to avoid app router mounting requirement
 vi.mock('next/navigation', () => ({
@@ -16,11 +16,12 @@ import AdminPage from '../../app/admin/page'
 describe('AdminPage UI', () => {
   beforeEach(() => {
     // mock fetch to return empty invites
-    global.fetch = (input: RequestInfo, init?: RequestInit) => {
+    // ignore params intentionally
+    global.fetch = () => {
       return Promise.resolve(new Response(JSON.stringify({ invites: [], nextCursor: null }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
     }
     // mock clipboard
-    // @ts-ignore
+    // @ts-expect-error - test env: provide clipboard mock
     global.navigator.clipboard = { writeText: () => Promise.resolve() }
   })
 
