@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createMocks } from 'node-mocks-http'
 import { getServerSession } from 'next-auth'
+import type { NextApiRequest, NextApiResponse } from 'next'
 
 // Mock next-auth
 vi.mock('next-auth', async () => {
@@ -38,14 +39,14 @@ import { prisma } from '../../lib/prisma'
 
 describe('Sprint Creation - Authorization Integration', () => {
   beforeEach(() => {
-    ;(getServerSession as any).mockReset()
-    ;(prisma.user.findUnique as any).mockReset()
-    ;(prisma.squad.findUnique as any).mockReset()
-    ;(prisma.sprint.create as any).mockReset()
-    ;(prisma.sprint.findFirst as any).mockReset()
-    ;(prisma.squadMember.findMany as any).mockReset()
-    ;(prisma.sprintMember.createMany as any).mockReset()
-    ;(prisma.$transaction as any).mockReset()
+    vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockReset()
+    vi.mocked(prisma.user.findUnique as unknown as ReturnType<typeof vi.fn>).mockReset()
+    vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockReset()
+    vi.mocked(prisma.sprint.create as unknown as ReturnType<typeof vi.fn>).mockReset()
+    vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>).mockReset()
+    vi.mocked(prisma.squadMember.findMany as unknown as ReturnType<typeof vi.fn>).mockReset()
+    vi.mocked(prisma.sprintMember.createMany as unknown as ReturnType<typeof vi.fn>).mockReset()
+    vi.mocked(prisma.$transaction as unknown as ReturnType<typeof vi.fn>).mockReset()
   })
 
   afterEach(() => {
@@ -54,7 +55,7 @@ describe('Sprint Creation - Authorization Integration', () => {
 
   it('should allow Scrum Master to create sprint for owned squad', async () => {
     // Mock authenticated Scrum Master
-    ;(getServerSession as any).mockResolvedValue({
+    vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: {
         id: 'user-1',
         email: 'scrum.master@example.com',
@@ -63,14 +64,14 @@ describe('Sprint Creation - Authorization Integration', () => {
     })
 
     // Mock user lookup
-    ;(prisma.user.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.user.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'user-1',
       email: 'scrum.master@example.com',
       role: 'SCRUM_MASTER'
     })
 
     // Mock squad ownership
-    ;(prisma.squad.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'owned-squad',
       name: 'Owned Squad',
       scrumMasterId: 'user-1' // User owns this squad
@@ -84,15 +85,15 @@ describe('Sprint Creation - Authorization Integration', () => {
     }
 
     // Mock no overlapping sprints
-    ;(prisma.sprint.findFirst as any).mockResolvedValue(null)
+  vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null)
 
     // Mock squad members for population
-    ;(prisma.squadMember.findMany as any).mockResolvedValue([
+    vi.mocked(prisma.squadMember.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
       { userId: 'member-1' }
     ])
 
     // Mock transaction for successful creation
-    ;(prisma.$transaction as any).mockImplementation(async (callback) => {
+    vi.mocked(prisma.$transaction as unknown as ReturnType<typeof vi.fn>).mockImplementation(async (callback) => {
       const result = await callback(prisma)
       return {
         sprint: result.sprint,
@@ -102,7 +103,7 @@ describe('Sprint Creation - Authorization Integration', () => {
     })
 
     // Mock sprint creation
-    ;(prisma.sprint.create as any).mockResolvedValue({
+    vi.mocked(prisma.sprint.create as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'authorized-sprint',
       name: 'Authorized Sprint',
       squadId: 'owned-squad',
@@ -119,8 +120,8 @@ describe('Sprint Creation - Authorization Integration', () => {
       }
     })
 
-    const handler = await import('../../pages/api/sprints')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(201)
 
@@ -132,7 +133,7 @@ describe('Sprint Creation - Authorization Integration', () => {
 
   it('should deny regular member from creating sprint', async () => {
     // Mock authenticated regular member
-    ;(getServerSession as any).mockResolvedValue({
+    vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: {
         id: 'user-2',
         email: 'regular.member@example.com',
@@ -141,14 +142,14 @@ describe('Sprint Creation - Authorization Integration', () => {
     })
 
     // Mock user lookup
-    ;(prisma.user.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.user.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'user-2',
       email: 'regular.member@example.com',
       role: 'MEMBER'
     })
 
     // Mock squad exists but user doesn't own it
-    ;(prisma.squad.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'some-squad',
       name: 'Some Squad',
       scrumMasterId: 'different-user'
@@ -169,8 +170,8 @@ describe('Sprint Creation - Authorization Integration', () => {
       }
     })
 
-    const handler = await import('../../pages/api/sprints')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(403)
     const responseData = JSON.parse(res._getData())
@@ -179,7 +180,7 @@ describe('Sprint Creation - Authorization Integration', () => {
 
   it('should deny Scrum Master from creating sprint for unowned squad', async () => {
     // Mock authenticated Scrum Master
-    ;(getServerSession as any).mockResolvedValue({
+    vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: {
         id: 'user-1',
         email: 'scrum.master@example.com',
@@ -188,14 +189,14 @@ describe('Sprint Creation - Authorization Integration', () => {
     })
 
     // Mock user lookup
-    ;(prisma.user.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.user.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'user-1',
       email: 'scrum.master@example.com',
       role: 'SCRUM_MASTER'
     })
 
     // Mock squad ownership by different Scrum Master
-    ;(prisma.squad.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'unowned-squad',
       name: 'Unowned Squad',
       scrumMasterId: 'different-user' // Different owner
@@ -216,8 +217,8 @@ describe('Sprint Creation - Authorization Integration', () => {
       }
     })
 
-    const handler = await import('../../pages/api/sprints')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(403)
     const responseData = JSON.parse(res._getData())
@@ -231,7 +232,7 @@ describe('Sprint Creation - Authorization Integration', () => {
 
   it('should deny unauthenticated users', async () => {
     // Mock unauthenticated user
-    ;(getServerSession as any).mockResolvedValue(null)
+  vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null)
 
     const requestBody = {
       name: 'Unauthenticated Sprint',
@@ -248,8 +249,8 @@ describe('Sprint Creation - Authorization Integration', () => {
       }
     })
 
-    const handler = await import('../../pages/api/sprints')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(401)
     const responseData = JSON.parse(res._getData())
@@ -258,7 +259,7 @@ describe('Sprint Creation - Authorization Integration', () => {
 
   it('should deny access to non-existent squad', async () => {
     // Mock authenticated Scrum Master
-    ;(getServerSession as any).mockResolvedValue({
+    vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: {
         id: 'user-1',
         email: 'scrum.master@example.com',
@@ -267,14 +268,14 @@ describe('Sprint Creation - Authorization Integration', () => {
     })
 
     // Mock user lookup
-    ;(prisma.user.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.user.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'user-1',
       email: 'scrum.master@example.com',
       role: 'SCRUM_MASTER'
     })
 
     // Mock squad not found
-    ;(prisma.squad.findUnique as any).mockResolvedValue(null)
+  vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null)
 
     const requestBody = {
       name: 'Non-existent Squad Sprint',
@@ -291,8 +292,8 @@ describe('Sprint Creation - Authorization Integration', () => {
       }
     })
 
-    const handler = await import('../../pages/api/sprints')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(404)
     const responseData = JSON.parse(res._getData())
@@ -301,7 +302,7 @@ describe('Sprint Creation - Authorization Integration', () => {
 
   it('should deny creation of sprint with duplicate name in same squad', async () => {
     // Mock authenticated Scrum Master
-    ;(getServerSession as any).mockResolvedValue({
+    vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: {
         id: 'user-1',
         email: 'scrum.master@example.com',
@@ -310,14 +311,14 @@ describe('Sprint Creation - Authorization Integration', () => {
     })
 
     // Mock user lookup
-    ;(prisma.user.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.user.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'user-1',
       email: 'scrum.master@example.com',
       role: 'SCRUM_MASTER'
     })
 
     // Mock squad ownership
-    ;(prisma.squad.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'owned-squad',
       name: 'Owned Squad',
       scrumMasterId: 'user-1' // User owns this squad
@@ -332,7 +333,7 @@ describe('Sprint Creation - Authorization Integration', () => {
 
     // Mock existing sprint with same name in the squad (first call for uniqueness check)
     // and no overlapping sprints (second call for date overlap check)
-    ;(prisma.sprint.findFirst as any)
+    vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce({
         id: 'existing-sprint',
         name: 'FMBS-Sprint-111',
@@ -348,8 +349,8 @@ describe('Sprint Creation - Authorization Integration', () => {
       }
     })
 
-    const handler = await import('../../pages/api/sprints')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(409)
     const responseData = JSON.parse(res._getData())

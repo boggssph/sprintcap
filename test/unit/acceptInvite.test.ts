@@ -18,9 +18,9 @@ describe('acceptInvite', () => {
 
   it('accepts a valid token and creates/links user', async () => {
     const mockInvite = { id: 'inv1', email: 'new@user.com', squadId: null }
-    ;(prisma.invitation.findFirst as any).mockResolvedValue(mockInvite)
-    ;(prisma.user.findUnique as any).mockResolvedValue(null)
-    ;(prisma.user.create as any).mockResolvedValue({ id: 'user1', email: 'new@user.com' })
+  vi.mocked(prisma.invitation.findFirst as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockInvite)
+  vi.mocked(prisma.user.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null)
+  vi.mocked(prisma.user.create as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'user1', email: 'new@user.com' })
 
     const res = await acceptInvite('token123', 'new@user.com')
     expect(res.success).toBe(true)

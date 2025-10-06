@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createMocks } from 'node-mocks-http'
 import { getServerSession } from 'next-auth'
+import type { NextApiRequest, NextApiResponse } from 'next'
 
 // Mock next-auth
 vi.mock('next-auth', async () => {
@@ -40,16 +41,16 @@ import { prisma } from '../../lib/prisma'
 
 describe('Sprint Creation - Overlap Prevention Integration', () => {
   beforeEach(() => {
-    ;(getServerSession as any).mockReset()
-    ;(prisma.user.findUnique as any).mockReset()
-    ;(prisma.sprint.findFirst as any).mockReset()
-    ;(prisma.squad.findUnique as any).mockReset()
-    ;(prisma.squadMember.findMany as any).mockReset()
-    ;(prisma.sprintMember.createMany as any).mockReset()
-    ;(prisma.$transaction as any).mockReset()
+    vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockReset()
+    vi.mocked(prisma.user.findUnique as unknown as ReturnType<typeof vi.fn>).mockReset()
+    vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>).mockReset()
+    vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockReset()
+    vi.mocked(prisma.squadMember.findMany as unknown as ReturnType<typeof vi.fn>).mockReset()
+    vi.mocked(prisma.sprintMember.createMany as unknown as ReturnType<typeof vi.fn>).mockReset()
+    vi.mocked(prisma.$transaction as unknown as ReturnType<typeof vi.fn>).mockReset()
 
     // Mock user lookup to return a valid Scrum Master
-    ;(prisma.user.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.user.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'user-1',
       email: 'scrum.master@example.com',
       role: 'SCRUM_MASTER'
@@ -62,7 +63,7 @@ describe('Sprint Creation - Overlap Prevention Integration', () => {
 
   it('should prevent creation of overlapping sprints', async () => {
     // Mock authenticated Scrum Master
-    ;(getServerSession as any).mockResolvedValue({
+    vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: {
         id: 'user-1',
         email: 'scrum.master@example.com',
@@ -71,14 +72,14 @@ describe('Sprint Creation - Overlap Prevention Integration', () => {
     })
 
     // Mock squad ownership
-    ;(prisma.squad.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'squad-123',
       name: 'Test Squad',
       scrumMasterId: 'user-1'
     })
 
     // Mock existing overlapping sprint
-    ;(prisma.sprint.findFirst as any).mockResolvedValue({
+    vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'existing-sprint',
       name: 'Sprint 2025.09',
       startDate: new Date('2025-09-16T09:00:00Z'),
@@ -100,8 +101,8 @@ describe('Sprint Creation - Overlap Prevention Integration', () => {
       }
     })
 
-    const handler = await import('../../pages/api/sprints')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
   expect(res._getStatusCode()).toBe(409)
   const responseData = JSON.parse(res._getData())
@@ -121,7 +122,7 @@ describe('Sprint Creation - Overlap Prevention Integration', () => {
 
   it('should allow creation when no overlap exists', async () => {
     // Mock authenticated Scrum Master
-    ;(getServerSession as any).mockResolvedValue({
+    vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: {
         id: 'user-1',
         email: 'scrum.master@example.com',
@@ -130,14 +131,14 @@ describe('Sprint Creation - Overlap Prevention Integration', () => {
     })
 
     // Mock squad ownership
-    ;(prisma.squad.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'squad-123',
       name: 'Test Squad',
       scrumMasterId: 'user-1'
     })
 
     // Mock no overlapping sprints
-    ;(prisma.sprint.findFirst as any).mockResolvedValue(null)
+  vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null)
 
     const requestBody = {
       name: 'Non-overlapping Sprint',
@@ -147,13 +148,13 @@ describe('Sprint Creation - Overlap Prevention Integration', () => {
     }
 
     // Mock squad members for population
-    ;(prisma.squadMember.findMany as any).mockResolvedValue([
+    vi.mocked(prisma.squadMember.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
       { userId: 'member-1' },
       { userId: 'member-2' }
     ])
 
     // Mock transaction for successful creation
-    ;(prisma.$transaction as any).mockImplementation(async (callback) => {
+    vi.mocked(prisma.$transaction as unknown as ReturnType<typeof vi.fn>).mockImplementation(async (callback) => {
       const result = await callback(prisma)
       return {
         sprint: result.sprint,
@@ -163,7 +164,7 @@ describe('Sprint Creation - Overlap Prevention Integration', () => {
     })
 
     // Mock sprint creation
-    ;(prisma.sprint.create as any).mockResolvedValue({
+    vi.mocked(prisma.sprint.create as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'new-sprint-123',
       name: 'Non-overlapping Sprint',
       squadId: 'squad-123',
@@ -180,8 +181,8 @@ describe('Sprint Creation - Overlap Prevention Integration', () => {
       }
     })
 
-    const handler = await import('../../pages/api/sprints')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(201)
     const responseData = JSON.parse(res._getData())

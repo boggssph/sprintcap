@@ -26,13 +26,13 @@ describe('Sprint Creation Performance', () => {
     vi.clearAllMocks()
 
     // Default mocks for successful sprint creation
-    ;(prisma.squad.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'squad-1',
       name: 'Test Squad',
       scrumMasterId: 'user-1'
     })
 
-    ;(prisma.squadMember.findMany as any).mockResolvedValue([
+    vi.mocked(prisma.squadMember.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
       { userId: 'user-2', user: { displayName: 'Dev 1', email: 'dev1@test.com' } },
       { userId: 'user-3', user: { displayName: 'Dev 2', email: 'dev2@test.com' } },
       { userId: 'user-4', user: { displayName: 'Dev 3', email: 'dev3@test.com' } },
@@ -40,9 +40,9 @@ describe('Sprint Creation Performance', () => {
       { userId: 'user-6', user: { displayName: 'Dev 5', email: 'dev5@test.com' } }
     ])
 
-    ;(prisma.sprint.findFirst as any).mockResolvedValue(null) // No overlap
+    vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null) // No overlap
 
-    ;(prisma.sprint.create as any).mockResolvedValue({
+    vi.mocked(prisma.sprint.create as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'sprint-1',
       name: 'Performance Test Sprint',
       squadId: 'squad-1',
@@ -51,9 +51,9 @@ describe('Sprint Creation Performance', () => {
       createdAt: new Date()
     })
 
-    ;(prisma.sprintMember.createMany as any).mockResolvedValue({ count: 5 })
+    vi.mocked(prisma.sprintMember.createMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ count: 5 })
 
-    ;(prisma.$transaction as any).mockImplementation(async (callback) => {
+    vi.mocked(prisma.$transaction as unknown as ReturnType<typeof vi.fn>).mockImplementation(async (callback) => {
       const result = await callback({
         sprint: { create: prisma.sprint.create },
         sprintMember: { createMany: prisma.sprintMember.createMany }
@@ -133,8 +133,8 @@ describe('Sprint Creation Performance', () => {
         }
       }))
 
-      ;(prisma.squadMember.findMany as any).mockResolvedValue(largeSquadMembers)
-      ;(prisma.sprintMember.createMany as any).mockResolvedValue({ count: 25 })
+  vi.mocked(prisma.squadMember.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(largeSquadMembers)
+  vi.mocked(prisma.sprintMember.createMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ count: 25 })
 
       const { createSprint } = await import('../../lib/services/sprintService')
 
@@ -157,7 +157,7 @@ describe('Sprint Creation Performance', () => {
 
     it('should handle overlap detection performance', async () => {
       // Mock existing sprints for overlap checking
-      ;(prisma.sprint.findFirst as any).mockResolvedValue(null) // No overlap
+  vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null) // No overlap
 
       const { createSprint } = await import('../../lib/services/sprintService')
 
@@ -203,7 +203,7 @@ describe('Sprint Creation Performance', () => {
       const { createSprint } = await import('../../lib/services/sprintService')
 
       const iterations = 10
-      const results: Array<{ duration: number; result: any }> = []
+  const results: Array<{ duration: number; result: unknown }> = []
 
       for (let i = 0; i < iterations; i++) {
         const startTime = performance.now()

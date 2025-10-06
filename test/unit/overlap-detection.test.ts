@@ -26,13 +26,13 @@ describe('Sprint Overlap Detection', () => {
     vi.clearAllMocks()
 
     // Default mocks for squad ownership and members
-    ;(prisma.squad.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'squad-123',
       name: 'Test Squad',
       scrumMasterId: 'user-1'
     })
 
-    ;(prisma.squadMember.findMany as any).mockResolvedValue([
+    vi.mocked(prisma.squadMember.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
       {
         userId: 'user-2',
         user: { displayName: 'Developer 1', email: 'dev1@example.com' }
@@ -43,8 +43,8 @@ describe('Sprint Overlap Detection', () => {
       }
     ])
 
-    ;(prisma.sprintMember.createMany as any).mockResolvedValue({ count: 2 })
-    ;(prisma.sprint.create as any).mockResolvedValue({
+    vi.mocked(prisma.sprintMember.createMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ count: 2 })
+    vi.mocked(prisma.sprint.create as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'new-sprint-id',
       name: 'New Sprint',
       squadId: 'squad-123',
@@ -52,7 +52,7 @@ describe('Sprint Overlap Detection', () => {
       endDate: new Date('2025-10-30T17:00:00Z'),
       createdAt: new Date()
     })
-    ;(prisma.$transaction as any).mockImplementation(async (callback) => {
+    vi.mocked(prisma.$transaction as unknown as ReturnType<typeof vi.fn>).mockImplementation(async (callback) => {
       const result = await callback({
         sprint: { create: prisma.sprint.create },
         sprintMember: { createMany: prisma.sprintMember.createMany }
@@ -74,7 +74,7 @@ describe('Sprint Overlap Detection', () => {
 
       // Mock: first call for uniqueness check (no existing sprint with this name)
       // second call for overlap check (finds overlapping sprint)
-      ;(prisma.sprint.findFirst as any)
+      vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>)
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce(mockOverlappingSprint)
 
@@ -127,7 +127,7 @@ describe('Sprint Overlap Detection', () => {
 
       // Mock: first call for uniqueness check (no existing sprint with this name)
       // second call for overlap check (finds overlapping sprint)
-      ;(prisma.sprint.findFirst as any)
+      vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>)
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce(mockOverlappingSprint)
 
@@ -153,7 +153,7 @@ describe('Sprint Overlap Detection', () => {
 
       // Mock: first call for uniqueness check (no existing sprint with this name)
       // second call for overlap check (finds overlapping sprint)
-      ;(prisma.sprint.findFirst as any)
+      vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>)
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce(mockOverlappingSprint)
 
@@ -179,7 +179,7 @@ describe('Sprint Overlap Detection', () => {
 
       // Mock: first call for uniqueness check (no existing sprint with this name)
       // second call for overlap check (finds overlapping sprint)
-      ;(prisma.sprint.findFirst as any)
+      vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>)
         .mockResolvedValueOnce(null)
         .mockResolvedValueOnce(mockOverlappingSprint)
 
@@ -196,7 +196,7 @@ describe('Sprint Overlap Detection', () => {
     it('should allow non-overlapping sprints', async () => {
       // Existing sprint: 2025-10-01 to 2025-10-15
       // New sprint: 2025-10-16 to 2025-10-30 (starts right after existing ends)
-      ;(prisma.sprint.findFirst as any)
+      vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>)
         .mockResolvedValueOnce(null) // No existing sprint with this name
         .mockResolvedValueOnce(null) // No overlapping sprint
 
@@ -217,7 +217,7 @@ describe('Sprint Overlap Detection', () => {
     it('should allow sprints that touch at boundaries (end equals start)', async () => {
       // Existing sprint: 2025-10-01 to 2025-10-15
       // New sprint: 2025-10-15 to 2025-10-30 (starts exactly when existing ends)
-      ;(prisma.sprint.findFirst as any)
+      vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>)
         .mockResolvedValueOnce(null) // No existing sprint with this name
         .mockResolvedValueOnce(null) // No overlapping sprint
 
@@ -238,12 +238,12 @@ describe('Sprint Overlap Detection', () => {
     it('should detect overlap across different squads independently', async () => {
       // Existing sprint in squad-123: 2025-10-01 to 2025-10-15
       // New sprint in squad-456: 2025-10-05 to 2025-10-20 (overlaps but in different squad)
-      ;(prisma.sprint.findFirst as any)
+      vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>)
         .mockResolvedValueOnce(null) // No existing sprint with this name in squad-456
         .mockResolvedValueOnce(null) // No overlap in squad-456
 
       // Mock squad-456 ownership
-      ;(prisma.squad.findUnique as any).mockResolvedValueOnce({
+      vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         id: 'squad-456',
         name: 'Other Squad',
         scrumMasterId: 'user-1'

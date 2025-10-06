@@ -1,52 +1,176 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { toast } from 'sonner'
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Target, BarChart3, Users, Settings, Plus } from "lucide-react";
 import SprintCreationForm from "@/components/SprintCreationForm";
+import SquadFormFields from '@/components/SquadFormFields'
 import ScrumMasterHeader from "@/components/ScrumMasterHeader";
 
 // --- Types ---
 interface Squad {
-  id?: number;
+  id?: string | number;
   alias?: string;
   name?: string;
+  memberCount?: number;
 }
 
 // --- Inline Create Squad Form ---
-function CreateSquadForm({ onSuccess }: { onSuccess: () => void }) {
-  // Minimal placeholder for now
+function CreateSquadForm({ onSuccess, refreshSquads }: { onSuccess: () => void; refreshSquads?: () => Promise<void> }) {
+  const [name, setName] = React.useState("");
+  const [alias, setAlias] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!name.trim() || !alias.trim()) {
+      setError('Name and alias are required');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch('/api/squads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), alias: alias.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data?.error || 'Failed to create squad');
+        toast.error(data?.error || 'Failed to create squad')
+        return;
+      }
+      await refreshSquads?.();
+      toast.success('Squad created')
+      onSuccess();
+    } catch (e) {
+      setError('Network error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <form className="max-w-md space-y-4 bg-white p-6 rounded shadow">
+    <form onSubmit={handleCreate} className="max-w-md space-y-4 bg-white p-6 rounded shadow">
       <h2 className="text-xl font-semibold mb-2">Create Squad</h2>
+      <SquadFormFields name={name} alias={alias} onChangeName={setName} onChangeAlias={setAlias} />
+      {error && <div className="text-sm text-red-600">{error}</div>}
       <div className="flex gap-2">
-        <Button type="button" onClick={onSuccess}>Done</Button>
+        <Button type="submit" disabled={loading}>{loading ? 'Creating...' : 'Create'}</Button>
+        <Button type="button" variant="ghost" onClick={onSuccess}>Cancel</Button>
       </div>
     </form>
   );
 }
 
 // --- Inline Edit Squad Form ---
-function EditSquadForm({ onSuccess }: { squad: Squad; onSuccess: () => void }) {
-  // Minimal placeholder for now
+function EditSquadForm({ squad, onSuccess, refreshSquads }: { squad: Squad; onSuccess: (updated?: Squad) => void; refreshSquads?: () => Promise<void> }) {
+  const [name, setName] = React.useState(squad?.name || '');
+  const [alias, setAlias] = React.useState(squad?.alias || '');
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!name.trim() || !alias.trim()) {
+      setError('Name and alias are required');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/squads/${squad.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), alias: alias.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data?.error || 'Failed to update squad');
+        return;
+      }
+      const updated = await res.json().catch(() => null);
+      // Refresh parent squad list and notify parent with updated squad so it can select it
+      await refreshSquads?.();
+      toast.success('Squad updated')
+      onSuccess(updated || undefined);
+    } catch (e) {
+      setError('Network error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <form className="max-w-md space-y-4 bg-white p-6 rounded shadow">
+    <form onSubmit={handleSave} className="max-w-md space-y-4 bg-white p-6 rounded shadow">
       <h2 className="text-xl font-semibold mb-2">Edit Squad</h2>
+      <SquadFormFields name={name} alias={alias} onChangeName={setName} onChangeAlias={setAlias} />
+      {error && <div className="text-sm text-red-600">{error}</div>}
       <div className="flex gap-2">
-        <Button type="button" onClick={onSuccess}>Done</Button>
+  <Button type="submit" disabled={loading}>{loading ? 'Saving...' : 'Save'}</Button>
+  <Button type="button" variant="ghost" onClick={() => onSuccess()}>Cancel</Button>
       </div>
     </form>
   );
 }
 
 // --- Inline Invite Members Form ---
-function InviteMembersForm({ onSuccess }: { squad: Squad; onSuccess: () => void }) {
-  // Minimal placeholder for now
+function InviteMembersForm({ squad, onSuccess, refreshSquads }: { squad: Squad; onSuccess: (updated?: Squad) => void; refreshSquads?: () => Promise<void> }) {
+  const [emails, setEmails] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function handleInvite(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    const list = emails.split(/\s*,\s*/).map(s => s.trim()).filter(Boolean);
+    if (!list.length) {
+      setError('Please provide one or more email addresses');
+      return;
+    }
+    if (list.length > 10) {
+      setError('Maximum 10 emails allowed per request');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch('/api/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emails: list, squadId: squad.id })
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data?.error || 'Failed to send invites');
+        toast.error(data?.error || 'Failed to send invites')
+        return;
+      }
+      // Refresh squad list/member counts
+      await refreshSquads?.();
+      toast.success('Invites sent')
+      onSuccess();
+    } catch (e) {
+      setError('Network error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <form className="max-w-md space-y-4 bg-white p-6 rounded shadow">
+    <form onSubmit={handleInvite} className="max-w-md space-y-4 bg-white p-6 rounded shadow">
       <h2 className="text-xl font-semibold mb-2">Invite Members</h2>
+      <div className="text-sm text-slate-600">Inviting to: {squad?.alias || squad?.name || 'Unnamed'}</div>
+      <div>
+        <label className="block text-sm font-medium text-slate-700">Emails (comma separated)</label>
+        <textarea value={emails} onChange={(e) => setEmails(e.target.value)} className="mt-1 block w-full rounded-md border px-2 py-1" rows={4} />
+      </div>
+      {error && <div className="text-sm text-red-600">{error}</div>}
       <div className="flex gap-2">
-        <Button type="button" onClick={onSuccess}>Done</Button>
+  <Button type="submit" disabled={loading}>{loading ? 'Sending...' : 'Send Invites'}</Button>
+  <Button type="button" variant="ghost" onClick={() => onSuccess()}>Cancel</Button>
       </div>
     </form>
   );
@@ -56,10 +180,58 @@ export default function ScrumMasterDashboard() {
   const [view, setView] = useState<'overview' | 'squad' | 'sprint' | 'settings'>("overview");
   const [squadMenuOpen, setSquadMenuOpen] = useState(false);
   const [sprintMenuOpen, setSprintMenuOpen] = useState(false);
-  const [showSprintForm, setShowSprintForm] = useState(false);
+  // showSprintForm removed - sprint form is rendered in the 'sprint' view
 
   const [squadAction, setSquadAction] = useState<null | 'create' | 'edit' | 'invite'>(null);
-  const [selectedSquad] = useState<Squad | null>(null);
+  const [selectedSquad, setSelectedSquad] = useState<Squad | null>(null);
+  const [squads, setSquads] = useState<Squad[]>([]);
+  // Refs used for focusing submenu items when opened
+  const squadMenuButtonRef = React.useRef<HTMLButtonElement | null>(null)
+  const squadFirstSubRef = React.useRef<HTMLButtonElement | null>(null)
+  const sprintMenuButtonRef = React.useRef<HTMLButtonElement | null>(null)
+  const sprintFirstSubRef = React.useRef<HTMLButtonElement | null>(null)
+
+  // When squad submenu opens, move focus to first submenu item
+  useEffect(() => {
+    if (squadMenuOpen) {
+      // slight delay to ensure element is mounted
+      setTimeout(() => squadFirstSubRef.current?.focus(), 0)
+    }
+  }, [squadMenuOpen])
+
+  // When sprint submenu opens, focus its first item
+  useEffect(() => {
+    if (sprintMenuOpen) {
+      setTimeout(() => sprintFirstSubRef.current?.focus(), 0)
+    }
+  }, [sprintMenuOpen])
+
+  // Load squads for the current Scrum Master so the sidebar/list can operate.
+  // fetchSquads is exposed so children (CreateSquadForm) can refresh the list after creating.
+  async function fetchSquads() {
+    try {
+      const res = await fetch('/api/squads');
+      if (!res.ok) {
+        console.error('Failed to fetch squads', res.statusText);
+        return;
+      }
+      const data = await res.json();
+      setSquads(data.squads || []);
+      if (!selectedSquad && (data.squads || []).length > 0) {
+        setSelectedSquad((data.squads || [])[0]);
+      }
+    } catch (e) {
+      console.error('Failed to fetch squads', e);
+    }
+  }
+
+  useEffect(() => {
+    let mounted = true;
+    if (mounted) fetchSquads();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   function handleSignOut() {
     // Implement sign out logic here
@@ -91,20 +263,36 @@ export default function ScrumMasterDashboard() {
                 </SidebarMenuItem>
                 {/* Squad with submenu */}
                 <SidebarMenuItem>
+                  {/** Manage focus when submenu opens. We keep refs to the parent button and first submenu item. */}
                   <SidebarMenuButton
+                    ref={squadMenuButtonRef}
                     className={view === 'squad' ? 'bg-indigo-50 text-indigo-700' : ''}
                     onClick={() => {
                       setView('squad');
                       setSquadMenuOpen((open) => !open);
                     }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSquadMenuOpen((open) => !open)
+                      }
+                    }}
                     aria-expanded={squadMenuOpen}
+                    aria-controls="squad-submenu"
                   >
                     <Users className="h-4 w-4 mr-2" />
                     Squad
                   </SidebarMenuButton>
+
                   {squadMenuOpen && (
-                    <div className="ml-8 mt-1 space-y-1">
-                      <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => { setView('squad'); setSquadAction('create'); }}>
+                    <div id="squad-submenu" className="ml-8 mt-1 space-y-1" onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        e.preventDefault();
+                        setSquadMenuOpen(false);
+                        squadMenuButtonRef.current?.focus()
+                      }
+                    }}>
+                      <Button ref={squadFirstSubRef} variant="ghost" size="sm" className="w-full justify-start" onClick={() => { setView('squad'); setSquadAction('create'); }}>
                         + Create Squad
                       </Button>
                       <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => { setView('squad'); setSquadAction('edit'); }}>
@@ -117,21 +305,30 @@ export default function ScrumMasterDashboard() {
                   )}
                 </SidebarMenuItem>
                 {/* Sprint with submenu */}
-                <SidebarMenuItem>
+                  <SidebarMenuItem>
                   <SidebarMenuButton
+                    ref={sprintMenuButtonRef}
                     className={view === 'sprint' ? 'bg-indigo-50 text-indigo-700' : ''}
                     onClick={() => {
                       setView('sprint');
                       setSprintMenuOpen((open) => !open);
                     }}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSprintMenuOpen(open => !open) } }}
                     aria-expanded={sprintMenuOpen}
+                    aria-controls="sprint-submenu"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Sprint
                   </SidebarMenuButton>
                   {sprintMenuOpen && (
-                    <div className="ml-8 mt-1 space-y-1">
-                      <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => setShowSprintForm(true)}>
+                    <div id="sprint-submenu" className="ml-8 mt-1 space-y-1" onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        e.preventDefault();
+                        setSprintMenuOpen(false);
+                        sprintMenuButtonRef.current?.focus()
+                      }
+                    }}>
+                      <Button ref={sprintFirstSubRef} variant="ghost" size="sm" className="w-full justify-start" onClick={() => { setView('sprint'); setSprintMenuOpen(false); }}>
                         + Create Sprint
                       </Button>
                       {/* Add more sprint actions here */}
@@ -157,17 +354,7 @@ export default function ScrumMasterDashboard() {
             {/* Header */}
             <ScrumMasterHeader onSignOut={handleSignOut} />
             <main className="w-full max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 flex-1 flex flex-col">
-              {/* Conditional Sprint Creation Form */}
-              {showSprintForm && (
-                <div className="mb-6">
-                  <div className="flex justify-end mb-2">
-                    <Button variant="outline" size="sm" onClick={() => setShowSprintForm(false)}>
-                      Cancel
-                    </Button>
-                  </div>
-                  <SprintCreationForm />
-                </div>
-              )}
+              {/* Sprint Creation rendered in the sprint view (main body) */}
               {/* Main dashboard content by view */}
               {view === 'overview' && (
                 <div className="text-slate-700 text-lg">Overview content goes here.</div>
@@ -176,27 +363,61 @@ export default function ScrumMasterDashboard() {
                 <div className="text-slate-700 text-lg">
                   {/* Squad action views */}
                   {squadAction === null && (
-                    <div>Squad list and actions go here.</div>
+                    <div>
+                      <div className="mb-4">
+                        <div className="text-sm text-slate-600 mb-2">Your Squads</div>
+                        {squads.length === 0 ? (
+                          <div className="text-sm text-gray-500">No squads found.</div>
+                        ) : (
+                          <ul className="space-y-2">
+                            {squads.map((s) => (
+                              <li key={(s.id ?? s.name) as React.Key}>
+                                <button
+                                  className={`w-full text-left p-2 rounded-md hover:bg-slate-50 ${selectedSquad?.id === s.id ? 'bg-indigo-50 text-indigo-700' : ''}`}
+                                  onClick={() => setSelectedSquad(s)}
+                                >
+                                  <div className="font-medium">{s.name} {s.alias ? `(${s.alias})` : ''}</div>
+                                  <div className="text-xs text-slate-500">{s.memberCount ?? 0} members</div>
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
                   )}
                   {squadAction === 'create' && (
-                    <CreateSquadForm onSuccess={() => setSquadAction(null)} />
+                    <CreateSquadForm onSuccess={() => setSquadAction(null)} refreshSquads={fetchSquads} />
                   )}
                   {squadAction === 'edit' && selectedSquad && (
                     <EditSquadForm
                       squad={selectedSquad}
-                      onSuccess={() => setSquadAction(null)}
+                      refreshSquads={fetchSquads}
+                      onSuccess={(updated) => {
+                        setSquadAction(null);
+                        if (updated) setSelectedSquad(updated as Squad);
+                      }}
                     />
                   )}
                   {squadAction === 'invite' && selectedSquad && (
                     <InviteMembersForm
                       squad={selectedSquad}
-                      onSuccess={() => setSquadAction(null)}
+                      refreshSquads={fetchSquads}
+                      onSuccess={() => {
+                        setSquadAction(null);
+                        // keep current selection
+                      }}
                     />
                   )}
                 </div>
               )}
               {view === 'sprint' && (
-                <div className="text-slate-700 text-lg">Sprint actions and list go here.</div>
+                <div className="text-slate-700 text-lg">
+                  <div className="mb-6">
+                    <SprintCreationForm squadsProp={squads as unknown as { id: string; name: string; alias?: string; memberCount: number }[]} selectedSquadIdProp={selectedSquad?.id as string | undefined} onSprintCreated={() => { /* no-op for now */ }} />
+                  </div>
+                  <div>Sprint list and other sprint actions go here.</div>
+                </div>
               )}
               {view === 'settings' && (
                 <div className="text-slate-700 text-lg">Settings and profile actions go here.</div>

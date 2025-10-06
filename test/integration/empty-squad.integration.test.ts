@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createMocks } from 'node-mocks-http'
 import { getServerSession } from 'next-auth'
+import type { NextApiRequest, NextApiResponse } from 'next'
 
 // Mock next-auth
 vi.mock('next-auth', async () => {
@@ -38,16 +39,16 @@ import { prisma } from '../../lib/prisma'
 
 describe('Sprint Creation - Empty Squad Integration', () => {
   beforeEach(() => {
-    ;(getServerSession as any).mockReset()
-    ;(prisma.user.findUnique as any).mockReset()
-    ;(prisma.sprint.create as any).mockReset()
-    ;(prisma.squadMember.findMany as any).mockReset()
-    ;(prisma.squad.findUnique as any).mockReset()
-    ;(prisma.sprintMember.createMany as any).mockReset()
-    ;(prisma.$transaction as any).mockReset()
+  vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockReset()
+  vi.mocked(prisma.user.findUnique as unknown as ReturnType<typeof vi.fn>).mockReset()
+  vi.mocked(prisma.sprint.create as unknown as ReturnType<typeof vi.fn>).mockReset()
+  vi.mocked(prisma.squadMember.findMany as unknown as ReturnType<typeof vi.fn>).mockReset()
+  vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockReset()
+  vi.mocked(prisma.sprintMember.createMany as unknown as ReturnType<typeof vi.fn>).mockReset()
+  vi.mocked(prisma.$transaction as unknown as ReturnType<typeof vi.fn>).mockReset()
 
     // Mock user lookup to return a valid Scrum Master
-    ;(prisma.user.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.user.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'user-1',
       email: 'scrum.master@example.com',
       role: 'SCRUM_MASTER'
@@ -60,7 +61,7 @@ describe('Sprint Creation - Empty Squad Integration', () => {
 
   it('should create sprint successfully for squad with no active members', async () => {
     // Mock authenticated Scrum Master
-    ;(getServerSession as any).mockResolvedValue({
+    vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: {
         id: 'user-1',
         email: 'scrum.master@example.com',
@@ -69,17 +70,17 @@ describe('Sprint Creation - Empty Squad Integration', () => {
     })
 
     // Mock squad ownership
-    ;(prisma.squad.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'empty-squad',
       name: 'Empty Squad',
       scrumMasterId: 'user-1'
     })
 
     // Mock empty squad members list
-    ;(prisma.squadMember.findMany as any).mockResolvedValue([])
+  vi.mocked(prisma.squadMember.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([])
 
     // Mock sprint creation
-    ;(prisma.sprint.create as any).mockResolvedValue({
+    vi.mocked(prisma.sprint.create as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'empty-sprint',
       name: 'Sprint for Empty Squad',
       squadId: 'empty-squad',
@@ -96,10 +97,10 @@ describe('Sprint Creation - Empty Squad Integration', () => {
     }
 
     // Mock no overlapping sprints
-    ;(prisma.sprint.findFirst as any).mockResolvedValue(null)
+  vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null)
 
     // Mock transaction for successful creation
-    ;(prisma.$transaction as any).mockImplementation(async (callback) => {
+    vi.mocked(prisma.$transaction as unknown as ReturnType<typeof vi.fn>).mockImplementation(async (callback) => {
       const result = await callback(prisma)
       return {
         sprint: result.sprint,
@@ -116,8 +117,8 @@ describe('Sprint Creation - Empty Squad Integration', () => {
       }
     })
 
-    const handler = await import('../../pages/api/sprints')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(201)
     const responseData = JSON.parse(res._getData())
@@ -152,7 +153,7 @@ describe('Sprint Creation - Empty Squad Integration', () => {
 
   it('should handle squad with only inactive members', async () => {
     // Mock authenticated Scrum Master
-    ;(getServerSession as any).mockResolvedValue({
+    vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: {
         id: 'user-1',
         email: 'scrum.master@example.com',
@@ -161,17 +162,17 @@ describe('Sprint Creation - Empty Squad Integration', () => {
     })
 
     // Mock squad ownership
-    ;(prisma.squad.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'inactive-squad',
       name: 'Squad with Inactive Members',
       scrumMasterId: 'user-1'
     })
 
     // Mock squad members query returns empty (simulating inactive members)
-    ;(prisma.squadMember.findMany as any).mockResolvedValue([])
+  vi.mocked(prisma.squadMember.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([])
 
     // Mock sprint creation
-    ;(prisma.sprint.create as any).mockResolvedValue({
+    vi.mocked(prisma.sprint.create as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'inactive-sprint',
       name: 'Sprint for Inactive Squad',
       squadId: 'inactive-squad',
@@ -188,10 +189,10 @@ describe('Sprint Creation - Empty Squad Integration', () => {
     }
 
     // Mock no overlapping sprints
-    ;(prisma.sprint.findFirst as any).mockResolvedValue(null)
+  vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null)
 
     // Mock transaction for successful creation
-    ;(prisma.$transaction as any).mockImplementation(async (callback) => {
+    vi.mocked(prisma.$transaction as unknown as ReturnType<typeof vi.fn>).mockImplementation(async (callback) => {
       const result = await callback(prisma)
       return {
         sprint: result.sprint,
@@ -208,8 +209,8 @@ describe('Sprint Creation - Empty Squad Integration', () => {
       }
     })
 
-    const handler = await import('../../pages/api/sprints')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(201)
     const responseData = JSON.parse(res._getData())

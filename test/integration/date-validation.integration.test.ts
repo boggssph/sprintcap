@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createMocks } from 'node-mocks-http'
 import { getServerSession } from 'next-auth'
+import type { NextApiRequest, NextApiResponse } from 'next'
 
 // Mock next-auth
 vi.mock('next-auth', async () => {
@@ -38,24 +39,24 @@ import { prisma } from '../../lib/prisma'
 
 describe('Sprint Creation - Date Validation Integration', () => {
   beforeEach(() => {
-     ;(getServerSession as any).mockReset()
-     ;(prisma.user.findUnique as any).mockReset()
-     ;(prisma.squad.findUnique as any).mockReset()
-     ;(prisma.squadMember.findMany as any).mockReset()
-     ;(prisma.sprint.findFirst as any).mockReset()
-     ;(prisma.sprint.create as any).mockReset()
-     ;(prisma.sprintMember.createMany as any).mockReset()
-     ;(prisma.$transaction as any).mockReset()
+  vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockReset()
+  vi.mocked(prisma.user.findUnique as unknown as ReturnType<typeof vi.fn>).mockReset()
+  vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockReset()
+  vi.mocked(prisma.squadMember.findMany as unknown as ReturnType<typeof vi.fn>).mockReset()
+  vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>).mockReset()
+  vi.mocked(prisma.sprint.create as unknown as ReturnType<typeof vi.fn>).mockReset()
+  vi.mocked(prisma.sprintMember.createMany as unknown as ReturnType<typeof vi.fn>).mockReset()
+  vi.mocked(prisma.$transaction as unknown as ReturnType<typeof vi.fn>).mockReset()
 
      // Mock user lookup to return a valid Scrum Master
-     ;(prisma.user.findUnique as any).mockResolvedValue({
+  vi.mocked(prisma.user.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'user-1',
       email: 'scrum.master@example.com',
       role: 'SCRUM_MASTER'
      })
 
     // Mock $transaction to execute the callback
-    ;(prisma.$transaction as any).mockImplementation(async (callback) => {
+    vi.mocked(prisma.$transaction as unknown as ReturnType<typeof vi.fn>).mockImplementation(async (callback) => {
       return await callback(prisma)
     })
   })
@@ -66,7 +67,7 @@ describe('Sprint Creation - Date Validation Integration', () => {
 
   it('should reject sprint with end date before start date', async () => {
     // Mock authenticated Scrum Master
-    ;(getServerSession as any).mockResolvedValue({
+    vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: {
         id: 'user-1',
         email: 'scrum.master@example.com',
@@ -75,14 +76,14 @@ describe('Sprint Creation - Date Validation Integration', () => {
     })
 
     // Mock user lookup
-    ;(prisma.user.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.user.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'user-1',
       email: 'scrum.master@example.com',
       role: 'SCRUM_MASTER'
     })
 
     // Mock squad ownership
-    ;(prisma.squad.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'squad-123',
       name: 'Test Squad',
       scrumMasterId: 'user-1'
@@ -103,8 +104,8 @@ describe('Sprint Creation - Date Validation Integration', () => {
       }
     })
 
-    const handler = await import('../../pages/api/sprints')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(400)
     const responseData = JSON.parse(res._getData())
@@ -115,7 +116,7 @@ describe('Sprint Creation - Date Validation Integration', () => {
 
   it('should reject sprint with invalid date format', async () => {
     // Mock authenticated Scrum Master
-    ;(getServerSession as any).mockResolvedValue({
+    vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: {
         id: 'user-1',
         email: 'scrum.master@example.com',
@@ -124,7 +125,7 @@ describe('Sprint Creation - Date Validation Integration', () => {
     })
 
     // Mock squad ownership
-    ;(prisma.squad.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'squad-123',
       name: 'Test Squad',
       scrumMasterId: 'user-1'
@@ -145,8 +146,8 @@ describe('Sprint Creation - Date Validation Integration', () => {
       }
     })
 
-    const handler = await import('../../pages/api/sprints')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(400)
     const responseData = JSON.parse(res._getData())
@@ -155,7 +156,7 @@ describe('Sprint Creation - Date Validation Integration', () => {
 
   it('should accept valid date range', async () => {
     // Mock authenticated Scrum Master
-    ;(getServerSession as any).mockResolvedValue({
+    vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: {
         id: 'user-1',
         email: 'scrum.master@example.com',
@@ -164,22 +165,22 @@ describe('Sprint Creation - Date Validation Integration', () => {
     })
 
     // Mock squad ownership
-    ;(prisma.squad.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'squad-123',
       name: 'Test Squad',
       scrumMasterId: 'user-1'
     })
 
     // Mock squad members
-    ;(prisma.squadMember.findMany as any).mockResolvedValue([
+    vi.mocked(prisma.squadMember.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
       { userId: 'user-2' }
     ])
 
     // Mock no overlapping sprints
-    ;(prisma.sprint.findFirst as any).mockResolvedValue(null)
+  vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null)
 
     // Mock sprint creation
-    ;(prisma.sprint.create as any).mockResolvedValue({
+    vi.mocked(prisma.sprint.create as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'sprint-456',
       name: 'Valid Date Sprint',
       squadId: 'squad-123',
@@ -188,7 +189,7 @@ describe('Sprint Creation - Date Validation Integration', () => {
       createdAt: new Date()
     })
 
-    ;(prisma.sprintMember.createMany as any).mockResolvedValue({ count: 1 })
+  vi.mocked(prisma.sprintMember.createMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ count: 1 })
 
     const requestBody = {
       name: 'Valid Date Sprint',
@@ -205,8 +206,8 @@ describe('Sprint Creation - Date Validation Integration', () => {
       }
     })
 
-    const handler = await import('../../pages/api/sprints')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(201)
 
@@ -218,7 +219,7 @@ describe('Sprint Creation - Date Validation Integration', () => {
 
   it('should accept same-day sprint (start and end on same day)', async () => {
     // Mock authenticated Scrum Master
-    ;(getServerSession as any).mockResolvedValue({
+    vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: {
         id: 'user-1',
         email: 'scrum.master@example.com',
@@ -227,22 +228,22 @@ describe('Sprint Creation - Date Validation Integration', () => {
     })
 
     // Mock squad ownership
-    ;(prisma.squad.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'squad-123',
       name: 'Test Squad',
       scrumMasterId: 'user-1'
     })
 
     // Mock squad members
-    ;(prisma.squadMember.findMany as any).mockResolvedValue([
+    vi.mocked(prisma.squadMember.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
       { userId: 'user-2' }
     ])
 
     // Mock no overlapping sprints
-    ;(prisma.sprint.findFirst as any).mockResolvedValue(null)
+    vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null)
 
     // Mock sprint creation
-    ;(prisma.sprint.create as any).mockResolvedValue({
+    vi.mocked(prisma.sprint.create as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'sprint-456',
       name: 'One Day Sprint',
       squadId: 'squad-123',
@@ -251,7 +252,7 @@ describe('Sprint Creation - Date Validation Integration', () => {
       createdAt: new Date()
     })
 
-    ;(prisma.sprintMember.createMany as any).mockResolvedValue({ count: 1 })
+    vi.mocked(prisma.sprintMember.createMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ count: 1 })
 
     const requestBody = {
       name: 'One Day Sprint',
@@ -268,8 +269,8 @@ describe('Sprint Creation - Date Validation Integration', () => {
       }
     })
 
-    const handler = await import('../../pages/api/sprints')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(201)
 

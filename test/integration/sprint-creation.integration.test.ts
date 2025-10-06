@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { createMocks } from 'node-mocks-http'
 import { getServerSession } from 'next-auth'
+import type { NextApiRequest, NextApiResponse } from 'next'
 
 // Mock next-auth
 vi.mock('next-auth', async () => {
@@ -39,21 +40,21 @@ import { prisma } from '../../lib/prisma'
 
 describe('Sprint Creation - Happy Path Integration', () => {
   beforeEach(() => {
-    ;(getServerSession as any).mockReset()
-    ;(prisma.user.findUnique as any).mockReset()
-    ;(prisma.sprint.create as any).mockReset()
-    ;(prisma.sprintMember.createMany as any).mockReset()
-    ;(prisma.squadMember.findMany as any).mockReset()
-    ;(prisma.squad.findUnique as any).mockReset()
-    ;(prisma.$transaction as any).mockReset()
+  vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockReset()
+  vi.mocked(prisma.user.findUnique as unknown as ReturnType<typeof vi.fn>).mockReset()
+  vi.mocked(prisma.sprint.create as unknown as ReturnType<typeof vi.fn>).mockReset()
+  vi.mocked(prisma.sprintMember.createMany as unknown as ReturnType<typeof vi.fn>).mockReset()
+  vi.mocked(prisma.squadMember.findMany as unknown as ReturnType<typeof vi.fn>).mockReset()
+  vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockReset()
+  vi.mocked(prisma.$transaction as unknown as ReturnType<typeof vi.fn>).mockReset()
 
     // Mock $transaction to execute the callback
-    ;(prisma.$transaction as any).mockImplementation(async (callback) => {
+    vi.mocked(prisma.$transaction as unknown as ReturnType<typeof vi.fn>).mockImplementation(async (callback) => {
       return await callback(prisma)
     })
 
     // Mock user lookup to return a valid Scrum Master
-    ;(prisma.user.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.user.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'user-1',
       email: 'scrum.master@example.com',
       role: 'SCRUM_MASTER'
@@ -66,7 +67,7 @@ describe('Sprint Creation - Happy Path Integration', () => {
 
   it('should create sprint with automatic member population', async () => {
     // Mock authenticated Scrum Master
-    ;(getServerSession as any).mockResolvedValue({
+    vi.mocked(getServerSession as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: {
         id: 'user-1',
         email: 'scrum.master@example.com',
@@ -75,24 +76,24 @@ describe('Sprint Creation - Happy Path Integration', () => {
     })
 
     // Mock squad ownership verification
-    ;(prisma.squad.findUnique as any).mockResolvedValue({
+    vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'squad-123',
       name: 'Test Squad',
       scrumMasterId: 'user-1'
     })
 
     // Mock active squad members
-    ;(prisma.squadMember.findMany as any).mockResolvedValue([
+    vi.mocked(prisma.squadMember.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
       { userId: 'user-2', user: { displayName: 'John Doe', email: 'john@example.com' } },
       { userId: 'user-3', user: { displayName: 'Jane Smith', email: 'jane@example.com' } },
       { userId: 'user-4', user: { displayName: 'Bob Johnson', email: 'bob@example.com' } }
     ])
 
     // Mock no overlapping sprints
-    ;(prisma.sprint.findFirst as any).mockResolvedValue(null)
+  vi.mocked(prisma.sprint.findFirst as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null)
 
     // Mock sprint creation
-    ;(prisma.sprint.create as any).mockResolvedValue({
+    vi.mocked(prisma.sprint.create as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'sprint-456',
       name: 'Sprint 2025.10',
       squadId: 'squad-123',
@@ -102,7 +103,7 @@ describe('Sprint Creation - Happy Path Integration', () => {
     })
 
     // Mock member creation
-    ;(prisma.sprintMember.createMany as any).mockResolvedValue({ count: 3 })
+  vi.mocked(prisma.sprintMember.createMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ count: 3 })
 
     const requestBody = {
       name: 'Sprint 2025.10',
@@ -119,8 +120,8 @@ describe('Sprint Creation - Happy Path Integration', () => {
       }
     })
 
-    const handler = await import('../../pages/api/sprints')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(201)
     const responseData = JSON.parse(res._getData())

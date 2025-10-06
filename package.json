@@ -13,7 +13,9 @@
     "check:next-auth-imports": "node ./tools/check-next-auth-imports.js",
     "lint": "eslint -c .eslintrc.cjs --resolve-plugins-relative-to ./tools --ext .js,.jsx,.ts,.tsx app/",
     "test:watch": "vitest --watch",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "e2e:dev": "next dev",
+    "e2e:ci": "playwright test --reporter=github"
   },
   "dependencies": {
     "@prisma/client": "^5.0.0",

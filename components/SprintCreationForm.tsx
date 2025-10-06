@@ -14,21 +14,20 @@ type Member = {
   name: string;
 };
 
-type Squad = {
+type SprintFormSquad = {
   id: string;
   name: string;
   alias?: string;
   memberCount: number;
 };
 
-
-
-
 type SprintCreationFormProps = {
   onSprintCreated?: () => void;
+  squadsProp?: SprintFormSquad[]; // optional squads passed from parent to avoid refetch
+  selectedSquadIdProp?: string; // optional preselected squad id
 };
 
-export default function SprintCreationForm({ onSprintCreated }: SprintCreationFormProps) {
+export default function SprintCreationForm({ onSprintCreated, squadsProp, selectedSquadIdProp }: SprintCreationFormProps) {
   // Handles input changes for form fields
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -37,7 +36,7 @@ export default function SprintCreationForm({ onSprintCreated }: SprintCreationFo
       setErrors(prev => ({ ...prev, [field]: '' }))
     }
   }
-  const [squads, setSquads] = useState<Squad[]>([]);
+  const [squads, setSquads] = useState<SprintFormSquad[]>(squadsProp || []);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(false);
   // const [loadingSquads, setLoadingSquads] = useState(true); // unused
@@ -139,6 +138,7 @@ export default function SprintCreationForm({ onSprintCreated }: SprintCreationFo
         if (data.warning) {
           toast.warning(data.warning);
         }
+        toast.success('Sprint created')
         setFormData({
           sprintNumber: '',
           squadId: '',
@@ -165,28 +165,35 @@ export default function SprintCreationForm({ onSprintCreated }: SprintCreationFo
     ? `${selectedSquad.alias}-Sprint-${formData.sprintNumber.trim()}`
     : ''
 
-  // Fetch user's squads on component mount
+  // If parent provided squads, use them; otherwise fetch on mount
   useEffect(() => {
-    fetchSquads()
-  }, [])
-
-  const fetchSquads = async () => {
-    try {
-      const res = await fetch('/api/squads')
-      if (res.ok) {
-        const data = await res.json()
-        setSquads(data.squads || [])
-      } else {
-        console.error('Failed to fetch squads:', res.status, res.statusText)
-        setErrors({ submit: 'Failed to load squads. Please refresh the page.' })
-      }
-    } catch (error) {
-      console.error('Failed to fetch squads:', error)
-      setErrors({ submit: 'Network error. Please check your connection.' })
-    } finally {
-      // nothing
+    if (squadsProp && squadsProp.length > 0) {
+      setSquads(squadsProp)
+      // preselect if provided
+      if (selectedSquadIdProp) setFormData(prev => ({ ...prev, squadId: selectedSquadIdProp }))
+      return
     }
-  }
+    // fetch only when parent didn't supply squads
+    let mounted = true
+    async function fetchSquads() {
+      try {
+        const res = await fetch('/api/squads')
+        if (res.ok) {
+          const data = await res.json()
+          if (!mounted) return
+          setSquads(data.squads || [])
+        } else {
+          console.error('Failed to fetch squads:', res.status, res.statusText)
+          setErrors({ submit: 'Failed to load squads. Please refresh the page.' })
+        }
+      } catch (error) {
+        console.error('Failed to fetch squads:', error)
+        setErrors({ submit: 'Network error. Please check your connection.' })
+      }
+    }
+    fetchSquads()
+    return () => { mounted = false }
+  }, [squadsProp, selectedSquadIdProp])
 
   // --- Render logic below ---
 
