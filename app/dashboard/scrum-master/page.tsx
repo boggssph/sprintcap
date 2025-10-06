@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { toast } from 'sonner'
-import { signOut } from 'next-auth/react'
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Target, BarChart3, Users, Settings, Plus } from "lucide-react";
@@ -72,11 +71,23 @@ function CreateSquadForm({ onSuccess, refreshSquads }: { onSuccess: () => void; 
 }
 
 // --- Inline Edit Squad Form ---
-function EditSquadForm({ squad, onSuccess, refreshSquads }: { squad: Squad; onSuccess: (updated?: Squad) => void; refreshSquads?: () => Promise<void> }) {
-  const [name, setName] = React.useState(squad?.name || '');
-  const [alias, setAlias] = React.useState(squad?.alias || '');
+function EditSquadForm({ squads, onSuccess, refreshSquads }: { squads: Squad[]; onSuccess: (updated?: Squad) => void; refreshSquads?: () => Promise<void> }) {
+  const [selectedId, setSelectedId] = React.useState<string | undefined>(undefined);
+  const [name, setName] = React.useState('');
+  const [alias, setAlias] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+
+  useEffect(() => {
+    const s = squads.find(s => String(s.id) === String(selectedId));
+    if (s) {
+      setName(s.name || '');
+      setAlias(s.alias || '');
+    } else {
+      setName('');
+      setAlias('');
+    }
+  }, [selectedId, squads]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -85,9 +96,13 @@ function EditSquadForm({ squad, onSuccess, refreshSquads }: { squad: Squad; onSu
       setError('Name and alias are required');
       return;
     }
+    if (!selectedId) {
+      setError('Please select a squad to edit');
+      return;
+    }
     setLoading(true);
     try {
-      const res = await fetch(`/api/squads/${squad.id}`, {
+      const res = await fetch(`/api/squads/${selectedId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: name.trim(), alias: alias.trim() }),
@@ -112,6 +127,15 @@ function EditSquadForm({ squad, onSuccess, refreshSquads }: { squad: Squad; onSu
   return (
     <form onSubmit={handleSave} className="max-w-md space-y-4 bg-white p-6 rounded shadow">
       <h2 className="text-xl font-semibold mb-2">Edit Squad</h2>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-slate-700">Select squad to edit</label>
+        <select value={selectedId} onChange={(e) => setSelectedId(e.target.value)} className="block w-full rounded-md border px-2 py-1">
+          <option value={''}>-- choose a squad --</option>
+          {squads.map(s => (
+            <option key={s.id} value={String(s.id)}>{s.name}{s.alias ? ` (${s.alias})` : ''}</option>
+          ))}
+        </select>
+      </div>
       <SquadFormFields name={name} alias={alias} onChangeName={setName} onChangeAlias={setAlias} />
       {error && (
         <div role="alert" aria-live="assertive" className="text-sm text-red-700 bg-red-50 border border-red-100 p-2 rounded">
@@ -127,7 +151,8 @@ function EditSquadForm({ squad, onSuccess, refreshSquads }: { squad: Squad; onSu
 }
 
 // --- Inline Invite Members Form ---
-function InviteMembersForm({ squad, onSuccess, refreshSquads }: { squad: Squad; onSuccess: (updated?: Squad) => void; refreshSquads?: () => Promise<void> }) {
+function InviteMembersForm({ squads, onSuccess, refreshSquads }: { squads: Squad[]; onSuccess: (updated?: Squad) => void; refreshSquads?: () => Promise<void> }) {
+  const [selectedId, setSelectedId] = React.useState<string | undefined>(undefined);
   const [emails, setEmails] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -144,12 +169,16 @@ function InviteMembersForm({ squad, onSuccess, refreshSquads }: { squad: Squad; 
       setError('Maximum 10 emails allowed per request');
       return;
     }
+    if (!selectedId) {
+      setError('Please select a squad to invite members to');
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch('/api/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ emails: list, squadId: squad.id })
+        body: JSON.stringify({ emails: list, squadId: selectedId })
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -171,7 +200,16 @@ function InviteMembersForm({ squad, onSuccess, refreshSquads }: { squad: Squad; 
   return (
     <form onSubmit={handleInvite} className="max-w-md space-y-4 bg-white p-6 rounded shadow">
       <h2 className="text-xl font-semibold mb-2">Invite Members</h2>
-      <div className="text-sm text-slate-600">Inviting to: {squad?.alias || squad?.name || 'Unnamed'}</div>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-slate-700">Select squad to invite</label>
+        <select value={selectedId} onChange={(e) => setSelectedId(e.target.value)} className="block w-full rounded-md border px-2 py-1">
+          <option value={''}>-- choose a squad --</option>
+          {squads.map(s => (
+            <option key={s.id} value={String(s.id)}>{s.name}{s.alias ? ` (${s.alias})` : ''}</option>
+          ))}
+        </select>
+        <div className="text-sm text-slate-600">Inviting to: {squads.find(x => String(x.id) === String(selectedId))?.alias || squads.find(x => String(x.id) === String(selectedId))?.name || '—'}</div>
+      </div>
       <div>
         <label className="block text-sm font-medium text-slate-700">Emails (comma separated)</label>
         <textarea value={emails} onChange={(e) => setEmails(e.target.value)} className="mt-1 block w-full rounded-md border px-2 py-1" rows={4} />
@@ -230,9 +268,8 @@ export default function ScrumMasterDashboard() {
       }
       const data = await res.json();
       setSquads(data.squads || []);
-      if (!selectedSquad && (data.squads || []).length > 0) {
-        setSelectedSquad((data.squads || [])[0]);
-      }
+      // Do not auto-select a squad. The user must explicitly choose a squad when
+      // performing actions like Edit or Invite. This avoids surprise operations.
     } catch (e) {
       console.error('Failed to fetch squads', e);
     }
@@ -246,11 +283,7 @@ export default function ScrumMasterDashboard() {
     };
   }, []);
 
-  function handleSignOut() {
-    // Use NextAuth signOut helper which will clear the session and redirect.
-    // Redirect to no-access page after sign out.
-    signOut({ callbackUrl: '/auth/no-access' });
-  }
+  // Sign out is handled in the client header component via next-auth's signOut.
 
   return (
     <>
@@ -367,7 +400,7 @@ export default function ScrumMasterDashboard() {
           {/* Main content area */}
           <SidebarInset>
             {/* Header */}
-            <ScrumMasterHeader onSignOut={handleSignOut} />
+            <ScrumMasterHeader />
             <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col">
               {/* Modern hero / KPI area */}
               {view === 'overview' && (
@@ -447,9 +480,9 @@ export default function ScrumMasterDashboard() {
                   {squadAction === 'create' && (
                     <CreateSquadForm onSuccess={() => setSquadAction(null)} refreshSquads={fetchSquads} />
                   )}
-                  {squadAction === 'edit' && selectedSquad && (
+                  {squadAction === 'edit' && (
                     <EditSquadForm
-                      squad={selectedSquad}
+                      squads={squads}
                       refreshSquads={fetchSquads}
                       onSuccess={(updated) => {
                         setSquadAction(null);
@@ -457,9 +490,9 @@ export default function ScrumMasterDashboard() {
                       }}
                     />
                   )}
-                  {squadAction === 'invite' && selectedSquad && (
+                  {squadAction === 'invite' && (
                     <InviteMembersForm
-                      squad={selectedSquad}
+                      squads={squads}
                       refreshSquads={fetchSquads}
                       onSuccess={() => {
                         setSquadAction(null);
