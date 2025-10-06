@@ -243,6 +243,10 @@ export default function ScrumMasterDashboard() {
   const [view, setView] = useState<'overview' | 'squad' | 'sprint' | 'settings'>("overview");
   const [squadMenuOpen, setSquadMenuOpen] = useState(false);
   const [sprintMenuOpen, setSprintMenuOpen] = useState(false);
+  // Track the last intent when navigating to sprint view so we don't
+  // accidentally override an explicit "create only" action with the
+  // generic view effect. Values: 'parent' | 'create' | null
+  const lastSprintIntentRef = React.useRef<'parent' | 'create' | null>(null)
   // showSprintForm removed - sprint form is rendered in the 'sprint' view
 
   const [squadAction, setSquadAction] = useState<null | 'create' | 'edit' | 'invite'>(null);
@@ -431,13 +435,13 @@ export default function ScrumMasterDashboard() {
                     ref={sprintMenuButtonRef}
                     className={view === 'sprint' ? 'bg-indigo-50 text-indigo-700' : ''}
                     onClick={() => {
-                      // When clicking the Sprint parent, always show the sprint
-                      // list view (never the create-only form). Close the submenu
-                      // so the parent click is idempotent and doesn't expose the
-                      // Create Sprint submenu item by accident.
+                      // Mark intent as coming from parent and show list view.
+                      lastSprintIntentRef.current = 'parent'
                       setView('sprint');
                       setShowSprintCreateOnly(false);
                       setSprintMenuOpen(false);
+                      // clear the intent after a short time to avoid stale state
+                      setTimeout(() => { lastSprintIntentRef.current = null }, 1000)
                     }}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSprintMenuOpen(open => !open) } }}
                     aria-expanded={sprintMenuOpen}
@@ -468,7 +472,7 @@ export default function ScrumMasterDashboard() {
                       if (e.key === 'Home') { e.preventDefault(); const items = Array.from((e.currentTarget as HTMLElement).querySelectorAll('button')) as HTMLButtonElement[]; items[0]?.focus() }
                       if (e.key === 'End') { e.preventDefault(); const items = Array.from((e.currentTarget as HTMLElement).querySelectorAll('button')) as HTMLButtonElement[]; items[items.length - 1]?.focus() }
                     }}>
-                      <Button ref={sprintFirstSubRef} role="menuitem" variant="ghost" size="sm" className="w-full justify-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-md" onClick={() => { setView('sprint'); setSprintMenuOpen(false); setShowSprintCreateOnly(true); }}>
+                      <Button ref={sprintFirstSubRef} role="menuitem" variant="ghost" size="sm" className="w-full justify-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-md" onClick={() => { lastSprintIntentRef.current = 'create'; setView('sprint'); setSprintMenuOpen(false); setShowSprintCreateOnly(true); setTimeout(() => { lastSprintIntentRef.current = null }, 1000) }}>
                         <Users className="h-4 w-4 mr-2" /> Create Sprint
                       </Button>
                       {/* Add more sprint actions here */}
@@ -504,7 +508,7 @@ export default function ScrumMasterDashboard() {
                         <p className="mt-1 text-sm text-slate-600">Manage your squads and sprints efficiently. Quick actions and insights below.</p>
                       </div>
                         <div className="flex gap-2">
-                        <Button onClick={() => { setView('sprint'); setSprintMenuOpen(false); setShowSprintCreateOnly(true); }} className="bg-indigo-600 text-white hover:bg-indigo-700">+ Create Sprint</Button>
+                        <Button onClick={() => { lastSprintIntentRef.current = 'create'; setView('sprint'); setSprintMenuOpen(false); setShowSprintCreateOnly(true); setTimeout(() => { lastSprintIntentRef.current = null }, 1000) }} className="bg-indigo-600 text-white hover:bg-indigo-700">+ Create Sprint</Button>
                         <Button onClick={() => { setView('squad'); setSquadAction('create'); }} variant="outline">+ Create Squad</Button>
                       </div>
                     </div>
@@ -561,7 +565,7 @@ export default function ScrumMasterDashboard() {
                                     <Button variant="ghost" size="sm" onClick={() => { setSelectedSquad(s); setSquadAction('edit'); }}>Edit</Button>
                                     <Button variant="ghost" size="sm" onClick={() => { setSelectedSquad(s); setSquadAction('invite'); }}>Invite</Button>
                                     <div>
-                                      <Button ref={sprintFirstSubRef} variant="ghost" size="sm" className="w-full justify-start" onClick={() => { setView('sprint'); setSprintMenuOpen(false); setShowSprintCreateOnly(true); }}>
+                                      <Button ref={sprintFirstSubRef} variant="ghost" size="sm" className="w-full justify-start" onClick={() => { lastSprintIntentRef.current = 'create'; setView('sprint'); setSprintMenuOpen(false); setShowSprintCreateOnly(true); setTimeout(() => { lastSprintIntentRef.current = null }, 1000) }}>
                                         <Users className="h-4 w-4 mr-2" /> Create Sprint
                                       </Button>
                                     </div>
