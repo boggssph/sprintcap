@@ -57,7 +57,11 @@ function CreateSquadForm({ onSuccess, refreshSquads }: { onSuccess: () => void; 
     <form onSubmit={handleCreate} className="max-w-md space-y-4 bg-white p-6 rounded shadow">
       <h2 className="text-xl font-semibold mb-2">Create Squad</h2>
       <SquadFormFields name={name} alias={alias} onChangeName={setName} onChangeAlias={setAlias} />
-      {error && <div className="text-sm text-red-600">{error}</div>}
+      {error && (
+        <div role="alert" aria-live="assertive" className="text-sm text-red-700 bg-red-50 border border-red-100 p-2 rounded">
+          {error}
+        </div>
+      )}
       <div className="flex gap-2">
         <Button type="submit" disabled={loading}>{loading ? 'Creating...' : 'Create'}</Button>
         <Button type="button" variant="ghost" onClick={onSuccess}>Cancel</Button>
@@ -108,7 +112,11 @@ function EditSquadForm({ squad, onSuccess, refreshSquads }: { squad: Squad; onSu
     <form onSubmit={handleSave} className="max-w-md space-y-4 bg-white p-6 rounded shadow">
       <h2 className="text-xl font-semibold mb-2">Edit Squad</h2>
       <SquadFormFields name={name} alias={alias} onChangeName={setName} onChangeAlias={setAlias} />
-      {error && <div className="text-sm text-red-600">{error}</div>}
+      {error && (
+        <div role="alert" aria-live="assertive" className="text-sm text-red-700 bg-red-50 border border-red-100 p-2 rounded">
+          {error}
+        </div>
+      )}
       <div className="flex gap-2">
   <Button type="submit" disabled={loading}>{loading ? 'Saving...' : 'Save'}</Button>
   <Button type="button" variant="ghost" onClick={() => onSuccess()}>Cancel</Button>
@@ -167,7 +175,11 @@ function InviteMembersForm({ squad, onSuccess, refreshSquads }: { squad: Squad; 
         <label className="block text-sm font-medium text-slate-700">Emails (comma separated)</label>
         <textarea value={emails} onChange={(e) => setEmails(e.target.value)} className="mt-1 block w-full rounded-md border px-2 py-1" rows={4} />
       </div>
-      {error && <div className="text-sm text-red-600">{error}</div>}
+      {error && (
+        <div role="alert" aria-live="assertive" className="text-sm text-red-700 bg-red-50 border border-red-100 p-2 rounded">
+          {error}
+        </div>
+      )}
       <div className="flex gap-2">
   <Button type="submit" disabled={loading}>{loading ? 'Sending...' : 'Send Invites'}</Button>
   <Button type="button" variant="ghost" onClick={() => onSuccess()}>Cancel</Button>
@@ -353,32 +365,75 @@ export default function ScrumMasterDashboard() {
           <SidebarInset>
             {/* Header */}
             <ScrumMasterHeader onSignOut={handleSignOut} />
-            <main className="w-full max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 flex-1 flex flex-col">
-              {/* Sprint Creation rendered in the sprint view (main body) */}
-              {/* Main dashboard content by view */}
+            <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col">
+              {/* Modern hero / KPI area */}
               {view === 'overview' && (
-                <div className="text-slate-700 text-lg">Overview content goes here.</div>
+                <section className="mb-6">
+                  <div className="bg-gradient-to-r from-white to-slate-50 border border-slate-100 rounded-lg p-6 shadow-sm">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      <div>
+                        <h2 className="text-2xl font-semibold text-slate-900">Welcome, Scrum Master</h2>
+                        <p className="mt-1 text-sm text-slate-600">Manage your squads and sprints efficiently. Quick actions and insights below.</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button onClick={() => { setView('sprint'); setSprintMenuOpen(false); }} className="bg-indigo-600 text-white hover:bg-indigo-700">+ Create Sprint</Button>
+                        <Button onClick={() => { setView('squad'); setSquadAction('create'); }} variant="outline">+ Create Squad</Button>
+                      </div>
+                    </div>
+
+                    {/* KPI cards */}
+                    <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                        <div className="text-sm text-slate-500">Active Squads</div>
+                        <div className="mt-1 text-2xl font-bold text-slate-900">{squads.length}</div>
+                      </div>
+                      <div className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                        <div className="text-sm text-slate-500">Upcoming Sprints</div>
+                        <div className="mt-1 text-2xl font-bold text-slate-900">—</div>
+                      </div>
+                      <div className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                        <div className="text-sm text-slate-500">Pending Invites</div>
+                        <div className="mt-1 text-2xl font-bold text-slate-900">—</div>
+                      </div>
+                    </div>
+                  </div>
+                </section>
               )}
               {view === 'squad' && (
-                <div className="text-slate-700 text-lg">
+                <div className="text-slate-700">
                   {/* Squad action views */}
                   {squadAction === null && (
                     <div>
                       <div className="mb-4">
-                        <div className="text-sm text-slate-600 mb-2">Your Squads</div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-lg font-semibold text-slate-900">Your Squads</h3>
+                            <div className="text-sm text-slate-600">Manage members and settings</div>
+                          </div>
+                          <div>
+                            <Button onClick={() => setSquadAction('create')} className="bg-indigo-600 text-white hover:bg-indigo-700">+ New Squad</Button>
+                          </div>
+                        </div>
+
                         {squads.length === 0 ? (
-                          <div className="text-sm text-gray-500">No squads found.</div>
+                          <div className="mt-4 text-sm text-gray-500">No squads found.</div>
                         ) : (
-                          <ul className="space-y-2">
+                          <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {squads.map((s) => (
                               <li key={(s.id ?? s.name) as React.Key}>
-                                <button
-                                  className={`w-full text-left p-2 rounded-md hover:bg-slate-50 ${selectedSquad?.id === s.id ? 'bg-indigo-50 text-indigo-700' : ''}`}
-                                  onClick={() => setSelectedSquad(s)}
-                                >
-                                  <div className="font-medium">{s.name} {s.alias ? `(${s.alias})` : ''}</div>
-                                  <div className="text-xs text-slate-500">{s.memberCount ?? 0} members</div>
-                                </button>
+                                <div className={`p-4 rounded-lg border border-slate-100 bg-white shadow-sm ${selectedSquad?.id === s.id ? 'ring-2 ring-indigo-100' : ''}`}>
+                                  <button
+                                    className="w-full text-left"
+                                    onClick={() => setSelectedSquad(s)}
+                                  >
+                                    <div className="font-medium text-slate-900">{s.name} {s.alias ? `(${s.alias})` : ''}</div>
+                                    <div className="text-xs text-slate-500">{s.memberCount ?? 0} members</div>
+                                  </button>
+                                  <div className="mt-3 flex gap-2">
+                                    <Button variant="ghost" size="sm" onClick={() => { setSelectedSquad(s); setSquadAction('edit'); }}>Edit</Button>
+                                    <Button variant="ghost" size="sm" onClick={() => { setSelectedSquad(s); setSquadAction('invite'); }}>Invite</Button>
+                                  </div>
+                                </div>
                               </li>
                             ))}
                           </ul>
