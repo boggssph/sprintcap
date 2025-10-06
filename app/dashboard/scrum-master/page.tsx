@@ -431,12 +431,13 @@ export default function ScrumMasterDashboard() {
                     ref={sprintMenuButtonRef}
                     className={view === 'sprint' ? 'bg-indigo-50 text-indigo-700' : ''}
                     onClick={() => {
-                      // When clicking the Sprint parent, we want to show the sprint
-                      // list view (not the create-only form). Child "Create Sprint"
-                      // submenu will set create-only mode.
+                      // When clicking the Sprint parent, always show the sprint
+                      // list view (never the create-only form). Close the submenu
+                      // so the parent click is idempotent and doesn't expose the
+                      // Create Sprint submenu item by accident.
                       setView('sprint');
                       setShowSprintCreateOnly(false);
-                      setSprintMenuOpen((open) => !open);
+                      setSprintMenuOpen(false);
                     }}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSprintMenuOpen(open => !open) } }}
                     aria-expanded={sprintMenuOpen}
