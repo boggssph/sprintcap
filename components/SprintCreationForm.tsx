@@ -9,11 +9,6 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 
-type Member = {
-  id: string;
-  name: string;
-};
-
 type SprintFormSquad = {
   id: string;
   name: string;
@@ -37,11 +32,7 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
     }
   }
   const [squads, setSquads] = useState<SprintFormSquad[]>(squadsProp || []);
-  const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(false);
-  // const [loadingSquads, setLoadingSquads] = useState(true); // unused
-  const [loadingMembers, setLoadingMembers] = useState(false);
-  const [memberError, setMemberError] = useState<string | null>(null);
 
 
 
@@ -55,37 +46,7 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Fetch members when squad changes
-  useEffect(() => {
-    if (!formData.squadId) {
-      setMembers([]);
-      setMemberError(null);
-      return;
-    }
-    setLoadingMembers(true);
-    setMemberError(null);
-    if (typeof fetch !== 'function') {
-      setLoadingMembers(false);
-      setMembers([]);
-      setMemberError(null);
-      return;
-    }
-    fetch(`/api/squads/${formData.squadId}/members`)
-      .then(async (res) => {
-        if (!res.ok) {
-          throw new Error('Failed to fetch members');
-        }
-        const data = await res.json();
-        setMembers(data.members || []);
-      })
-      .catch(() => {
-        setMemberError('Failed to load members.');
-        setMembers([]);
-      })
-      .finally(() => {
-        setLoadingMembers(false);
-      });
-  }, [formData.squadId]);
+  // members list is not shown in the creation UI; omit fetching to simplify UX
 
   // --- Move validateForm and handleSubmit inside the component ---
   const validateForm = () => {
@@ -236,29 +197,7 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
               </Select>
               {errors.squadId && <p className="text-sm text-red-500">{errors.squadId}</p>}
             </div>
-            {/* Member list display */}
-            {selectedSquad && (
-              <div className="mb-2">
-                <div className="font-medium text-sm mb-1">
-                  Members ({loadingMembers ? '?' : members.length})
-                </div>
-                {loadingMembers && <div className="text-xs text-gray-500">Loading members...</div>}
-                {!loadingMembers && members.length > 0 && (
-                  <ul className="list-disc list-inside text-xs text-gray-800">
-                    {members.map((m) => (
-                      <li key={m.id}>{m.name}</li>
-                    ))}
-                  </ul>
-                )}
-                {!loadingMembers && members.length === 0 && (
-                  <div className="text-xs text-gray-500">No members found in this squad.</div>
-                )}
-                {/* Show error as secondary line if present */}
-                {!loadingMembers && memberError && (
-                  <div className="text-xs text-red-500">{memberError}</div>
-                )}
-              </div>
-            )}
+            {/* Members list removed: not needed in this UI */}
             {/* Sprint number input with prefix */}
             <div className="space-y-2">
               <Label htmlFor="sprintNumber">Sprint Number</Label>
@@ -283,7 +222,7 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
               )}
               {errors.sprintNumber && <p className="text-sm text-red-500">{errors.sprintNumber}</p>}
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="startDate">Start Date & Time</Label>
                 <Input
