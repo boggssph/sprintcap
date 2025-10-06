@@ -249,6 +249,7 @@ export default function ScrumMasterDashboard() {
   const [selectedSquad, setSelectedSquad] = useState<Squad | null>(null);
   const [squads, setSquads] = useState<Squad[]>([]);
   const [sprints, setSprints] = useState<Array<{ id: string; name: string; squadId?: string }>>([]);
+  const [showSprintCreateOnly, setShowSprintCreateOnly] = useState(false);
   // Refs used for focusing submenu items when opened
   const squadMenuButtonRef = React.useRef<HTMLButtonElement | null>(null)
   const squadFirstSubRef = React.useRef<HTMLButtonElement | null>(null)
@@ -284,7 +285,11 @@ export default function ScrumMasterDashboard() {
 
   // When sprint view is activated, refresh the list
   useEffect(() => {
-    if (view !== 'sprint') return;
+    if (view !== 'sprint') {
+      // leaving sprint view, clear the "create only" mode
+      setShowSprintCreateOnly(false);
+      return;
+    }
     let mounted = true;
     if (mounted) fetchSprints();
     return () => { mounted = false };
@@ -409,7 +414,7 @@ export default function ScrumMasterDashboard() {
                         sprintMenuButtonRef.current?.focus()
                       }
                     }}>
-                      <Button ref={sprintFirstSubRef} variant="ghost" size="sm" className="w-full justify-start" onClick={() => { setView('sprint'); setSprintMenuOpen(false); }}>
+                      <Button ref={sprintFirstSubRef} variant="ghost" size="sm" className="w-full justify-start" onClick={() => { setView('sprint'); setSprintMenuOpen(false); setShowSprintCreateOnly(true); }}>
                         <Users className="h-4 w-4 mr-2" /> Create Sprint
                       </Button>
                       {/* Add more sprint actions here */}
@@ -444,8 +449,8 @@ export default function ScrumMasterDashboard() {
                         <h2 className="text-2xl font-semibold text-slate-900">Welcome, Scrum Master</h2>
                         <p className="mt-1 text-sm text-slate-600">Manage your squads and sprints efficiently. Quick actions and insights below.</p>
                       </div>
-                      <div className="flex gap-2">
-                        <Button onClick={() => { setView('sprint'); setSprintMenuOpen(false); }} className="bg-indigo-600 text-white hover:bg-indigo-700">+ Create Sprint</Button>
+                        <div className="flex gap-2">
+                        <Button onClick={() => { setView('sprint'); setSprintMenuOpen(false); setShowSprintCreateOnly(true); }} className="bg-indigo-600 text-white hover:bg-indigo-700">+ Create Sprint</Button>
                         <Button onClick={() => { setView('squad'); setSquadAction('create'); }} variant="outline">+ Create Squad</Button>
                       </div>
                     </div>
@@ -501,6 +506,11 @@ export default function ScrumMasterDashboard() {
                                   <div className="mt-3 flex gap-2">
                                     <Button variant="ghost" size="sm" onClick={() => { setSelectedSquad(s); setSquadAction('edit'); }}>Edit</Button>
                                     <Button variant="ghost" size="sm" onClick={() => { setSelectedSquad(s); setSquadAction('invite'); }}>Invite</Button>
+                                    <div>
+                                      <Button ref={sprintFirstSubRef} variant="ghost" size="sm" className="w-full justify-start" onClick={() => { setView('sprint'); setSprintMenuOpen(false); setShowSprintCreateOnly(true); }}>
+                                        <Users className="h-4 w-4 mr-2" /> Create Sprint
+                                      </Button>
+                                    </div>
                                   </div>
                                 </div>
                               </li>
@@ -537,28 +547,40 @@ export default function ScrumMasterDashboard() {
               )}
               {view === 'sprint' && (
                 <div className="text-slate-700 text-lg">
-                  <div className="mb-6">
-                    <SprintCreationForm squadsProp={squads as unknown as { id: string; name: string; alias?: string; memberCount: number }[]} selectedSquadIdProp={selectedSquad?.id as string | undefined} onSprintCreated={() => { /* no-op for now */ }} />
-                  </div>
-                  <div>
-                    {sprints.length === 0 ? (
-                      <div className="text-sm text-slate-500">No sprints found.</div>
-                    ) : (
-                      <ul className="space-y-2">
-                        {sprints.map((sp) => (
-                          <li key={sp.id} className="p-3 bg-white rounded border border-slate-100 shadow-sm">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <div className="font-medium text-slate-900">{sp.name}</div>
-                                <div className="text-xs text-slate-500">Squad: {sp.squadId || '—'}</div>
-                              </div>
-                              <div className="text-sm text-slate-600">{/* placeholder for status/date */}</div>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                  {showSprintCreateOnly ? (
+                    <div className="mb-6">
+                      <SprintCreationForm
+                        squadsProp={squads as unknown as { id: string; name: string; alias?: string; memberCount: number }[]}
+                        selectedSquadIdProp={selectedSquad?.id as string | undefined}
+                        onSprintCreated={async () => { await fetchSprints(); setShowSprintCreateOnly(false); }}
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="mb-6">
+                        <SprintCreationForm squadsProp={squads as unknown as { id: string; name: string; alias?: string; memberCount: number }[]} selectedSquadIdProp={selectedSquad?.id as string | undefined} onSprintCreated={async () => { await fetchSprints(); }} />
+                      </div>
+                      <div>
+                        {sprints.length === 0 ? (
+                          <div className="text-sm text-slate-500">No sprints found.</div>
+                        ) : (
+                          <ul className="space-y-2">
+                            {sprints.map((sp) => (
+                              <li key={sp.id} className="p-3 bg-white rounded border border-slate-100 shadow-sm">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <div className="font-medium text-slate-900">{sp.name}</div>
+                                    <div className="text-xs text-slate-500">Squad: {sp.squadId || '—'}</div>
+                                  </div>
+                                  <div className="text-sm text-slate-600">{/* placeholder for status/date */}</div>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
               {view === 'settings' && (
