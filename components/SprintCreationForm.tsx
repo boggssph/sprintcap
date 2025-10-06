@@ -213,7 +213,7 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div style={{ color: 'red', fontWeight: 'bold', textAlign: 'center', marginBottom: 8 }}>DEPLOY TEST</div>
+            {/* removed debug/deploy test label */}
             {/* Squad selection dropdown */}
             <div className="space-y-2">
               <Label htmlFor="squadId">Squad</Label>
@@ -223,10 +223,10 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
                 name="squadId"
                 disabled={squads.length === 0}
               >
-                <SelectTrigger id="squadId" className={errors.squadId ? 'border-red-500' : ''}>
+                <SelectTrigger id="squadId" className={`${errors.squadId ? 'border-red-500' : ''} bg-white shadow-sm` }>
                   <SelectValue placeholder="Select a squad" />
                 </SelectTrigger>
-                <SelectContent>
+                  <SelectContent className="bg-white shadow-lg">
                   {squads.map((squad) => (
                     <SelectItem key={squad.id} value={squad.id}>
                       {squad.name} {squad.alias ? `(${squad.alias})` : ''} - {squad.memberCount} member{squad.memberCount === 1 ? '' : 's'}
