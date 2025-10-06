@@ -248,7 +248,7 @@ export default function ScrumMasterDashboard() {
   const [squadAction, setSquadAction] = useState<null | 'create' | 'edit' | 'invite'>(null);
   const [selectedSquad, setSelectedSquad] = useState<Squad | null>(null);
   const [squads, setSquads] = useState<Squad[]>([]);
-  const [sprints, setSprints] = useState<Array<{ id: string; name: string; squadId?: string }>>([]);
+  const [sprints, setSprints] = useState<Array<{ id: string; name: string; squadId?: string; startDate?: string }>>([]);
   const [showSprintCreateOnly, setShowSprintCreateOnly] = useState(false);
   // Refs used for focusing submenu items when opened
   const squadMenuButtonRef = React.useRef<HTMLButtonElement | null>(null)
@@ -431,7 +431,11 @@ export default function ScrumMasterDashboard() {
                     ref={sprintMenuButtonRef}
                     className={view === 'sprint' ? 'bg-indigo-50 text-indigo-700' : ''}
                     onClick={() => {
+                      // When clicking the Sprint parent, we want to show the sprint
+                      // list view (not the create-only form). Child "Create Sprint"
+                      // submenu will set create-only mode.
                       setView('sprint');
+                      setShowSprintCreateOnly(false);
                       setSprintMenuOpen((open) => !open);
                     }}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSprintMenuOpen(open => !open) } }}
@@ -613,19 +617,54 @@ export default function ScrumMasterDashboard() {
                         {sprints.length === 0 ? (
                           <div className="text-sm text-slate-500">No sprints found.</div>
                         ) : (
-                          <ul className="space-y-2">
-                            {sprints.map((sp) => (
-                              <li key={sp.id} className="p-3 bg-white rounded border border-slate-100 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <div className="font-medium text-slate-900">{sp.name}</div>
-                                    <div className="text-xs text-slate-500">Squad: {sp.squadId || '—'}</div>
-                                  </div>
-                                  <div className="text-sm text-slate-600">{/* placeholder for status/date */}</div>
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
+                            <div className="space-y-6">
+                              {/* Group sprints by squad and show latest + up to 3 past sprints */}
+                              {(() => {
+                                // Convert sprint list to grouped map by squadId
+                                const bySquad: Record<string, Array<{ id: string; name: string; squadId?: string; startDate?: string }>> = {}
+                                sprints.forEach(sp => {
+                                  const key = sp.squadId || 'unassigned'
+                                  bySquad[key] = bySquad[key] || []
+                                  bySquad[key].push(sp)
+                                })
+
+                                // For each squad, sort descending by startDate (newest first) and take latest + up to 3 past
+                                const groups = Object.keys(bySquad).map(squadId => {
+                                  const list = bySquad[squadId].slice().sort((a, b) => {
+                                    const da = a.startDate ? new Date(a.startDate).getTime() : 0
+                                    const db = b.startDate ? new Date(b.startDate).getTime() : 0
+                                    return db - da
+                                  })
+                                  return { squadId, list: list.slice(0, 4) }
+                                })
+
+                                // Render each group, showing squad header (resolve to name/alias from squads state when possible)
+                                return groups.map(group => {
+                                  const squad = squads.find(s => String(s.id) === String(group.squadId))
+                                  return (
+                                    <div key={group.squadId} className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                                      <div className="mb-3">
+                                        <div className="text-sm text-slate-500">Squad</div>
+                                        <div className="font-medium text-slate-900">{squad?.name || (group.squadId === 'unassigned' ? 'Unassigned' : group.squadId)}</div>
+                                      </div>
+                                      <ul className="space-y-2">
+                                        {group.list.map(sp => (
+                                          <li key={sp.id} className="p-3 rounded border border-slate-100">
+                                            <div className="flex items-center justify-between">
+                                              <div>
+                                                <div className="font-medium text-slate-900">{sp.name}</div>
+                                                <div className="text-xs text-slate-500">{sp.startDate ? new Date(sp.startDate).toLocaleString() : '—'}</div>
+                                              </div>
+                                              <div className="text-sm text-slate-600">{/* status/date placeholder */}</div>
+                                            </div>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )
+                                })
+                              })()}
+                            </div>
                         )}
                       </div>
                     </>
