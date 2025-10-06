@@ -1,12 +1,12 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Target } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 
-export default function ScrumMasterHeader({ onSignOut }: { onSignOut: () => void }) {
+export default function ScrumMasterHeader() {
   const { data: session } = useSession();
   const { toggleSidebar } = useSidebar();
 
@@ -32,7 +32,7 @@ export default function ScrumMasterHeader({ onSignOut }: { onSignOut: () => void
         </div>
       </div>
       <div className="flex items-center gap-2 mt-2 md:mt-0">
-        <Button onClick={onSignOut} variant="ghost" size="sm" className="border-slate-200 px-3 py-1">
+        <Button onClick={() => signOut({ callbackUrl: '/auth/no-access' })} variant="ghost" size="sm" className="border-slate-200 px-3 py-1">
           <span className="sr-only">Sign out</span>
           Sign Out
         </Button>
