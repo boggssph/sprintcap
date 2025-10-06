@@ -615,10 +615,10 @@ export default function ScrumMasterDashboard() {
                     </div>
                   ) : (
                     <>
-                      <div className="mb-4 flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-slate-900">Sprints</h3>
+                      <div className="mb-6 flex items-center justify-between">
+                        <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight">Sprints</h3>
                         <div>
-                          <Button onClick={() => { lastSprintIntentRef.current = 'create'; setShowSprintCreateOnly(true); setTimeout(() => { lastSprintIntentRef.current = null }, 1000) }} className="bg-indigo-600 text-white hover:bg-indigo-700">+ Create Sprint</Button>
+                          <Button onClick={() => { lastSprintIntentRef.current = 'create'; setShowSprintCreateOnly(true); setTimeout(() => { lastSprintIntentRef.current = null }, 1000) }} className="inline-flex items-center gap-3 px-5 py-3 rounded-lg bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 transform transition active:scale-95">+ Create Sprint</Button>
                         </div>
                       </div>
                       <div>
@@ -650,18 +650,18 @@ export default function ScrumMasterDashboard() {
                               return groups.map(group => {
                                 const squad = squads.find(s => String(s.id) === String(group.squadId))
                                 return (
-                                  <div key={group.squadId} className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
-                                    <div className="mb-3">
+                                  <div key={group.squadId} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-md">
+                                    <div className="mb-4">
                                       <div className="text-sm text-slate-500">Squad</div>
-                                      <div className="font-medium text-slate-900">{squad?.name || (group.squadId === 'unassigned' ? 'Unassigned' : group.squadId)}</div>
+                                      <div className="text-xl font-semibold text-slate-900">{squad?.name || (group.squadId === 'unassigned' ? 'Unassigned' : group.squadId)}</div>
                                     </div>
-                                    <ul className="space-y-2">
+                                    <ul className="space-y-3">
                                       {group.list.map(sp => (
-                                        <li key={sp.id} className="p-3 rounded border border-slate-100">
+                                        <li key={sp.id} className="bg-slate-50 p-4 rounded-lg border border-slate-100 hover:shadow transition">
                                           <div className="flex items-center justify-between">
                                             <div>
-                                              <div className="font-medium text-slate-900">{sp.name}</div>
-                                              <div className="text-xs text-slate-500">{sp.startDate ? new Date(sp.startDate).toLocaleString() : '—'}</div>
+                                              <div className="font-semibold text-slate-900 text-lg">{sp.name}</div>
+                                              <div className="text-sm text-slate-500">{sp.startDate ? new Date(sp.startDate).toLocaleString() : '—'}</div>
                                             </div>
                                             <div className="text-sm text-slate-600">{/* status/date placeholder */}</div>
                                           </div>
