@@ -3,7 +3,19 @@ import React, { useState, useEffect } from "react";
 import { toast } from 'sonner'
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Target, BarChart3, Users, Settings, Plus } from "lucide-react";
+import { Target, BarChart3, Users, Settings } from "lucide-react";
+// Inline running-person icon to avoid import/export naming issues with the icon package
+function RunningIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="13" cy="4" r="1.5" />
+      <path d="M6 20c1-2 3-3 5-3h1" />
+      <path d="M11 7l2 2 3-1" />
+      <path d="M14 14l3 6" />
+      <path d="M7 13l4 1" />
+    </svg>
+  )
+}
 import SprintCreationForm from "@/components/SprintCreationForm";
 import SquadFormFields from '@/components/SquadFormFields'
 import ScrumMasterHeader from "@/components/ScrumMasterHeader";
@@ -236,6 +248,7 @@ export default function ScrumMasterDashboard() {
   const [squadAction, setSquadAction] = useState<null | 'create' | 'edit' | 'invite'>(null);
   const [selectedSquad, setSelectedSquad] = useState<Squad | null>(null);
   const [squads, setSquads] = useState<Squad[]>([]);
+  const [sprints, setSprints] = useState<Array<{ id: string; name: string; squadId?: string }>>([]);
   // Refs used for focusing submenu items when opened
   const squadMenuButtonRef = React.useRef<HTMLButtonElement | null>(null)
   const squadFirstSubRef = React.useRef<HTMLButtonElement | null>(null)
@@ -256,6 +269,26 @@ export default function ScrumMasterDashboard() {
       setTimeout(() => sprintFirstSubRef.current?.focus(), 0)
     }
   }, [sprintMenuOpen])
+
+  // Fetch sprints (exposed so we can refresh after creation)
+  async function fetchSprints() {
+    try {
+      const res = await fetch('/api/sprints');
+      if (!res.ok) return;
+      const data = await res.json();
+      setSprints(data.sprints || []);
+    } catch (e) {
+      console.error('Failed to fetch sprints', e);
+    }
+  }
+
+  // When sprint view is activated, refresh the list
+  useEffect(() => {
+    if (view !== 'sprint') return;
+    let mounted = true;
+    if (mounted) fetchSprints();
+    return () => { mounted = false };
+  }, [view]);
 
   // Load squads for the current Scrum Master so the sidebar/list can operate.
   // fetchSquads is exposed so children (CreateSquadForm) can refresh the list after creating.
@@ -365,7 +398,7 @@ export default function ScrumMasterDashboard() {
                     aria-expanded={sprintMenuOpen}
                     aria-controls="sprint-submenu"
                   >
-                    <Plus className="h-4 w-4 mr-2" />
+                      <RunningIcon className="h-4 w-4 mr-2" />
                     Sprint
                   </SidebarMenuButton>
                   {sprintMenuOpen && (
@@ -377,7 +410,7 @@ export default function ScrumMasterDashboard() {
                       }
                     }}>
                       <Button ref={sprintFirstSubRef} variant="ghost" size="sm" className="w-full justify-start" onClick={() => { setView('sprint'); setSprintMenuOpen(false); }}>
-                        + Create Sprint
+                        <Users className="h-4 w-4 mr-2" /> Create Sprint
                       </Button>
                       {/* Add more sprint actions here */}
                     </div>
@@ -507,7 +540,25 @@ export default function ScrumMasterDashboard() {
                   <div className="mb-6">
                     <SprintCreationForm squadsProp={squads as unknown as { id: string; name: string; alias?: string; memberCount: number }[]} selectedSquadIdProp={selectedSquad?.id as string | undefined} onSprintCreated={() => { /* no-op for now */ }} />
                   </div>
-                  <div>Sprint list and other sprint actions go here.</div>
+                  <div>
+                    {sprints.length === 0 ? (
+                      <div className="text-sm text-slate-500">No sprints found.</div>
+                    ) : (
+                      <ul className="space-y-2">
+                        {sprints.map((sp) => (
+                          <li key={sp.id} className="p-3 bg-white rounded border border-slate-100 shadow-sm">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="font-medium text-slate-900">{sp.name}</div>
+                                <div className="text-xs text-slate-500">Squad: {sp.squadId || '—'}</div>
+                              </div>
+                              <div className="text-sm text-slate-600">{/* placeholder for status/date */}</div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 </div>
               )}
               {view === 'settings' && (
