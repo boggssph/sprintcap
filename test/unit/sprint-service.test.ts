@@ -62,9 +62,9 @@ describe('Sprint Service Methods', () => {
         }
       ]
 
-      ;(prisma.sprint.findMany as any).mockResolvedValue(mockSprints)
-      ;(prisma.sprint.count as any).mockResolvedValue(2)
-      ;(prisma.squad.findMany as any).mockResolvedValue([{ id: 'squad-1' }])
+  vi.mocked(prisma.sprint.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockSprints)
+  vi.mocked(prisma.sprint.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(2)
+  vi.mocked(prisma.squad.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([{ id: 'squad-1' }])
 
       const { listSprints } = await import('../../lib/services/sprintService')
 
@@ -136,9 +136,9 @@ describe('Sprint Service Methods', () => {
     })
 
     it('should handle empty results', async () => {
-      ;(prisma.sprint.findMany as any).mockResolvedValue([])
-      ;(prisma.sprint.count as any).mockResolvedValue(0)
-      ;(prisma.squad.findMany as any).mockResolvedValue([])
+  vi.mocked(prisma.sprint.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([])
+  vi.mocked(prisma.sprint.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(0)
+  vi.mocked(prisma.squad.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([])
 
       const { listSprints } = await import('../../lib/services/sprintService')
 
@@ -173,9 +173,9 @@ describe('Sprint Service Methods', () => {
         }
       ]
 
-      ;(prisma.sprint.findMany as any).mockResolvedValue(mockSprints)
-      ;(prisma.sprint.count as any).mockResolvedValue(1)
-      ;(prisma.squad.findUnique as any).mockResolvedValue({
+  vi.mocked(prisma.sprint.findMany as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockSprints)
+  vi.mocked(prisma.sprint.count as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(1)
+  vi.mocked(prisma.squad.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
         id: 'squad-1',
         name: 'Alpha Squad',
         scrumMasterId: 'user-1'
@@ -251,7 +251,7 @@ describe('Sprint Service Methods', () => {
         ]
       }
 
-      ;(prisma.sprint.findUnique as any).mockResolvedValue(mockSprint)
+  vi.mocked(prisma.sprint.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockSprint)
 
       const { getSprint } = await import('../../lib/services/sprintService')
 
@@ -303,7 +303,7 @@ describe('Sprint Service Methods', () => {
     })
 
     it('should throw error for non-existent sprint', async () => {
-      ;(prisma.sprint.findUnique as any).mockResolvedValue(null)
+  vi.mocked(prisma.sprint.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null)
 
       const { getSprint } = await import('../../lib/services/sprintService')
 
@@ -326,7 +326,7 @@ describe('Sprint Service Methods', () => {
         members: []
       }
 
-      ;(prisma.sprint.findUnique as any).mockResolvedValue(mockSprint)
+  vi.mocked(prisma.sprint.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockSprint)
 
       const { getSprint } = await import('../../lib/services/sprintService')
 
@@ -337,7 +337,7 @@ describe('Sprint Service Methods', () => {
 
   describe('Error Handling', () => {
     it('should handle database errors gracefully', async () => {
-      ;(prisma.squad.findMany as any).mockRejectedValue(new Error('Database connection failed'))
+  vi.mocked(prisma.squad.findMany as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Database connection failed'))
 
       const { listSprints } = await import('../../lib/services/sprintService')
 

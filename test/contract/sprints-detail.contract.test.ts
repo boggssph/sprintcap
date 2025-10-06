@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createMocks } from 'node-mocks-http'
+import type { NextApiRequest, NextApiResponse } from 'next'
 
 // Mock the sprint service (will be created later)
 vi.mock('../../lib/services/sprintService', async () => {
@@ -12,7 +13,7 @@ import * as sprintService from '../../lib/services/sprintService'
 
 describe('GET /api/sprints/[id] - Contract Test', () => {
   beforeEach(() => {
-    ;(sprintService.getSprint as any).mockReset()
+    vi.mocked(sprintService.getSprint as unknown as ReturnType<typeof vi.fn>).mockReset()
   })
 
   it('should return sprint details with members', async () => {
@@ -27,7 +28,7 @@ describe('GET /api/sprints/[id] - Contract Test', () => {
     })
 
     // Mock successful response with members
-    ;(sprintService.getSprint as any).mockResolvedValue({
+  vi.mocked(sprintService.getSprint as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: sprintId,
       name: 'Sprint 2025.10',
       squadId: 'squad-uuid-123',
@@ -54,8 +55,8 @@ describe('GET /api/sprints/[id] - Contract Test', () => {
       updatedAt: '2025-09-26T10:00:00Z'
     })
 
-    const handler = await import('../../pages/api/sprints/[id]')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints/[id]')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(200)
     const responseData = JSON.parse(res._getData())
@@ -80,11 +81,11 @@ describe('GET /api/sprints/[id] - Contract Test', () => {
 
     // Mock not found error
     const notFoundError = new Error('Sprint not found')
-    ;(notFoundError as any).code = 'NOT_FOUND'
-    ;(sprintService.getSprint as any).mockRejectedValue(notFoundError)
+  ;(notFoundError as unknown as { code?: string }).code = 'NOT_FOUND'
+  vi.mocked(sprintService.getSprint as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(notFoundError)
 
-    const handler = await import('../../pages/api/sprints/[id]')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints/[id]')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(404)
     const responseData = JSON.parse(res._getData())
@@ -103,7 +104,7 @@ describe('GET /api/sprints/[id] - Contract Test', () => {
     })
 
     // Mock sprint with no members
-    ;(sprintService.getSprint as any).mockResolvedValue({
+  vi.mocked(sprintService.getSprint as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: sprintId,
       name: 'Empty Sprint',
       squadId: 'squad-uuid-123',
@@ -115,8 +116,8 @@ describe('GET /api/sprints/[id] - Contract Test', () => {
       updatedAt: '2025-09-26T10:00:00Z'
     })
 
-    const handler = await import('../../pages/api/sprints/[id]')
-    await handler.default(req as any, res as any)
+  const handler = await import('../../pages/api/sprints/[id]')
+  await handler.default(req as unknown as NextApiRequest, res as unknown as NextApiResponse)
 
     expect(res._getStatusCode()).toBe(200)
     const responseData = JSON.parse(res._getData())

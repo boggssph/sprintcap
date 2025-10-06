@@ -18,7 +18,7 @@ describe('inviteService basic flows', () => {
   })
 
   it('createInvite throws when actor not found', async () => {
-    ;(prisma.user.findUnique as any).mockResolvedValue(null)
+    vi.mocked(prisma.user.findUnique as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null)
     await expect(inviteService.createInvite('noone@example.com', { email: 'a@b.com' })).rejects.toThrow()
   })
 })
