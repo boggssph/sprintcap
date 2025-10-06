@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { toast } from 'sonner'
+import { signOut } from 'next-auth/react'
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Target, BarChart3, Users, Settings, Plus } from "lucide-react";
@@ -246,7 +247,9 @@ export default function ScrumMasterDashboard() {
   }, []);
 
   function handleSignOut() {
-    // Implement sign out logic here
+    // Use NextAuth signOut helper which will clear the session and redirect.
+    // Redirect to no-access page after sign out.
+    signOut({ callbackUrl: '/auth/no-access' });
   }
 
   return (
