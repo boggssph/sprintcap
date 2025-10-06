@@ -615,61 +615,64 @@ export default function ScrumMasterDashboard() {
                     </div>
                   ) : (
                     <>
-                      <div className="mb-6">
-                        <SprintCreationForm squadsProp={squads as unknown as { id: string; name: string; alias?: string; memberCount: number }[]} selectedSquadIdProp={selectedSquad?.id as string | undefined} onSprintCreated={async () => { await fetchSprints(); }} />
+                      <div className="mb-4 flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-slate-900">Sprints</h3>
+                        <div>
+                          <Button onClick={() => { lastSprintIntentRef.current = 'create'; setShowSprintCreateOnly(true); setTimeout(() => { lastSprintIntentRef.current = null }, 1000) }} className="bg-indigo-600 text-white hover:bg-indigo-700">+ Create Sprint</Button>
+                        </div>
                       </div>
                       <div>
                         {sprints.length === 0 ? (
                           <div className="text-sm text-slate-500">No sprints found.</div>
                         ) : (
-                            <div className="space-y-6">
-                              {/* Group sprints by squad and show latest + up to 3 past sprints */}
-                              {(() => {
-                                // Convert sprint list to grouped map by squadId
-                                const bySquad: Record<string, Array<{ id: string; name: string; squadId?: string; startDate?: string }>> = {}
-                                sprints.forEach(sp => {
-                                  const key = sp.squadId || 'unassigned'
-                                  bySquad[key] = bySquad[key] || []
-                                  bySquad[key].push(sp)
-                                })
+                          <div className="space-y-6">
+                            {/* Group sprints by squad and show latest + up to 3 past sprints */}
+                            {(() => {
+                              // Convert sprint list to grouped map by squadId
+                              const bySquad: Record<string, Array<{ id: string; name: string; squadId?: string; startDate?: string }>> = {}
+                              sprints.forEach(sp => {
+                                const key = sp.squadId || 'unassigned'
+                                bySquad[key] = bySquad[key] || []
+                                bySquad[key].push(sp)
+                              })
 
-                                // For each squad, sort descending by startDate (newest first) and take latest + up to 3 past
-                                const groups = Object.keys(bySquad).map(squadId => {
-                                  const list = bySquad[squadId].slice().sort((a, b) => {
-                                    const da = a.startDate ? new Date(a.startDate).getTime() : 0
-                                    const db = b.startDate ? new Date(b.startDate).getTime() : 0
-                                    return db - da
-                                  })
-                                  return { squadId, list: list.slice(0, 4) }
+                              // For each squad, sort descending by startDate (newest first) and take latest + up to 3 past
+                              const groups = Object.keys(bySquad).map(squadId => {
+                                const list = bySquad[squadId].slice().sort((a, b) => {
+                                  const da = a.startDate ? new Date(a.startDate).getTime() : 0
+                                  const db = b.startDate ? new Date(b.startDate).getTime() : 0
+                                  return db - da
                                 })
+                                return { squadId, list: list.slice(0, 4) }
+                              })
 
-                                // Render each group, showing squad header (resolve to name/alias from squads state when possible)
-                                return groups.map(group => {
-                                  const squad = squads.find(s => String(s.id) === String(group.squadId))
-                                  return (
-                                    <div key={group.squadId} className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
-                                      <div className="mb-3">
-                                        <div className="text-sm text-slate-500">Squad</div>
-                                        <div className="font-medium text-slate-900">{squad?.name || (group.squadId === 'unassigned' ? 'Unassigned' : group.squadId)}</div>
-                                      </div>
-                                      <ul className="space-y-2">
-                                        {group.list.map(sp => (
-                                          <li key={sp.id} className="p-3 rounded border border-slate-100">
-                                            <div className="flex items-center justify-between">
-                                              <div>
-                                                <div className="font-medium text-slate-900">{sp.name}</div>
-                                                <div className="text-xs text-slate-500">{sp.startDate ? new Date(sp.startDate).toLocaleString() : '—'}</div>
-                                              </div>
-                                              <div className="text-sm text-slate-600">{/* status/date placeholder */}</div>
-                                            </div>
-                                          </li>
-                                        ))}
-                                      </ul>
+                              // Render each group, showing squad header (resolve to name/alias from squads state when possible)
+                              return groups.map(group => {
+                                const squad = squads.find(s => String(s.id) === String(group.squadId))
+                                return (
+                                  <div key={group.squadId} className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm">
+                                    <div className="mb-3">
+                                      <div className="text-sm text-slate-500">Squad</div>
+                                      <div className="font-medium text-slate-900">{squad?.name || (group.squadId === 'unassigned' ? 'Unassigned' : group.squadId)}</div>
                                     </div>
-                                  )
-                                })
-                              })()}
-                            </div>
+                                    <ul className="space-y-2">
+                                      {group.list.map(sp => (
+                                        <li key={sp.id} className="p-3 rounded border border-slate-100">
+                                          <div className="flex items-center justify-between">
+                                            <div>
+                                              <div className="font-medium text-slate-900">{sp.name}</div>
+                                              <div className="text-xs text-slate-500">{sp.startDate ? new Date(sp.startDate).toLocaleString() : '—'}</div>
+                                            </div>
+                                            <div className="text-sm text-slate-600">{/* status/date placeholder */}</div>
+                                          </div>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )
+                              })
+                            })()}
+                          </div>
                         )}
                       </div>
                     </>
