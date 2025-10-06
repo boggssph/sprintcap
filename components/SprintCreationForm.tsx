@@ -160,7 +160,7 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
 
   // Non-dialog branch
   return (
-  <Card className="mx-auto w-full lg:w-[70%]">
+  <Card className="mx-auto w-full max-w-full sm:max-w-md lg:max-w-[900px]">
       <CardHeader>
         <CardTitle>Create New Sprint</CardTitle>
         <CardDescription>
