@@ -14,13 +14,15 @@ type Props = {
 export default function SquadFormFields({ name, alias, onChangeName, onChangeAlias }: Props) {
   return (
     <>
-      <div>
-        <Label>Name</Label>
-  <Input value={name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChangeName(e.target.value)} />
+      <div className="space-y-1">
+        <Label className="text-sm font-medium text-slate-700">Name</Label>
+        <Input placeholder="e.g. Frontend Squad" value={name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChangeName(e.target.value)} />
+        <p className="text-xs text-slate-500">A descriptive name for the squad.</p>
       </div>
-      <div>
-        <Label>Alias</Label>
-  <Input value={alias} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChangeAlias(e.target.value)} />
+      <div className="space-y-1">
+        <Label className="text-sm font-medium text-slate-700">Alias</Label>
+        <Input placeholder="e.g. frontend" value={alias} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChangeAlias(e.target.value)} />
+        <p className="text-xs text-slate-500">Short unique handle used in URLs and mentions.</p>
       </div>
     </>
   )
