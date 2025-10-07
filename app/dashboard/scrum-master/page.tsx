@@ -640,8 +640,7 @@ export default function ScrumMasterDashboard() {
                         {sprints.length === 0 ? (
                           <div className="text-sm text-slate-500">No sprints found.</div>
                         ) : (
-                          <div className="max-w-7xl px-4 sm:px-6 lg:px-8 w-full">
-                            <div className="space-y-6">
+                          <div className="space-y-6">
                             {/* Group sprints by squad and show latest + up to 3 past sprints */}
                             {(() => {
                               // Convert sprint list to grouped map by squadId
@@ -692,7 +691,6 @@ export default function ScrumMasterDashboard() {
                                 )
                               })
                             })()}
-                            </div>
                           </div>
                         )}
                       </div>
