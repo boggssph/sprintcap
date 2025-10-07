@@ -275,6 +275,21 @@ export default function ScrumMasterDashboard() {
     }
   }, [sprintMenuOpen])
 
+  // Format date/time to user's requested style: "Oct-06-2025, 5:00PM"
+  function formatDateTime(iso?: string | null) {
+    if (!iso) return 'TBA'
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return 'TBA'
+    const month = d.toLocaleString('en-US', { month: 'short' })
+    const day = String(d.getDate()).padStart(2, '0')
+    const year = d.getFullYear()
+    let hours = d.getHours()
+    const minutes = String(d.getMinutes()).padStart(2, '0')
+    const ampm = hours >= 12 ? 'PM' : 'AM'
+    hours = hours % 12 || 12
+    return `${month}-${day}-${year}, ${hours}:${minutes}${ampm}`
+  }
+
   // Fetch sprints (exposed so we can refresh after creation)
   async function fetchSprints() {
     try {
@@ -658,12 +673,16 @@ export default function ScrumMasterDashboard() {
                                     <ul className="space-y-3">
                                       {group.list.map(sp => (
                                         <li key={sp.id} className="bg-slate-50 p-4 rounded-lg border border-slate-100 hover:shadow transition">
-                                          <div className="flex items-center justify-between">
+                                          <div className="grid grid-cols-1 md:grid-cols-[1fr,200px] gap-4 items-center">
                                             <div>
                                               <div className="font-semibold text-slate-900 text-lg">{sp.name}</div>
-                                              <div className="text-sm text-slate-500">{sp.startDate ? new Date(sp.startDate).toLocaleString() : '—'}</div>
                                             </div>
-                                            <div className="text-sm text-slate-600">{/* status/date placeholder */}</div>
+                                            <div className="text-right">
+                                              <div className="text-sm text-slate-500">Start</div>
+                                              <div className="font-medium text-slate-900"><time dateTime={sp.startDate || ''}>{formatDateTime(sp.startDate)}</time></div>
+                                              <div className="text-sm text-slate-500 mt-2">End</div>
+                                              <div className="font-medium text-slate-900"><time dateTime={sp.startDate || ''}>{formatDateTime(sp.startDate)}</time></div>
+                                            </div>
                                           </div>
                                         </li>
                                       ))}
