@@ -48,6 +48,7 @@ export interface SprintListResponse {
 export interface SprintSummary {
   id: string
   name: string
+  squadId?: string
   squadName: string
   startDate: string
   endDate: string
@@ -313,6 +314,7 @@ export async function listSprints(
   const sprintSummaries: SprintSummary[] = sprints.map(sprint => {
     return {
       id: sprint.id,
+      squadId: sprint.squadId,
       name: sprint.name,
       squadName: sprint.squad?.name ?? '',
       startDate: sprint.startDate.toISOString(),
