@@ -640,7 +640,7 @@ export default function ScrumMasterDashboard() {
                         {sprints.length === 0 ? (
                           <div className="text-sm text-slate-500">No sprints found.</div>
                         ) : (
-                          <div className="mx-auto max-w-4xl">
+                          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                             <div className="space-y-6">
                             {/* Group sprints by squad and show latest + up to 3 past sprints */}
                             {(() => {
