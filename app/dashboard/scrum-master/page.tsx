@@ -631,17 +631,19 @@ export default function ScrumMasterDashboard() {
                     </div>
                   ) : (
                     <>
-                      <div className="mb-6 flex items-center justify-between">
-                        <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight">Sprints</h3>
-                        <div>
-                          <Button onClick={() => { lastSprintIntentRef.current = 'create'; setShowSprintCreateOnly(true); setTimeout(() => { lastSprintIntentRef.current = null }, 1000) }} className="inline-flex items-center gap-3 px-5 py-3 rounded-lg bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 transform transition active:scale-95">+ Create Sprint</Button>
+                      {/* Ensure the Sprint view uses the same inner container as Overview */}
+                      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="mb-6 flex items-center justify-between">
+                          <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight">Sprints</h3>
+                          <div>
+                            <Button onClick={() => { lastSprintIntentRef.current = 'create'; setShowSprintCreateOnly(true); setTimeout(() => { lastSprintIntentRef.current = null }, 1000) }} className="inline-flex items-center gap-3 px-5 py-3 rounded-lg bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 transform transition active:scale-95">+ Create Sprint</Button>
+                          </div>
                         </div>
-                      </div>
-                      <div>
-                        {sprints.length === 0 ? (
-                          <div className="text-sm text-slate-500">No sprints found.</div>
-                        ) : (
-                          <div className="space-y-6">
+                        <div>
+                          {sprints.length === 0 ? (
+                            <div className="text-sm text-slate-500">No sprints found.</div>
+                          ) : (
+                            <div className="space-y-6">
                             {/* Group sprints by squad and show latest + up to 3 past sprints */}
                             {(() => {
                               // Convert sprint list to grouped map by squadId
@@ -695,6 +697,7 @@ export default function ScrumMasterDashboard() {
                           </div>
                         )}
                       </div>
+                    </div>
                     </>
                   )}
                 </div>
