@@ -692,6 +692,7 @@ export default function ScrumMasterDashboard() {
                                 )
                               })
                             })()}
+                            </div>
                           </div>
                         )}
                       </div>
