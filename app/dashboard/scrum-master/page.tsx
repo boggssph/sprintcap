@@ -19,6 +19,7 @@ function RunningIcon(props: React.SVGProps<SVGSVGElement>) {
 import SprintCreationForm from "@/components/SprintCreationForm";
 import SquadFormFields from '@/components/SquadFormFields'
 import ScrumMasterHeader from "@/components/ScrumMasterHeader";
+import CenteredContainer from '@/components/CenteredContainer'
 
 // --- Types ---
 interface Squad {
@@ -66,7 +67,8 @@ function CreateSquadForm({ onSuccess, refreshSquads }: { onSuccess: () => void; 
   }
 
   return (
-    <form onSubmit={handleCreate} className="max-w-md space-y-4 bg-white p-6 rounded shadow">
+    <CenteredContainer>
+      <form onSubmit={handleCreate} className="mx-auto w-full space-y-4 bg-white p-6 rounded shadow">
       <h2 className="text-xl font-semibold mb-2">Create Squad</h2>
       <SquadFormFields name={name} alias={alias} onChangeName={setName} onChangeAlias={setAlias} />
       {error && (
@@ -78,7 +80,8 @@ function CreateSquadForm({ onSuccess, refreshSquads }: { onSuccess: () => void; 
         <Button type="submit" disabled={loading}>{loading ? 'Creating...' : 'Create'}</Button>
         <Button type="button" variant="ghost" onClick={onSuccess}>Cancel</Button>
       </div>
-    </form>
+      </form>
+    </CenteredContainer>
   );
 }
 
@@ -137,7 +140,8 @@ function EditSquadForm({ squads, onSuccess, refreshSquads }: { squads: Squad[]; 
   }
 
   return (
-    <form onSubmit={handleSave} className="max-w-md space-y-4 bg-white p-6 rounded shadow">
+    <CenteredContainer>
+      <form onSubmit={handleSave} className="mx-auto w-full space-y-4 bg-white p-6 rounded shadow">
       <h2 className="text-xl font-semibold mb-2">Edit Squad</h2>
       <div className="space-y-2">
         <label className="block text-sm font-medium text-slate-700">Select squad to edit</label>
@@ -158,7 +162,8 @@ function EditSquadForm({ squads, onSuccess, refreshSquads }: { squads: Squad[]; 
   <Button type="submit" disabled={loading}>{loading ? 'Saving...' : 'Save'}</Button>
   <Button type="button" variant="ghost" onClick={() => onSuccess()}>Cancel</Button>
       </div>
-    </form>
+      </form>
+    </CenteredContainer>
   );
 }
 
@@ -210,7 +215,8 @@ function InviteMembersForm({ squads, onSuccess, refreshSquads }: { squads: Squad
   }
 
   return (
-    <form onSubmit={handleInvite} className="max-w-md space-y-4 bg-white p-6 rounded shadow">
+    <CenteredContainer>
+      <form onSubmit={handleInvite} className="mx-auto w-full space-y-4 bg-white p-6 rounded shadow">
       <h2 className="text-xl font-semibold mb-2">Invite Members</h2>
       <div className="space-y-2">
         <label className="block text-sm font-medium text-slate-700">Select squad to invite</label>
@@ -235,7 +241,8 @@ function InviteMembersForm({ squads, onSuccess, refreshSquads }: { squads: Squad
   <Button type="submit" disabled={loading}>{loading ? 'Sending...' : 'Send Invites'}</Button>
   <Button type="button" variant="ghost" onClick={() => onSuccess()}>Cancel</Button>
       </div>
-    </form>
+      </form>
+    </CenteredContainer>
   );
 }
 
@@ -349,7 +356,7 @@ export default function ScrumMasterDashboard() {
           {/* Sidebar for desktop */}
           <Sidebar className="hidden md:flex bg-white border-r border-slate-200/60">
             <SidebarHeader>
-              <div className="flex items-center gap-2 p-2">
+                <div className="flex items-center gap-2 p-2">
                 <Target className="h-6 w-6 text-indigo-600" />
                 <span className="font-bold text-lg text-slate-800">SprintCap</span>
               </div>
@@ -513,7 +520,7 @@ export default function ScrumMasterDashboard() {
             {/* Header */}
             <ScrumMasterHeader />
             <main className="w-full flex-1 flex flex-col bg-background">
-              <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              <CenteredContainer className="py-6">
               {/* Modern hero / KPI area */}
               {view === 'overview' && (
                 <section className="mb-6">
@@ -702,7 +709,7 @@ export default function ScrumMasterDashboard() {
               {view === 'settings' && (
                 <div className="text-slate-700 text-lg">Settings and profile actions go here.</div>
               )}
-              </div>
+              </CenteredContainer>
             </main>
           </SidebarInset>
         </div>

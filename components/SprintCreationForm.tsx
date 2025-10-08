@@ -22,6 +22,8 @@ type SprintCreationFormProps = {
   selectedSquadIdProp?: string; // optional preselected squad id
 };
 
+import CenteredContainer from './CenteredContainer'
+
 export default function SprintCreationForm({ onSprintCreated, squadsProp, selectedSquadIdProp }: SprintCreationFormProps) {
   // Handles input changes for form fields
   const handleInputChange = (field: string, value: string) => {
@@ -200,7 +202,8 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
 
   // Non-dialog branch
   return (
-  <Card className="mx-auto w-full max-w-full sm:max-w-md lg:max-w-[900px]">
+    <CenteredContainer>
+      <Card className="mx-auto w-full">
       <CardHeader>
         <CardTitle>Create New Sprint</CardTitle>
         <CardDescription>
@@ -320,6 +323,7 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
           </form>
         )}
       </CardContent>
-    </Card>
+      </Card>
+    </CenteredContainer>
   );
 }
