@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { toast } from 'sonner'
-import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset } from "@/components/ui/sidebar";
+import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger, NavigationMenuContent } from '@/components/ui/navigation-menu'
 import { Button } from "@/components/ui/button";
 import { Target, BarChart3, Users, Settings } from "lucide-react";
 // Inline running-person icon to avoid import/export naming issues with the icon package
@@ -20,6 +20,7 @@ import SprintCreationForm from "@/components/SprintCreationForm";
 import SquadFormFields from '@/components/SquadFormFields'
 import ScrumMasterHeader from "@/components/ScrumMasterHeader";
 import CenteredContainer from '@/components/CenteredContainer'
+import MainShell from '@/components/MainShell'
 
 // --- Types ---
 interface Squad {
@@ -67,7 +68,6 @@ function CreateSquadForm({ onSuccess, refreshSquads }: { onSuccess: () => void; 
   }
 
   return (
-    <CenteredContainer>
       <form onSubmit={handleCreate} className="mx-auto w-full space-y-4 bg-white p-6 rounded shadow">
       <h2 className="text-xl font-semibold mb-2">Create Squad</h2>
       <SquadFormFields name={name} alias={alias} onChangeName={setName} onChangeAlias={setAlias} />
@@ -81,7 +81,7 @@ function CreateSquadForm({ onSuccess, refreshSquads }: { onSuccess: () => void; 
         <Button type="button" variant="ghost" onClick={onSuccess}>Cancel</Button>
       </div>
       </form>
-    </CenteredContainer>
+  
   );
 }
 
@@ -140,7 +140,6 @@ function EditSquadForm({ squads, onSuccess, refreshSquads }: { squads: Squad[]; 
   }
 
   return (
-    <CenteredContainer>
       <form onSubmit={handleSave} className="mx-auto w-full space-y-4 bg-white p-6 rounded shadow">
       <h2 className="text-xl font-semibold mb-2">Edit Squad</h2>
       <div className="space-y-2">
@@ -163,7 +162,7 @@ function EditSquadForm({ squads, onSuccess, refreshSquads }: { squads: Squad[]; 
   <Button type="button" variant="ghost" onClick={() => onSuccess()}>Cancel</Button>
       </div>
       </form>
-    </CenteredContainer>
+  
   );
 }
 
@@ -215,7 +214,6 @@ function InviteMembersForm({ squads, onSuccess, refreshSquads }: { squads: Squad
   }
 
   return (
-    <CenteredContainer>
       <form onSubmit={handleInvite} className="mx-auto w-full space-y-4 bg-white p-6 rounded shadow">
       <h2 className="text-xl font-semibold mb-2">Invite Members</h2>
       <div className="space-y-2">
@@ -242,14 +240,14 @@ function InviteMembersForm({ squads, onSuccess, refreshSquads }: { squads: Squad
   <Button type="button" variant="ghost" onClick={() => onSuccess()}>Cancel</Button>
       </div>
       </form>
-    </CenteredContainer>
+  
   );
 }
 
 export default function ScrumMasterDashboard() {
   const [view, setView] = useState<'overview' | 'squad' | 'sprint' | 'settings'>("overview");
-  const [squadMenuOpen, setSquadMenuOpen] = useState(false);
   const [sprintMenuOpen, setSprintMenuOpen] = useState(false);
+  const [squadMenuOpen, setSquadMenuOpen] = useState(false);
   // Track the last intent when navigating to sprint view so we don't
   // accidentally override an explicit "create only" action with the
   // generic view effect. Values: 'parent' | 'create' | null
@@ -264,16 +262,7 @@ export default function ScrumMasterDashboard() {
   // Refs used for focusing submenu items when opened
   const squadMenuButtonRef = React.useRef<HTMLButtonElement | null>(null)
   const squadFirstSubRef = React.useRef<HTMLButtonElement | null>(null)
-  const sprintMenuButtonRef = React.useRef<HTMLButtonElement | null>(null)
   const sprintFirstSubRef = React.useRef<HTMLButtonElement | null>(null)
-
-  // When squad submenu opens, move focus to first submenu item
-  useEffect(() => {
-    if (squadMenuOpen) {
-      // slight delay to ensure element is mounted
-      setTimeout(() => squadFirstSubRef.current?.focus(), 0)
-    }
-  }, [squadMenuOpen])
 
   // When sprint submenu opens, focus its first item
   useEffect(() => {
@@ -281,6 +270,13 @@ export default function ScrumMasterDashboard() {
       setTimeout(() => sprintFirstSubRef.current?.focus(), 0)
     }
   }, [sprintMenuOpen])
+
+  // When squad submenu opens, focus its first item
+  useEffect(() => {
+    if (squadMenuOpen) {
+      setTimeout(() => squadFirstSubRef.current?.focus(), 0)
+    }
+  }, [squadMenuOpen])
 
   // Format date/time to user's requested style: "Oct-06-2025, 5:00PM"
   function formatDateTime(iso?: string | null) {
@@ -351,176 +347,79 @@ export default function ScrumMasterDashboard() {
 
   return (
     <>
-      <SidebarProvider>
-        <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-          {/* Sidebar for desktop */}
-          <Sidebar className="hidden md:flex bg-white border-r border-slate-200/60">
-            <SidebarHeader>
-                <div className="flex items-center gap-2 p-2">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        {/* Top navigation using shadcn NavigationMenu */}
+        <div className="bg-white border-b border-slate-200">
+          <CenteredContainer className="py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
                 <Target className="h-6 w-6 text-indigo-600" />
                 <span className="font-bold text-lg text-slate-800">SprintCap</span>
               </div>
-            </SidebarHeader>
-            <SidebarContent>
-              <SidebarMenu>
-                {/* Overview */}
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    className={view === 'overview' ? 'bg-indigo-50 text-indigo-700' : ''}
-                    onClick={() => setView('overview')}
-                  >
-                    <BarChart3 className="h-4 w-4 mr-2" />
-                    Overview
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                {/* Squad with submenu */}
-                <SidebarMenuItem>
-                  {/** Manage focus when submenu opens. We keep refs to the parent button and first submenu item. */}
-                  <SidebarMenuButton
-                    id="squad-menu-button"
-                    ref={squadMenuButtonRef}
-                    className={view === 'squad' ? 'bg-indigo-50 text-indigo-700' : ''}
-                    onClick={() => {
-                      setView('squad');
-                      setSquadMenuOpen((open) => !open);
-                    }}
-                    onKeyDown={(e) => {
-                      // space/enter toggle
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
+              <NavigationMenu>
+                <NavigationMenuList>
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className={view === 'overview' ? 'bg-indigo-50 text-indigo-700 rounded-md px-3 py-2' : 'px-3 py-2 rounded-md'} onClick={() => setView('overview')}>
+                      <BarChart3 className="h-4 w-4 mr-2 inline" /> Overview
+                    </NavigationMenuTrigger>
+                  </NavigationMenuItem>
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger
+                      id="squad-menu-button"
+                      ref={squadMenuButtonRef}
+                      aria-controls="squad-submenu"
+                      aria-expanded={squadMenuOpen}
+                      className={view === 'squad' ? 'bg-indigo-50 text-indigo-700 rounded-md px-3 py-2' : 'px-3 py-2 rounded-md'}
+                      onClick={() => {
+                        setView('squad')
                         setSquadMenuOpen((open) => !open)
-                      }
-                      // arrow down moves into submenu
-                      if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        setSquadMenuOpen(true);
-                        setTimeout(() => squadFirstSubRef.current?.focus(), 0)
-                      }
-                      // arrow up toggles and focuses last submenu (not implemented here)
-                    }}
-                    aria-expanded={squadMenuOpen}
-                    aria-controls="squad-submenu"
-                    role="menuitem"
-                  >
-                    <Users className="h-4 w-4 mr-2" />
-                    Squad
-                  </SidebarMenuButton>
-
-                  {squadMenuOpen && (
-                    <div id="squad-submenu" className="ml-8 mt-1 space-y-1" role="menu" aria-labelledby="squad-menu-button" onKeyDown={(e) => {
-                      if (e.key === 'Escape') {
-                        e.preventDefault();
-                        setSquadMenuOpen(false);
-                        squadMenuButtonRef.current?.focus()
-                      }
-                      // allow arrow navigation between submenu items
-                      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        const items = Array.from((e.currentTarget as HTMLElement).querySelectorAll('button')) as HTMLButtonElement[]
-                        const idx = items.indexOf(document.activeElement as HTMLButtonElement)
-                        if (e.key === 'ArrowDown') {
-                          const next = items[(idx + 1) % items.length]
-                          next?.focus()
-                        } else {
-                          const prev = items[(idx - 1 + items.length) % items.length]
-                          prev?.focus()
+                      }}
+                    >
+                      <Users className="h-4 w-4 mr-2 inline" /> Squad
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <div id="squad-submenu" role="menu" className="p-3 flex flex-col gap-2" onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          e.preventDefault()
+                          setSquadMenuOpen(false)
+                          squadMenuButtonRef.current?.focus()
                         }
-                      }
-                      // Home/End
-                      if (e.key === 'Home') {
-                        e.preventDefault();
-                        const items = Array.from((e.currentTarget as HTMLElement).querySelectorAll('button')) as HTMLButtonElement[]
-                        items[0]?.focus()
-                      }
-                      if (e.key === 'End') {
-                        e.preventDefault();
-                        const items = Array.from((e.currentTarget as HTMLElement).querySelectorAll('button')) as HTMLButtonElement[]
-                        items[items.length - 1]?.focus()
-                      }
-                    }}>
-                      <Button ref={squadFirstSubRef} role="menuitem" variant="ghost" size="sm" className="w-full justify-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-md" onClick={() => { setView('squad'); setSquadAction('create'); }}>
-                        + Create Squad
-                      </Button>
-                      <Button role="menuitem" variant="ghost" size="sm" className="w-full justify-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-md" onClick={() => { setView('squad'); setSquadAction('edit'); }}>
-                        ! Edit Squad
-                      </Button>
-                      <Button role="menuitem" variant="ghost" size="sm" className="w-full justify-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-md" onClick={() => { setView('squad'); setSquadAction('invite'); }}>
-                        Invite Members
-                      </Button>
-                    </div>
-                  )}
-                </SidebarMenuItem>
-                {/* Sprint with submenu */}
-                  <SidebarMenuItem>
-                  <SidebarMenuButton
-                    id="sprint-menu-button"
-                    ref={sprintMenuButtonRef}
-                    className={view === 'sprint' ? 'bg-indigo-50 text-indigo-700' : ''}
-                    onClick={() => {
-                      // Mark intent as coming from parent and show list view.
-                      lastSprintIntentRef.current = 'parent'
-                      setView('sprint');
-                      setShowSprintCreateOnly(false);
-                      setSprintMenuOpen(false);
-                      // clear the intent after a short time to avoid stale state
-                      setTimeout(() => { lastSprintIntentRef.current = null }, 1000)
-                    }}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSprintMenuOpen(open => !open) } }}
-                    aria-expanded={sprintMenuOpen}
-                    aria-controls="sprint-submenu"
-                  >
-                      <RunningIcon className="h-4 w-4 mr-2" />
-                    Sprint
-                  </SidebarMenuButton>
-                  {sprintMenuOpen && (
-                    <div id="sprint-submenu" className="ml-8 mt-1 space-y-1" role="menu" aria-labelledby="sprint-menu-button" onKeyDown={(e) => {
-                      if (e.key === 'Escape') {
-                        e.preventDefault();
-                        setSprintMenuOpen(false);
-                        sprintMenuButtonRef.current?.focus()
-                      }
-                      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        const items = Array.from((e.currentTarget as HTMLElement).querySelectorAll('button')) as HTMLButtonElement[]
-                        const idx = items.indexOf(document.activeElement as HTMLButtonElement)
-                        if (e.key === 'ArrowDown') {
-                          const next = items[(idx + 1) % items.length]
-                          next?.focus()
-                        } else {
-                          const prev = items[(idx - 1 + items.length) % items.length]
-                          prev?.focus()
-                        }
-                      }
-                      if (e.key === 'Home') { e.preventDefault(); const items = Array.from((e.currentTarget as HTMLElement).querySelectorAll('button')) as HTMLButtonElement[]; items[0]?.focus() }
-                      if (e.key === 'End') { e.preventDefault(); const items = Array.from((e.currentTarget as HTMLElement).querySelectorAll('button')) as HTMLButtonElement[]; items[items.length - 1]?.focus() }
-                    }}>
-                      <Button ref={sprintFirstSubRef} role="menuitem" variant="ghost" size="sm" className="w-full justify-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-md" onClick={() => { lastSprintIntentRef.current = 'create'; setView('sprint'); setSprintMenuOpen(false); setShowSprintCreateOnly(true); setTimeout(() => { lastSprintIntentRef.current = null }, 1000) }}>
-                        <Users className="h-4 w-4 mr-2" /> Create Sprint
-                      </Button>
-                      {/* Add more sprint actions here */}
-                    </div>
-                  )}
-                </SidebarMenuItem>
-                {/* Settings */}
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    className={view === 'settings' ? 'bg-indigo-50 text-indigo-700' : ''}
-                    onClick={() => setView('settings')}
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    Settings
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarContent>
-          </Sidebar>
+                      }}>
+                        <button ref={squadFirstSubRef} role="menuitem" className="text-left w-full text-sm p-2 rounded hover:bg-slate-50" onClick={() => { setView('squad'); setSquadAction('create'); setSquadMenuOpen(false) }}>+ Create Squad</button>
+                        <button role="menuitem" className="text-left w-full text-sm p-2 rounded hover:bg-slate-50" onClick={() => { setView('squad'); setSquadAction('edit'); setSquadMenuOpen(false) }}>! Edit Squad</button>
+                        <button role="menuitem" className="text-left w-full text-sm p-2 rounded hover:bg-slate-50" onClick={() => { setView('squad'); setSquadAction('invite'); setSquadMenuOpen(false) }}>Invite Members</button>
+                      </div>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className={view === 'sprint' ? 'bg-indigo-50 text-indigo-700 rounded-md px-3 py-2' : 'px-3 py-2 rounded-md'}>
+                      <RunningIcon className="h-4 w-4 mr-2 inline" /> Sprint
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <div className="p-3 flex flex-col gap-2">
+                        <Button variant="ghost" onClick={() => { lastSprintIntentRef.current = 'create'; setView('sprint'); setShowSprintCreateOnly(true); setTimeout(() => { lastSprintIntentRef.current = null }, 1000) }}>
+                          <Users className="h-4 w-4 mr-2" /> Create Sprint
+                        </Button>
+                      </div>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className={view === 'settings' ? 'bg-indigo-50 text-indigo-700 rounded-md px-3 py-2' : 'px-3 py-2 rounded-md'} onClick={() => setView('settings')}>
+                      <Settings className="h-4 w-4 mr-2 inline" /> Settings
+                    </NavigationMenuTrigger>
+                  </NavigationMenuItem>
+                </NavigationMenuList>
+              </NavigationMenu>
+            </div>
+          </CenteredContainer>
+        </div>
 
-          {/* Main content area */}
-          <SidebarInset>
-            {/* Header */}
-            <ScrumMasterHeader />
-            <main className="w-full flex-1 flex flex-col bg-background">
-              <CenteredContainer className="py-6">
+        {/* Main content area */}
+        <div className="w-full flex-1 flex flex-col bg-background">
+          {/* Header */}
+          <ScrumMasterHeader />
+          <main className="w-full flex-1 flex flex-col bg-background">
+            <MainShell>
               {/* Modern hero / KPI area */}
               {view === 'overview' && (
                 <section className="mb-6">
@@ -709,12 +608,11 @@ export default function ScrumMasterDashboard() {
               {view === 'settings' && (
                 <div className="text-slate-700 text-lg">Settings and profile actions go here.</div>
               )}
-              </CenteredContainer>
+              </MainShell>
             </main>
-          </SidebarInset>
+          </div>
         </div>
-      </SidebarProvider>
-    </>
+      </>
   );
 }
 

@@ -2,6 +2,7 @@ import React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import ScrumMasterDashboard from '@/app/dashboard/scrum-master/page'
+import installResizeObserver from '@/test/utils/installResizeObserver'
 
 // make React available globally for JSX runtime in test environment
 ;(globalThis as unknown as { React?: typeof React }).React = React
@@ -9,6 +10,8 @@ import ScrumMasterDashboard from '@/app/dashboard/scrum-master/page'
 vi.mock('next-auth/react', () => ({ useSession: () => ({ data: { user: { email: 'test@example.com' } } }) }))
 
 describe('Sidebar submenu focus', () => {
+  // Install ResizeObserver for this test file only (Radix navigation-menu uses it).
+  installResizeObserver()
   beforeEach(() => {
     vi.clearAllMocks()
     global.fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve({ squads: [] }) })

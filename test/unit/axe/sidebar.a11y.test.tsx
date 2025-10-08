@@ -1,6 +1,6 @@
 import React from 'react'
 import { render } from '@testing-library/react'
-import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar'
+import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuTrigger } from '@/components/ui/navigation-menu'
 
 // Skip unless explicitly enabled (avoids requiring jest-axe in all environments)
 const ENABLE_AXE = !!process.env.ENABLE_AXE_TESTS
@@ -46,23 +46,16 @@ describe('Sidebar a11y (axe)', () => {
     ;(expect as any).extend ? (expect as any).extend(toHaveNoViolations) : void 0
 
     const { container } = render(
-      <SidebarProvider>
-        <Sidebar>
-          <SidebarHeader>
-            <div>App</div>
-          </SidebarHeader>
-          <SidebarContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton>Overview</SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>Squad</SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarContent>
-        </Sidebar>
-      </SidebarProvider>
+      <NavigationMenu>
+        <NavigationMenuList>
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>Overview</NavigationMenuTrigger>
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>Squad</NavigationMenuTrigger>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>
     )
 
     const results = await axe(container)

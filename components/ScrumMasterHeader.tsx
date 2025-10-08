@@ -4,11 +4,11 @@ import { useSession, signOut } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Target } from "lucide-react";
-import { useSidebar } from "@/components/ui/sidebar";
+// Sidebar was replaced by top navigation; keep header independent of sidebar context.
 
 export default function ScrumMasterHeader() {
   const { data: session } = useSession();
-  const { toggleSidebar } = useSidebar();
+  const toggleSidebar = () => { /* no-op: sidebar replaced with top navigation */ };
 
   return (
   <header className="bg-white/90 backdrop-blur-sm border-b border-slate-100 sticky top-0 z-50 flex flex-col md:flex-row md:items-center md:justify-between px-4 py-3 shadow-sm">

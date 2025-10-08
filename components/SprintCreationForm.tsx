@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { MainShellSection } from './MainShell'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -22,7 +22,6 @@ type SprintCreationFormProps = {
   selectedSquadIdProp?: string; // optional preselected squad id
 };
 
-import CenteredContainer from './CenteredContainer'
 
 export default function SprintCreationForm({ onSprintCreated, squadsProp, selectedSquadIdProp }: SprintCreationFormProps) {
   // Handles input changes for form fields
@@ -202,21 +201,13 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
 
   // Non-dialog branch
   return (
-    <CenteredContainer>
-      <Card className="mx-auto w-full">
-      <CardHeader>
-        <CardTitle>Create New Sprint</CardTitle>
-        <CardDescription>
-          Create a sprint for one of your squads. All active squad members will be automatically added as sprint participants.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {squads.length === 0 ? (
-          <div className="text-center py-4">
-            <p className="text-sm text-gray-600">No squads available. Please contact an administrator to create a squad for you.</p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+    <MainShellSection>
+      {squads.length === 0 ? (
+        <div className="text-center py-4">
+          <p className="text-sm text-gray-600">No squads available. Please contact an administrator to create a squad for you.</p>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
             {/* removed debug/deploy test label */}
             {/* Squad selection dropdown */}
             <div className="space-y-2">
@@ -322,8 +313,6 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
             </Button>
           </form>
         )}
-      </CardContent>
-      </Card>
-    </CenteredContainer>
+    </MainShellSection>
   );
 }

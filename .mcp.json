@@ -1,0 +1,10 @@
+{
+  "servers": [
+    {
+      "name": "shadcn-ui-local",
+      "command": "npx shadcn@latest mcp",
+      "cwd": "./",
+      "env": {}
+    }
+  ]
+}
