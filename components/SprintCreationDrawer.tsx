@@ -68,6 +68,7 @@ export default function SprintCreationDrawer({
   useEffect(() => {
     if (open) {
       fetchSquads()
+      form.reset()
     }
   }, [open])
 
@@ -125,14 +126,14 @@ export default function SprintCreationDrawer({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} data-testid="sprint-creation-drawer">
-      <DrawerContent className="max-h-[90vh] lg:max-w-screen-md lg:mx-auto" data-testid="sprint-drawer-content">
+      <DrawerContent className="max-h-[95vh] lg:max-w-screen-md lg:mx-auto" data-testid="sprint-drawer-content">
         <DrawerHeader>
           <DrawerTitle>Create New Sprint</DrawerTitle>
         </DrawerHeader>
 
-        <div className="px-4 pb-4 flex-1 overflow-y-auto">
+        <div className="px-4 pb-4">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -145,6 +146,7 @@ export default function SprintCreationDrawer({
                         placeholder="e.g., Sprint 2025.01"
                         {...field}
                         data-testid="sprint-name-input"
+                        autoFocus
                       />
                     </FormControl>
                     <FormMessage />
@@ -220,7 +222,7 @@ export default function SprintCreationDrawer({
                 />
               </div>
 
-              <div className="flex gap-2 pt-6 mt-6 border-t">
+              <div className="flex gap-2 pt-4">
                 <DrawerClose asChild>
                   <Button type="button" variant="outline" className="flex-1">
                     Cancel
