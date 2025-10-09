@@ -49,4 +49,14 @@ Whenever troubleshooting, circumspection is required and avoid making knee-jerk 
 <!-- MANUAL ADDITIONS END -->
 
 <!-- MANUAL ADDITIONS START -->
+## UI/UX Redesign Guidelines (011-redesign-the-entire)
+- **Landing Page**: Keep unchanged - clean, Jony Ive-inspired design.
+- **Internal Pages**: Redesign for speed and simplicity, eliminate "bullshit" elements.
+- **Performance**: Target <20ms page load, <15ms mobile.
+- **Components**: Use shadcn/ui exclusively via MCP, apply best judgement for themes.
+- **Accessibility**: Use best judgement for standards, ensure WCAG compliance.
+- **Testing**: Update E2E tests for new UI, maintain data-testid selectors.
+<!-- MANUAL ADDITIONS END -->
+
+<!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

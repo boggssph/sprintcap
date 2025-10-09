@@ -31,7 +31,7 @@ describe('AdminPage UI', () => {
         <AdminPage />
       </SessionProvider>
     )
-    expect(await screen.findByText(/Admin - Create Invite/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Create New Invite/i)).toBeInTheDocument()
   // The form labels in the component are not linked via htmlFor/id,
   // so query by role instead: a textbox for email and multiple comboboxes.
   expect(screen.getAllByRole('textbox').length).toBeGreaterThanOrEqual(1)
