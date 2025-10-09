@@ -7,13 +7,27 @@ import { Badge } from '@/components/ui/badge'
 import SquadsEmptyState from './SquadsEmptyState'
 import SquadCreationDrawer from './SquadCreationDrawer'
 
+/**
+ * Squad interface representing a team with member information
+ */
 interface Squad {
   id: string
   name: string
   alias: string
   memberCount: number
   createdAt: string
+  members?: Array<{
+    id: string
+    name: string
+    joinedAt: string
+  }>
 }
+
+/**
+ * SquadsTab component displays a Scrum Master's squads in a vertical stack layout.
+ * Each squad card shows the squad name, alias, member count, creation date, and a list of all members with their join dates.
+ * Cards are displayed in a single vertical column with scrollable member lists for large squads.
+ */
 
 export default function SquadsTab() {
   const [squads, setSquads] = useState<Squad[]>([])
@@ -117,25 +131,68 @@ export default function SquadsTab() {
       {squads.length === 0 ? (
         <SquadsEmptyState onCreateSquad={() => setDrawerOpen(true)} />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4" data-testid="squads-list">
           {squads.map((squad) => (
-            <Card key={squad.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+            <Card key={squad.id} className="hover:shadow-md transition-shadow" data-testid="squad-card">
+              <CardHeader data-testid="squad-card-header">
+                <CardTitle className="flex items-center justify-between" data-testid="squad-card-title">
                   <span>{squad.name}</span>
-                  <Badge variant="secondary">
+                  <Badge variant="secondary" data-testid="squad-card-alias">
                     {squad.alias}
                   </Badge>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent data-testid="squad-card-content">
                 <div className="flex items-center justify-between text-sm text-gray-600">
-                  <span>
+                  <span data-testid="squad-member-count">
                     {squad.memberCount} {squad.memberCount === 1 ? 'member' : 'members'}
                   </span>
-                  <span>
+                  <span data-testid="squad-creation-date">
                     Created {new Date(squad.createdAt).toLocaleDateString()}
                   </span>
+                </div>
+
+                {/* Member List */}
+                <div className="mt-4">
+                  <div className="text-sm font-medium text-gray-700 mb-2">Members</div>
+                  {squad.members && squad.members.length > 0 ? (
+                    <div
+                      className="max-h-32 overflow-y-auto space-y-1"
+                      data-testid="squad-members-list"
+                      role="list"
+                      aria-label={`Members of ${squad.name} squad`}
+                    >
+                      {squad.members.map((member) => (
+                        <div
+                          key={member.id}
+                          className="flex items-center justify-between text-sm py-1 px-2 bg-gray-50 rounded"
+                          data-testid="squad-member-item"
+                          role="listitem"
+                          aria-label={`${member.name} joined ${new Date(member.joinedAt).toLocaleDateString('en-US', {
+                            month: '2-digit',
+                            day: '2-digit',
+                            year: 'numeric'
+                          })}`}
+                        >
+                          <span data-testid="member-name">{member.name}</span>
+                          <span data-testid="member-join-date">
+                            {new Date(member.joinedAt).toLocaleDateString('en-US', {
+                              month: '2-digit',
+                              day: '2-digit',
+                              year: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div
+                      className="text-sm text-gray-500 italic py-2"
+                      data-testid="squad-no-members"
+                    >
+                      No members yet
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
