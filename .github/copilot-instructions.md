@@ -60,4 +60,12 @@ Whenever troubleshooting, circumspection is required and avoid making knee-jerk 
 <!-- MANUAL ADDITIONS END -->
 
 <!-- MANUAL ADDITIONS START -->
+## Drawer Component Usage Patterns (014-as-scrum-master)
+- **Import**: Use `import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer"`
+- **Mobile Behavior**: Drawer automatically becomes full-screen on mobile devices (< 768px)
+- **Desktop Behavior**: Side drawer with backdrop on larger screens
+- **Form Integration**: Place forms inside DrawerContent with proper spacing
+- **State Management**: Use local state for open/close, combine with form state for navigation guards
+- **Accessibility**: Include proper ARIA labels and keyboard navigation (Escape to close)
+- **Animation**: Use default smooth animations, avoid custom transitions unless necessary
 <!-- MANUAL ADDITIONS END -->
