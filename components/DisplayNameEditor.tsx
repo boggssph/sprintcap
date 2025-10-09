@@ -85,7 +85,7 @@ export default function DisplayNameEditor() {
           <span className="sr-only">Edit display name</span>
         </Button>
       </DrawerTrigger>
-      <DrawerContent className="sm:max-w-[425px]" data-testid="display-name-dialog">
+      <DrawerContent className="sm:max-w-[425px] left-1/2 transform -translate-x-1/2 w-full max-w-sm" data-testid="display-name-dialog">
         <DrawerHeader>
           <DrawerTitle>Edit Display Name</DrawerTitle>
           <DrawerDescription>
