@@ -4,7 +4,7 @@ import '@testing-library/jest-dom'
 import * as nextNavigation from 'next/navigation'
 try {
   // Some environments already define this; avoid redefining.
-  ;(nextNavigation as unknown as { useRouter?: () => { push: () => void } }).useRouter = (nextNavigation as unknown as { useRouter?: () => { push: () => void } }).useRouter || (() => ({ push: () => {} }))
+  (nextNavigation as unknown as { useRouter?: () => { push: () => void } }).useRouter = (nextNavigation as unknown as { useRouter?: () => { push: () => void } }).useRouter || (() => ({ push: () => {} }))
 } catch (e) {
   // ignore; tests can still proceed without overriding
 }
@@ -24,5 +24,32 @@ if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
       dispatchEvent: () => false
     } as unknown as MediaQueryList
     return mql
+  }
+}
+
+// jsdom doesn't implement Pointer Events API; vaul drawer uses it
+if (typeof window !== 'undefined' && typeof window.Element !== 'undefined') {
+  const originalAddEventListener = window.Element.prototype.addEventListener
+  window.Element.prototype.addEventListener = function(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions) {
+    // Mock pointer events that vaul uses
+    if (type.startsWith('pointer')) {
+      // Don't add the listener to avoid vaul trying to use pointer events
+      return
+    }
+    return originalAddEventListener.call(this, type, listener, options)
+  }
+
+  // Mock setPointerCapture method
+  if (!window.Element.prototype.setPointerCapture) {
+    window.Element.prototype.setPointerCapture = function() {
+      // No-op implementation
+    }
+  }
+
+  // Mock releasePointerCapture method
+  if (!window.Element.prototype.releasePointerCapture) {
+    window.Element.prototype.releasePointerCapture = function() {
+      // No-op implementation
+    }
   }
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -124,15 +124,15 @@ export default function SprintCreationDrawer({
   const today = new Date().toISOString().split('T')[0]
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[85vh]">
+    <Drawer open={open} onOpenChange={onOpenChange} data-testid="sprint-creation-drawer">
+      <DrawerContent className="max-h-[85vh] lg:max-w-screen-md lg:mx-auto" data-testid="sprint-drawer-content">
         <DrawerHeader>
           <DrawerTitle>Create New Sprint</DrawerTitle>
         </DrawerHeader>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="px-4 pb-4">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -144,6 +144,7 @@ export default function SprintCreationDrawer({
                       <Input
                         placeholder="e.g., Sprint 2025.01"
                         {...field}
+                        data-testid="sprint-name-input"
                       />
                     </FormControl>
                     <FormMessage />
@@ -160,7 +161,7 @@ export default function SprintCreationDrawer({
                     <FormLabel>Squad</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger data-testid="sprint-squad-dropdown">
                           <SelectValue placeholder="Select a squad" />
                         </SelectTrigger>
                       </FormControl>
@@ -190,6 +191,7 @@ export default function SprintCreationDrawer({
                           type="date"
                           min={today}
                           {...field}
+                          data-testid="sprint-start-date"
                         />
                       </FormControl>
                       <FormMessage />
@@ -209,6 +211,7 @@ export default function SprintCreationDrawer({
                           type="date"
                           min={form.watch('startDate') || today}
                           {...field}
+                          data-testid="sprint-end-date"
                         />
                       </FormControl>
                       <FormMessage />
@@ -217,13 +220,13 @@ export default function SprintCreationDrawer({
                 />
               </div>
 
-              <div className="flex justify-end gap-3 pt-6">
+              <div className="flex gap-2 pt-4">
                 <DrawerClose asChild>
-                  <Button type="button" variant="outline">
+                  <Button type="button" variant="outline" className="flex-1">
                     Cancel
                   </Button>
                 </DrawerClose>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="submit" className="flex-1" disabled={isSubmitting} data-testid="sprint-submit-button">
                   {isSubmitting ? 'Creating...' : 'Create Sprint'}
                 </Button>
               </div>

@@ -32,6 +32,7 @@ Auto-generated from all feature plans. Last updated: 2025-09-28
 - PostgreSQL via Prisma ORM (016-the-avatar-seem)
 - TypeScript 5.x + Next.js App Router, Tailwind CSS, shadcn/ui components (017-modify-the-drawercontent)
 - N/A (UI-only change) (017-modify-the-drawercontent)
+- TypeScript (v5.x) + Next.js (App Router), Tailwind CSS, shadcn/ui, Prisma, PostgreSQL (019-the-create-new)
 
 ## Project Structure
 ```
@@ -47,19 +48,23 @@ npm test [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNO
 TypeScript 5.9: Follow standard conventions
 
 ## Recent Changes
+- 019-the-create-new: Added TypeScript (v5.x) + Next.js (App Router), Tailwind CSS, shadcn/ui, Prisma, PostgreSQL
 - 018-the-sprints-tab: Added TypeScript 5.x + Next.js App Router, Prisma ORM, PostgreSQL, shadcn/ui
 - 017-modify-the-drawercontent: Added TypeScript 5.x + Next.js App Router, Tailwind CSS, shadcn/ui components
-- 016-the-avatar-seem: Added TypeScript 5.x + Next.js App Router, shadcn/ui Avatar components, NextAuth
 
 <!-- MANUAL ADDITIONS START -->
 Whenever troubleshooting, circumspection is required and avoid making knee-jerk changes that could introduce new issues.
 <!-- MANUAL ADDITIONS END -->
 
 <!-- MANUAL ADDITIONS START -->
+Use the shadcn mcp that is locally running in this local machine docker container for all UI component development.
+<!-- MANUAL ADDITIONS END -->
+
+<!-- MANUAL ADDITIONS START -->
 ## UI/UX Redesign Guidelines (011-redesign-the-entire)
 - **Landing Page**: Keep unchanged - clean, Jony Ive-inspired design.
 - **Internal Pages**: Redesign for speed and simplicity, eliminate "bullshit" elements.
-- **Performance**: Target <20ms page load, <15ms mobile.
+- **Performance**: Target <200ms page load, <150ms mobile.
 - **Components**: Use shadcn/ui exclusively via MCP, apply best judgement for themes.
 - **Accessibility**: Use best judgement for standards, ensure WCAG compliance.
 - **Testing**: Update E2E tests for new UI, maintain data-testid selectors.
