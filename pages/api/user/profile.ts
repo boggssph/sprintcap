@@ -44,14 +44,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Display name is required' })
     }
 
-    if (displayName.length > 50) {
+    const trimmedDisplayName = displayName.trim()
+    if (trimmedDisplayName.length < 2) {
+      return res.status(400).json({ error: 'Display name must be at least 2 characters' })
+    }
+
+    if (trimmedDisplayName.length > 50) {
       return res.status(400).json({ error: 'Display name must be less than 50 characters' })
+    }
+
+    // Validate only alphanumeric characters and spaces
+    const alphanumericSpaceRegex = /^[a-zA-Z0-9\s]+$/
+    if (!alphanumericSpaceRegex.test(trimmedDisplayName)) {
+      return res.status(400).json({ error: 'Display name can only contain letters, numbers, and spaces' })
     }
 
     try {
       const user = await prisma.user.update({
         where: { email: session.user.email },
-        data: { displayName: displayName.trim() },
+        data: { displayName: trimmedDisplayName },
         select: {
           id: true,
           email: true,

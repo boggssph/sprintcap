@@ -25,6 +25,7 @@ Auto-generated from all feature plans. Last updated: 2025-09-28
 - TypeScript 5.x + Next.js App Router, Tailwind CSS, shadcn/ui, Prisma, PostgreSQL (007-the-ui-to)
 - PostgreSQL (via Prisma ORM) (007-the-ui-to)
 - TypeScript 5.x + Next.js App Router, Prisma ORM, PostgreSQL, shadcn/ui components (008-bug-found-there)
+- TypeScript 5.x + Next.js App Router, shadcn/ui, NextAuth, Prisma (013-show-my-display)
 
 ## Project Structure
 ```
@@ -40,9 +41,9 @@ npm test [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNO
 TypeScript 5.9: Follow standard conventions
 
 ## Recent Changes
+- 013-show-my-display: Added TypeScript 5.x + Next.js App Router, shadcn/ui, NextAuth, Prisma
 - 008-bug-found-there: Added TypeScript 5.x + Next.js App Router, Prisma ORM, PostgreSQL, shadcn/ui components
 - 007-the-ui-to: Added TypeScript 5.x + Next.js App Router, Tailwind CSS, shadcn/ui, Prisma, PostgreSQL
-- 006-the-version-number: Added TypeScript 5.x + Next.js App Router, Vercel API
 
 <!-- MANUAL ADDITIONS START -->
 Whenever troubleshooting, circumspection is required and avoid making knee-jerk changes that could introduce new issues.

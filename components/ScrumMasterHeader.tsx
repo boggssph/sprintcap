@@ -1,13 +1,12 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Target } from "lucide-react";
+import ProfileDisplay from "./ProfileDisplay";
 // Sidebar was replaced by top navigation; keep header independent of sidebar context.
 
 export default function ScrumMasterHeader() {
-  const { data: session } = useSession();
   const toggleSidebar = () => { /* no-op: sidebar replaced with top navigation */ };
 
   return (
@@ -17,14 +16,7 @@ export default function ScrumMasterHeader() {
           <span className="sr-only">Open sidebar</span>
           <Target className="h-6 w-6 text-indigo-600" />
         </Button>
-        <Avatar className="h-9 w-9">
-          <AvatarImage src={(session?.user as { image?: string })?.image} />
-          <AvatarFallback className="bg-indigo-100 text-indigo-700">
-            {(session?.user as { displayName?: string, name?: string })?.displayName?.charAt(0) ||
-              (session?.user as { name?: string })?.name?.charAt(0) ||
-              session?.user?.email?.charAt(0)}
-          </AvatarFallback>
-        </Avatar>
+        <ProfileDisplay size="md" />
         {/* Visible app title on small screens for context */}
         <div className="ml-2 md:hidden">
           <div className="text-sm font-semibold text-slate-800">SprintCap</div>

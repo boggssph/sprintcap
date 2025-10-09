@@ -76,6 +76,7 @@ export default function DisplayNameEditor() {
           onClick={handleOpen}
           className="inline-flex items-center gap-1 text-slate-600 hover:text-slate-900 transition-colors"
           title="Edit display name"
+          data-testid="edit-display-name"
         >
           <span className="text-sm font-medium">
             {currentDisplayName}
@@ -83,7 +84,7 @@ export default function DisplayNameEditor() {
           <Pencil className="h-3 w-3" />
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px]" data-testid="display-name-dialog">
         <DialogHeader>
           <DialogTitle>Edit Display Name</DialogTitle>
           <DialogDescription>
@@ -103,10 +104,11 @@ export default function DisplayNameEditor() {
               placeholder="Enter your display name"
               maxLength={50}
               disabled={loading}
+              data-testid="display-name-input"
             />
           </div>
           {error && (
-            <div className="text-sm text-red-600 bg-red-50 p-2 rounded col-span-4">
+            <div className="text-sm text-red-600 bg-red-50 p-2 rounded col-span-4" data-testid="display-name-error">
               {error}
             </div>
           )}
@@ -124,6 +126,7 @@ export default function DisplayNameEditor() {
             type="button"
             onClick={handleSave}
             disabled={loading || displayName.trim() === currentDisplayName}
+            data-testid="save-display-name"
           >
             {loading ? (
               <>

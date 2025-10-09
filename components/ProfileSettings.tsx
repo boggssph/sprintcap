@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, User, Save, X } from 'lucide-react'
+import ProfileDisplay from './ProfileDisplay'
 
 interface UserProfile {
   id: string
@@ -21,7 +21,7 @@ interface UserProfile {
 }
 
 export default function ProfileSettings() {
-  const { data: session, update } = useSession()
+  const { update } = useSession()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [displayName, setDisplayName] = useState('')
   const [loading, setLoading] = useState(false)
@@ -110,10 +110,6 @@ export default function ProfileSettings() {
     )
   }
 
-  const currentDisplayName = typeof session?.user === 'object' && session?.user !== null
-    ? ('displayName' in session.user ? (session.user as { displayName?: string }).displayName : undefined) || profile.name || 'No name set'
-    : profile.name || 'No name set'
-
   return (
     <Card>
       <CardHeader>
@@ -128,14 +124,8 @@ export default function ProfileSettings() {
       <CardContent className="space-y-6">
         {/* Profile Overview */}
         <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-          <Avatar className="h-16 w-16">
-            <AvatarImage src={profile.image || undefined} />
-            <AvatarFallback className="text-lg">
-              {currentDisplayName.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <ProfileDisplay size="lg" />
           <div className="flex-1">
-            <h3 className="text-lg font-semibold">{currentDisplayName}</h3>
             <p className="text-gray-600">{profile.email}</p>
             <Badge variant="secondary" className="mt-1">
               {profile.role.replace('_', ' ')}
