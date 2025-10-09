@@ -18,12 +18,15 @@ const Slot = React.forwardRef<HTMLElement, React.HTMLAttributes<HTMLElement>>(
     const existingClassName = (child.props && (child.props.className ?? "")) || ""
     const mergedClassName = cn(existingClassName, className)
 
-    // cast to any to avoid strict generic mismatch from cloneElement
-    return React.cloneElement(child as any, {
-      ...(props as any),
+    // Use a narrow props shape for cloneElement to avoid using `any` while
+    // still allowing arbitrary HTML attributes to be forwarded.
+    const forwardProps = props as Record<string, unknown>
+    return React.cloneElement(child, {
+      ...forwardProps,
       className: mergedClassName,
+      // cloneElement accepts ref in the second argument
       ref,
-    } as any)
+    } as unknown as Record<string, unknown>)
   }
 )
 

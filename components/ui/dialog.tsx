@@ -19,10 +19,23 @@ type DialogState = {
 
 const DialogContext = React.createContext<DialogState | null>(null)
 
-const Dialog: React.FC<React.PropsWithChildren<{ open?: boolean; defaultOpen?: boolean }>> = ({ children, defaultOpen }) => {
-  const [open, setOpen] = React.useState(!!defaultOpen)
+type DialogProps = React.PropsWithChildren<{ open?: boolean; defaultOpen?: boolean; onOpenChange?: (open: boolean) => void }>
 
-  return <DialogContext.Provider value={{ open, setOpen }}>{children}</DialogContext.Provider>
+const Dialog: React.FC<DialogProps> = ({ children, defaultOpen, open: openProp, onOpenChange }) => {
+  const [openState, setOpenState] = React.useState<boolean>(() => !!defaultOpen)
+
+  // If component is controlled via `open` prop, sync local state
+  React.useEffect(() => {
+    if (typeof openProp === 'boolean') setOpenState(openProp)
+  }, [openProp])
+
+  // Wrapped setter that also notifies parent via onOpenChange when present
+  const setOpen = React.useCallback((v: boolean) => {
+    setOpenState(v)
+    onOpenChange?.(v)
+  }, [onOpenChange])
+
+  return <DialogContext.Provider value={{ open: openState, setOpen }}>{children}</DialogContext.Provider>
 }
 
 type TriggerProps = React.ButtonHTMLAttributes<HTMLButtonElement> & { asChild?: boolean }
@@ -32,20 +45,35 @@ const DialogTrigger = React.forwardRef<HTMLButtonElement, TriggerProps>(({ child
   if (!ctx) return null
   const { setOpen } = ctx
 
-  const Comp: any = asChild ? Slot : "button"
+  if (asChild) {
+    return (
+      <Slot
+        ref={ref as unknown as React.Ref<HTMLElement>}
+        onClick={(e: React.MouseEvent) => {
+          const cast = onClick as unknown as ((ev: React.MouseEvent) => void) | undefined
+          cast?.(e)
+          setOpen(true)
+        }}
+        {...props}
+      >
+        {children}
+      </Slot>
+    )
+  }
 
   return (
-    <Comp
+    <button
       ref={ref}
-      type={asChild ? undefined : "button"}
-      onClick={(e: any) => {
-        onClick?.(e)
+      type="button"
+      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+        const cast = onClick as unknown as ((ev: React.MouseEvent<HTMLButtonElement>) => void) | undefined
+        cast?.(e)
         setOpen(true)
       }}
       {...props}
     >
       {children}
-    </Comp>
+    </button>
   )
 })
 DialogTrigger.displayName = "DialogTrigger"
@@ -60,20 +88,35 @@ const DialogClose = React.forwardRef<HTMLButtonElement, TriggerProps>(({ childre
   if (!ctx) return null
   const { setOpen } = ctx
 
-  const Comp: any = asChild ? Slot : "button"
+  if (asChild) {
+    return (
+      <Slot
+        ref={ref as unknown as React.Ref<HTMLElement>}
+        onClick={(e: React.MouseEvent) => {
+          const cast = onClick as unknown as ((ev: React.MouseEvent) => void) | undefined
+          cast?.(e)
+          setOpen(false)
+        }}
+        {...props}
+      >
+        {children}
+      </Slot>
+    )
+  }
 
   return (
-    <Comp
+    <button
       ref={ref}
-      type={asChild ? undefined : "button"}
-      onClick={(e: any) => {
-        onClick?.(e)
+      type="button"
+      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+        const cast = onClick as unknown as ((ev: React.MouseEvent<HTMLButtonElement>) => void) | undefined
+        cast?.(e)
         setOpen(false)
       }}
       {...props}
     >
       {children}
-    </Comp>
+    </button>
   )
 })
 DialogClose.displayName = "DialogClose"

@@ -56,12 +56,32 @@ const SelectTrigger = React.forwardRef<HTMLButtonElement, TriggerProps>(
     React.useEffect(() => {
       if (typeof ariaExpanded === 'boolean') setOpen(Boolean(ariaExpanded))
     }, [ariaExpanded, setOpen])
-    const Comp: any = asChild ? Slot : "button"
+    if (asChild) {
+      return (
+        <Slot
+          ref={ref as unknown as React.Ref<HTMLElement>}
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={listboxId}
+          aria-haspopup="listbox"
+          aria-disabled={disabled}
+          onClick={() => setOpen(!open)}
+          className={cn(
+            "flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+            className
+          )}
+          {...props}
+        >
+          <span className="truncate">{children}</span>
+          <ChevronDown className="h-4 w-4 opacity-50 ml-2" />
+        </Slot>
+      )
+    }
 
     return (
-      <Comp
-        ref={ref as any}
-        type={asChild ? undefined : "button"}
+      <button
+        ref={ref}
+        type="button"
         role="combobox"
         aria-expanded={open}
         aria-controls={listboxId}
@@ -76,7 +96,7 @@ const SelectTrigger = React.forwardRef<HTMLButtonElement, TriggerProps>(
       >
         <span className="truncate">{children}</span>
         <ChevronDown className="h-4 w-4 opacity-50 ml-2" />
-      </Comp>
+      </button>
     )
   }
 )
