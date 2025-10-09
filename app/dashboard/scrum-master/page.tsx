@@ -125,7 +125,7 @@ export default function ScrumMasterDashboard() {
       const res = await fetch('/api/squads');
       if (res.ok) {
         const data = await res.json();
-        setSquads(data);
+        setSquads(data.squads || []);
       }
     } catch (error) {
       toast.error('Failed to load squads');
