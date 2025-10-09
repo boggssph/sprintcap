@@ -125,14 +125,14 @@ export default function SprintCreationDrawer({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} data-testid="sprint-creation-drawer">
-      <DrawerContent className="h-[120vh] lg:max-w-screen-md lg:mx-auto" data-testid="sprint-drawer-content">
+      <DrawerContent className="max-h-[90vh] lg:max-w-screen-md lg:mx-auto" data-testid="sprint-drawer-content">
         <DrawerHeader>
           <DrawerTitle>Create New Sprint</DrawerTitle>
         </DrawerHeader>
 
-        <div className="px-4 pb-4">
+        <div className="px-4 pb-4 flex-1 overflow-y-auto">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="name"
@@ -220,7 +220,7 @@ export default function SprintCreationDrawer({
                 />
               </div>
 
-              <div className="flex gap-2 pt-4">
+              <div className="flex gap-2 pt-6 mt-6 border-t">
                 <DrawerClose asChild>
                   <Button type="button" variant="outline" className="flex-1">
                     Cancel
