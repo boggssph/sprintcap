@@ -51,6 +51,14 @@ export async function GET(request: NextRequest) {
     const squads = await prisma.squad.findMany({
       where: { scrumMasterId: dbUser.id },
       include: {
+        members: {
+          include: {
+            user: {
+              select: { id: true, name: true }
+            }
+          },
+          orderBy: { createdAt: 'asc' } // oldest members first
+        },
         _count: {
           select: { members: true }
         }
@@ -64,7 +72,12 @@ export async function GET(request: NextRequest) {
       name: squad.name,
       alias: squad.alias,
       memberCount: squad._count.members,
-      createdAt: squad.createdAt.toISOString()
+      createdAt: squad.createdAt.toISOString(),
+      members: squad.members.map(member => ({
+        id: member.user.id,
+        name: member.user.name || 'Unknown User',
+        joinedAt: member.createdAt.toISOString()
+      }))
     }))
 
     return NextResponse.json({ squads: transformedSquads })
