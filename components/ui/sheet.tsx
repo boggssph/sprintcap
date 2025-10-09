@@ -15,9 +15,21 @@ import { Slot } from "./slot"
 type SheetState = { open: boolean; setOpen: (v: boolean) => void }
 const SheetContext = React.createContext<SheetState | null>(null)
 
-const Sheet: React.FC<React.PropsWithChildren<{ defaultOpen?: boolean }>> = ({ children, defaultOpen }) => {
-  const [open, setOpen] = React.useState(!!defaultOpen)
-  return <SheetContext.Provider value={{ open, setOpen }}>{children}</SheetContext.Provider>
+type SheetProps = React.PropsWithChildren<{ defaultOpen?: boolean; open?: boolean; onOpenChange?: (open: boolean) => void }>
+
+const Sheet: React.FC<SheetProps> = ({ children, defaultOpen, open: openProp, onOpenChange }) => {
+  const [openState, setOpenState] = React.useState<boolean>(() => !!defaultOpen)
+
+  React.useEffect(() => {
+    if (typeof openProp === 'boolean') setOpenState(openProp)
+  }, [openProp])
+
+  const setOpen = React.useCallback((v: boolean) => {
+    setOpenState(v)
+    onOpenChange?.(v)
+  }, [onOpenChange])
+
+  return <SheetContext.Provider value={{ open: openState, setOpen }}>{children}</SheetContext.Provider>
 }
 
 type TriggerProps = React.ButtonHTMLAttributes<HTMLButtonElement> & { asChild?: boolean; open?: boolean }
@@ -31,20 +43,35 @@ const SheetTrigger = React.forwardRef<HTMLButtonElement, TriggerProps>(({ childr
     if (typeof openProp === 'boolean') setOpen(Boolean(openProp))
   }, [openProp, setOpen])
 
-  const Comp: any = asChild ? Slot : "button"
+  if (asChild) {
+    return (
+      <Slot
+        ref={ref as unknown as React.Ref<HTMLElement>}
+        onClick={(e: React.MouseEvent) => {
+          const cast = onClick as unknown as ((ev: React.MouseEvent) => void) | undefined
+          cast?.(e)
+          setOpen(true)
+        }}
+        {...props}
+      >
+        {children}
+      </Slot>
+    )
+  }
 
   return (
-    <Comp
+      <button
       ref={ref}
-      type={asChild ? undefined : "button"}
-      onClick={(e: any) => {
-        onClick?.(e)
+      type="button"
+      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+        const cast = onClick as unknown as ((ev: React.MouseEvent<HTMLButtonElement>) => void) | undefined
+        cast?.(e)
         setOpen(true)
       }}
       {...props}
     >
       {children}
-    </Comp>
+    </button>
   )
 })
 SheetTrigger.displayName = "SheetTrigger"
@@ -58,20 +85,35 @@ const SheetClose = React.forwardRef<HTMLButtonElement, TriggerProps>(({ children
     if (typeof openProp === 'boolean') setOpen(Boolean(openProp))
   }, [openProp, setOpen])
 
-  const Comp: any = asChild ? Slot : "button"
+  if (asChild) {
+    return (
+      <Slot
+        ref={ref as unknown as React.Ref<HTMLElement>}
+        onClick={(e: React.MouseEvent) => {
+          const cast = onClick as unknown as ((ev: React.MouseEvent) => void) | undefined
+          cast?.(e)
+          setOpen(false)
+        }}
+        {...props}
+      >
+        {children}
+      </Slot>
+    )
+  }
 
   return (
-    <Comp
+    <button
       ref={ref}
-      type={asChild ? undefined : "button"}
-      onClick={(e: any) => {
-        onClick?.(e)
+      type="button"
+      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+        const cast = onClick as unknown as ((ev: React.MouseEvent<HTMLButtonElement>) => void) | undefined
+        cast?.(e)
         setOpen(false)
       }}
       {...props}
     >
       {children}
-    </Comp>
+    </button>
   )
 })
 SheetClose.displayName = "SheetClose"

@@ -21,6 +21,7 @@ import SquadFormFields from '@/components/SquadFormFields'
 import ScrumMasterHeader from "@/components/ScrumMasterHeader";
 import CenteredContainer from '@/components/CenteredContainer'
 import MainShell from '@/components/MainShell'
+import ScrumMasterNav from '@/components/ui/ScrumMasterNav'
 
 // --- Types ---
 interface Squad {
@@ -418,6 +419,21 @@ export default function ScrumMasterDashboard() {
         <div className="w-full flex-1 flex flex-col bg-background">
           {/* Header */}
           <ScrumMasterHeader />
+          {/* Centered Scrum Master navigation (scoped change) */}
+          <div className="w-full">
+            <CenteredContainer>
+              {/* Provide simple presentational items for the scoped nav. Interaction continues to be handled by the top navigation for now. */}
+              <ScrumMasterNav
+                sticky={false}
+                items={[
+                  { id: 'overview', label: 'Overview', href: '#overview' },
+                  { id: 'squad', label: 'Squad', href: '#squad' },
+                  { id: 'sprint', label: 'Sprint', href: '#sprint' },
+                  { id: 'settings', label: 'Settings', href: '#settings' },
+                ]}
+              />
+            </CenteredContainer>
+          </div>
           <main className="w-full flex-1 flex flex-col bg-background">
             <MainShell>
               {/* Modern hero / KPI area */}

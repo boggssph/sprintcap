@@ -23,10 +23,15 @@ jobs:
       - name: Validate env files for empty critical keys
         run: npm run validate:env
 
+      - name: Lint
+        run: npm run lint
+
       - name: Typecheck
         run: npx tsc --noEmit
 
       - name: Run unit & contract tests (Vitest)
+        env:
+          ENABLE_AXE_TESTS: 'true'
         run: npm test --silent
 
   e2e:
@@ -52,7 +57,7 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
       - name: Run Playwright tests
-        run: npx playwright test --reporter=github || true
+        run: npx playwright test --reporter=github
       - name: Generate Playwright HTML report
         if: always()
         run: npx playwright show-report || true
@@ -68,3 +73,21 @@ jobs:
         with:
           name: playwright-test-results
           path: test-results
+      - name: Collect Playwright snapshots
+        if: always()
+        run: |
+          mkdir -p test-results/snapshots/009-change-all-scrum
+          # Copy snapshots produced by Playwright (if any) into a canonical folder
+          shopt -s globstar || true
+          for d in e2e/**/snapshots; do
+            if [ -d "$d" ]; then
+              cp -R "$d"/* test-results/snapshots/009-change-all-scrum/ || true
+            fi
+          done
+
+      - name: Upload Playwright snapshots (009-change-all-scrum)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-snapshots-009-change-all-scrum
+          path: test-results/snapshots/009-change-all-scrum/
