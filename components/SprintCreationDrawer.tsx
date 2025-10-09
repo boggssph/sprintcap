@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -64,14 +64,6 @@ export default function SprintCreationDrawer({
     }
   })
 
-  // Fetch squads when drawer opens
-  useEffect(() => {
-    if (open) {
-      fetchSquads()
-      form.reset()
-    }
-  }, [open])
-
   const fetchSquads = async () => {
     try {
       const response = await fetch('/api/squads')
@@ -86,7 +78,6 @@ export default function SprintCreationDrawer({
 
   const onSubmit = async (data: SprintFormData) => {
     setIsSubmitting(true)
-
     try {
       const response = await fetch('/api/sprints', {
         method: 'POST',
@@ -101,18 +92,20 @@ export default function SprintCreationDrawer({
         form.reset()
         onOpenChange(false)
         onSprintCreated?.()
-      } else {
+      } else if (response.status === 400) {
         const errorData = await response.json()
-        if (response.status === 400 && errorData.details) {
-          // Handle validation errors
+        if (errorData.details) {
           Object.entries(errorData.details).forEach(([field, message]) => {
             form.setError(field as keyof SprintFormData, {
               message: message as string
             })
           })
         } else {
-          toast.error(errorData.message || 'Failed to create sprint')
+          toast.error(errorData.message || 'Validation failed')
         }
+      } else {
+        const errorData = await response.json()
+        toast.error(errorData.message || 'Failed to create sprint')
       }
     } catch (error) {
       console.error('Error creating sprint:', error)
@@ -122,11 +115,28 @@ export default function SprintCreationDrawer({
     }
   }
 
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen && form.formState.isDirty) {
+      const confirmed = window.confirm(
+        'You have unsaved changes. Are you sure you want to close?'
+      )
+      if (!confirmed) return
+    }
+    onOpenChange(newOpen)
+    if (newOpen) {
+      fetchSquads()
+      form.reset()
+    }
+    if (!newOpen) {
+      form.reset()
+    }
+  }
+
   const today = new Date().toISOString().split('T')[0]
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} data-testid="sprint-creation-drawer">
-      <DrawerContent className="max-h-[95vh] lg:max-w-screen-md lg:mx-auto" data-testid="sprint-drawer-content">
+    <Drawer open={open} onOpenChange={handleOpenChange} data-testid="sprint-creation-drawer">
+      <DrawerContent className="max-h-[85vh] lg:max-w-screen-md lg:mx-auto" data-testid="sprint-drawer-content">
         <DrawerHeader>
           <DrawerTitle>Create New Sprint</DrawerTitle>
         </DrawerHeader>
@@ -145,6 +155,7 @@ export default function SprintCreationDrawer({
                       <Input
                         placeholder="e.g., Sprint 2025.01"
                         {...field}
+                        disabled={isSubmitting}
                         data-testid="sprint-name-input"
                         autoFocus
                       />
@@ -161,7 +172,7 @@ export default function SprintCreationDrawer({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Squad</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
                       <FormControl>
                         <SelectTrigger data-testid="sprint-squad-dropdown">
                           <SelectValue placeholder="Select a squad" />
@@ -193,6 +204,7 @@ export default function SprintCreationDrawer({
                           type="date"
                           min={today}
                           {...field}
+                          disabled={isSubmitting}
                           data-testid="sprint-start-date"
                         />
                       </FormControl>
@@ -211,8 +223,9 @@ export default function SprintCreationDrawer({
                       <FormControl>
                         <Input
                           type="date"
-                          min={form.watch('startDate') || today}
+                          min={today}
                           {...field}
+                          disabled={isSubmitting}
                           data-testid="sprint-end-date"
                         />
                       </FormControl>
@@ -224,11 +237,22 @@ export default function SprintCreationDrawer({
 
               <div className="flex gap-2 pt-4">
                 <DrawerClose asChild>
-                  <Button type="button" variant="outline" className="flex-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    disabled={isSubmitting}
+                    data-testid="sprint-cancel-button"
+                  >
                     Cancel
                   </Button>
                 </DrawerClose>
-                <Button type="submit" className="flex-1" disabled={isSubmitting} data-testid="sprint-submit-button">
+                <Button
+                  type="submit"
+                  className="flex-1"
+                  disabled={isSubmitting}
+                  data-testid="sprint-submit-button"
+                >
                   {isSubmitting ? 'Creating...' : 'Create Sprint'}
                 </Button>
               </div>
