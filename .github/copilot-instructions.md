@@ -30,6 +30,8 @@ Auto-generated from all feature plans. Last updated: 2025-09-28
 - PostgreSQL (Neon) via Prisma ORM (015-stack-the-squad)
 - TypeScript 5.x + Next.js App Router, shadcn/ui Avatar components, NextAuth (016-the-avatar-seem)
 - PostgreSQL via Prisma ORM (016-the-avatar-seem)
+- TypeScript 5.x + Next.js App Router, Tailwind CSS, shadcn/ui components (017-modify-the-drawercontent)
+- N/A (UI-only change) (017-modify-the-drawercontent)
 
 ## Project Structure
 ```
@@ -45,9 +47,9 @@ npm test [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNO
 TypeScript 5.9: Follow standard conventions
 
 ## Recent Changes
+- 017-modify-the-drawercontent: Added TypeScript 5.x + Next.js App Router, Tailwind CSS, shadcn/ui components
 - 016-the-avatar-seem: Added TypeScript 5.x + Next.js App Router, shadcn/ui Avatar components, NextAuth
 - 015-stack-the-squad: Added TypeScript 5.x + Next.js App Router, React, Tailwind CSS, shadcn/ui
-- 013-show-my-display: Added TypeScript 5.x + Next.js App Router, shadcn/ui, NextAuth, Prisma
 
 <!-- MANUAL ADDITIONS START -->
 Whenever troubleshooting, circumspection is required and avoid making knee-jerk changes that could introduce new issues.

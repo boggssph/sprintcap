@@ -106,8 +106,8 @@ export default function SquadCreationDrawer({
   }
 
   return (
-    <Drawer open={open} onOpenChange={handleOpenChange}>
-      <DrawerContent className="max-h-[85vh]">
+    <Drawer open={open} onOpenChange={handleOpenChange} data-testid="squad-creation-drawer">
+      <DrawerContent className="max-h-[85vh] lg:max-w-7xl lg:mx-auto" data-testid="drawer-content">
         <DrawerHeader>
           <DrawerTitle>Create New Squad</DrawerTitle>
         </DrawerHeader>
@@ -126,6 +126,7 @@ export default function SquadCreationDrawer({
                         placeholder="e.g., Alpha Team"
                         {...field}
                         disabled={isSubmitting}
+                        data-testid="squad-name-input"
                       />
                     </FormControl>
                     <FormMessage />
@@ -144,6 +145,7 @@ export default function SquadCreationDrawer({
                         placeholder="e.g., alpha-team"
                         {...field}
                         disabled={isSubmitting}
+                        data-testid="squad-alias-input"
                       />
                     </FormControl>
                     <FormMessage />
@@ -161,6 +163,7 @@ export default function SquadCreationDrawer({
                     variant="outline"
                     className="flex-1"
                     disabled={isSubmitting}
+                    data-testid="cancel-squad-creation"
                   >
                     Cancel
                   </Button>
@@ -169,6 +172,7 @@ export default function SquadCreationDrawer({
                   type="submit"
                   className="flex-1"
                   disabled={isSubmitting}
+                  data-testid="create-squad-submit"
                 >
                   {isSubmitting ? 'Creating...' : 'Create Squad'}
                 </Button>
