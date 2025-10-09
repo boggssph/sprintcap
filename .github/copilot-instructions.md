@@ -47,9 +47,9 @@ npm test [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNO
 TypeScript 5.9: Follow standard conventions
 
 ## Recent Changes
+- 018-the-sprints-tab: Added TypeScript 5.x + Next.js App Router, Prisma ORM, PostgreSQL, shadcn/ui
 - 017-modify-the-drawercontent: Added TypeScript 5.x + Next.js App Router, Tailwind CSS, shadcn/ui components
 - 016-the-avatar-seem: Added TypeScript 5.x + Next.js App Router, shadcn/ui Avatar components, NextAuth
-- 015-stack-the-squad: Added TypeScript 5.x + Next.js App Router, React, Tailwind CSS, shadcn/ui
 
 <!-- MANUAL ADDITIONS START -->
 Whenever troubleshooting, circumspection is required and avoid making knee-jerk changes that could introduce new issues.

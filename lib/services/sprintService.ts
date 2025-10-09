@@ -56,6 +56,16 @@ export interface SprintSummary {
   status: 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
 }
 
+export interface SprintForScrumMaster {
+  id: string
+  name: string
+  startDate: string
+  endDate: string
+  squadId: string
+  squadName: string
+  isActive: boolean
+}
+
 export class SprintServiceError extends Error {
   constructor(message: string, public code: string = 'SPRINT_ERROR') {
     super(message)
@@ -386,4 +396,88 @@ export async function getSprint(
     createdAt: sprint.createdAt.toISOString(),
     updatedAt: sprint.updatedAt.toISOString()
   }
+}
+
+/**
+ * Gets sprints for all squads managed by a Scrum Master
+ * Returns last 3 sprints per squad with active sprint prioritized
+ */
+export async function getSprintsForScrumMaster(userId: string): Promise<SprintForScrumMaster[]> {
+  // Get all squads owned by this Scrum Master
+  const ownedSquads = await prisma.squad.findMany({
+    where: { scrumMasterId: userId },
+    select: { id: true, name: true }
+  })
+
+  if (ownedSquads.length === 0) {
+    return []
+  }
+
+  const squadIds = ownedSquads.map(s => s.id)
+  const now = new Date()
+
+  // Get all sprints for owned squads, ordered by start date descending (most recent first)
+  const allSprints = await prisma.sprint.findMany({
+    where: {
+      squadId: { in: squadIds }
+    },
+    select: {
+      id: true,
+      name: true,
+      startDate: true,
+      endDate: true,
+      squadId: true,
+      squad: {
+        select: { name: true }
+      }
+    },
+    orderBy: { startDate: 'desc' }
+  })
+
+  // Group sprints by squad and take only the last 3 per squad
+  const sprintsBySquad = new Map<string, typeof allSprints>()
+
+  for (const sprint of allSprints) {
+    const squadSprints = sprintsBySquad.get(sprint.squadId) || []
+    if (squadSprints.length < 3) {
+      squadSprints.push(sprint)
+      sprintsBySquad.set(sprint.squadId, squadSprints)
+    }
+  }
+
+  // Convert to response format with active sprint detection
+  const result: SprintForScrumMaster[] = []
+
+  for (const [squadId, sprints] of Array.from(sprintsBySquad.entries())) {
+    const squad = ownedSquads.find(s => s.id === squadId)
+    if (!squad) continue
+
+    // Sort: active sprint first, then by start date ascending
+    const sortedSprints = sprints
+      .map(sprint => ({
+        ...sprint,
+        isActive: now >= sprint.startDate && now <= sprint.endDate
+      }))
+      .sort((a, b) => {
+        // Active sprints first
+        if (a.isActive && !b.isActive) return -1
+        if (!a.isActive && b.isActive) return 1
+        // Then by start date ascending
+        return a.startDate.getTime() - b.startDate.getTime()
+      })
+
+    for (const sprint of sortedSprints) {
+      result.push({
+        id: sprint.id,
+        name: sprint.name,
+        startDate: sprint.startDate.toISOString(),
+        endDate: sprint.endDate.toISOString(),
+        squadId: sprint.squadId,
+        squadName: squad.name,
+        isActive: sprint.isActive
+      })
+    }
+  }
+
+  return result
 }

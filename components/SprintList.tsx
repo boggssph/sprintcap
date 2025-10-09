@@ -1,28 +1,33 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Plus } from 'lucide-react'
 
 type Sprint = {
   id: string
   name: string
-  squadId: string
-  squadName: string
   startDate: string
   endDate: string
-  status: 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
-  memberCount: number
-  createdAt: string
+  squadId: string
+  squadName: string
+  isActive: boolean
+}
+
+type SquadSprints = {
+  squadId: string
+  squadName: string
+  sprints: Sprint[]
 }
 
 type SprintListProps = {
   refreshTrigger?: number
+  onCreateSprint?: () => void
 }
 
-export default function SprintList({ refreshTrigger }: SprintListProps) {
+export default function SprintList({ refreshTrigger, onCreateSprint }: SprintListProps) {
   const [sprints, setSprints] = useState<Sprint[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -50,21 +55,27 @@ export default function SprintList({ refreshTrigger }: SprintListProps) {
     fetchSprints()
   }, [refreshTrigger])
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString()
-  }
-
-  const getSprintStatus = (sprint: Sprint) => {
-    switch (sprint.status) {
-      case 'ACTIVE':
-        return { label: 'Active', variant: 'default' as const }
-      case 'INACTIVE':
-        return { label: 'Inactive', variant: 'secondary' as const }
-      case 'COMPLETED':
-        return { label: 'Completed', variant: 'outline' as const }
-      default:
-        return { label: 'Unknown', variant: 'secondary' as const }
+  // Group sprints by squad
+  const sprintsBySquad = sprints.reduce((acc, sprint) => {
+    const existing = acc.find(s => s.squadId === sprint.squadId)
+    if (existing) {
+      existing.sprints.push(sprint)
+    } else {
+      acc.push({
+        squadId: sprint.squadId,
+        squadName: sprint.squadName,
+        sprints: [sprint]
+      })
     }
+    return acc
+  }, [] as SquadSprints[])
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })
   }
 
   if (loading) {
@@ -94,52 +105,73 @@ export default function SprintList({ refreshTrigger }: SprintListProps) {
     )
   }
 
+  if (sprintsBySquad.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Your Sprints</CardTitle>
+          <CardDescription>No sprints found. Create your first sprint to get started.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={onCreateSprint} className="w-full">
+            <Plus className="mr-2 h-4 w-4" />
+            Create New Sprint
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Your Sprints</CardTitle>
-        <CardDescription>
-          Overview of all sprints you've created for your squads.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {sprints.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <p>No sprints created yet.</p>
-            <p className="text-sm">Create your first sprint using the form above.</p>
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Sprint Name</TableHead>
-                <TableHead>Squad</TableHead>
-                <TableHead>Start Date</TableHead>
-                <TableHead>End Date</TableHead>
-                <TableHead>Members</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sprints.map((sprint) => {
-                const status = getSprintStatus(sprint)
-                return (
-                  <TableRow key={sprint.id}>
-                    <TableCell className="font-medium">{sprint.name}</TableCell>
-                    <TableCell>{sprint.squadName}</TableCell>
-                    <TableCell>{formatDate(sprint.startDate)}</TableCell>
-                    <TableCell>{formatDate(sprint.endDate)}</TableCell>
-                    <TableCell>{sprint.memberCount}</TableCell>
-                    <TableCell>
-                      <Badge variant={status.variant}>{status.label}</Badge>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Your Sprints</h2>
+          <p className="text-muted-foreground">Manage sprints across all your squads</p>
+        </div>
+        <Button onClick={onCreateSprint}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create New Sprint
+        </Button>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {sprintsBySquad.map((squad) => (
+          <Card key={squad.squadId} data-testid={`squad-card-${squad.squadId}`}>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                {squad.squadName}
+                <Badge variant="secondary">{squad.sprints.length} sprint{squad.sprints.length !== 1 ? 's' : ''}</Badge>
+              </CardTitle>
+              <CardDescription>Recent sprints for this squad</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {squad.sprints.map((sprint) => (
+                  <div
+                    key={sprint.id}
+                    className="flex items-center justify-between p-3 rounded-lg border bg-muted/50"
+                    data-testid={`sprint-card-${sprint.id}`}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{sprint.name}</span>
+                        {sprint.isActive && (
+                          <Badge variant="default" className="text-xs">Active</Badge>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-sm text-muted-foreground text-right">
+                      <div>{formatDate(sprint.startDate)}</div>
+                      <div>to {formatDate(sprint.endDate)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
   )
 }

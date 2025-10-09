@@ -1,8 +1,9 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Target } from "lucide-react";
-import SprintCreationForm from "@/components/SprintCreationForm";
+import SprintCreationDrawer from "@/components/SprintCreationDrawer";
+import SprintList from "@/components/SprintList";
 import SquadsTab from "@/components/SquadsTab";
 import ScrumMasterHeader from "@/components/ScrumMasterHeader";
 import CenteredContainer from '@/components/CenteredContainer'
@@ -10,9 +11,15 @@ import MainShell from '@/components/MainShell'
 
 // --- Main Component ---
 export default function ScrumMasterDashboard() {
+  const [sprintDrawerOpen, setSprintDrawerOpen] = useState(false)
+  const [sprintRefreshTrigger, setSprintRefreshTrigger] = useState(0)
+
   // Convert squads to the format expected by SprintCreationForm
   // Note: Squads are now managed by the SquadsTab component
-  const sprintFormSquads: Array<{ id: string; name: string; alias?: string; memberCount: number }> = [];
+
+  const handleSprintCreated = () => {
+    setSprintRefreshTrigger(prev => prev + 1)
+  }
 
   return (
     <MainShell>
@@ -33,10 +40,18 @@ export default function ScrumMasterDashboard() {
             <SquadsTab />
           </TabsContent>
           <TabsContent value="sprints" className="space-y-6">
-            <SprintCreationForm squadsProp={sprintFormSquads} />
-            {/* Sprint list would go here */}
+            <SprintList
+              refreshTrigger={sprintRefreshTrigger}
+              onCreateSprint={() => setSprintDrawerOpen(true)}
+            />
           </TabsContent>
         </Tabs>
+
+        <SprintCreationDrawer
+          open={sprintDrawerOpen}
+          onOpenChange={setSprintDrawerOpen}
+          onSprintCreated={handleSprintCreated}
+        />
       </CenteredContainer>
     </MainShell>
   );
