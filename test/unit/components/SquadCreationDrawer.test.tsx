@@ -41,7 +41,7 @@ describe('SquadCreationDrawer', () => {
 
       // Check that all required CSS classes are present
       expect(drawerContent).toHaveClass('max-h-[85vh]') // Existing height constraint
-      expect(drawerContent).toHaveClass('lg:max-w-7xl') // New width constraint for large screens
+      expect(drawerContent).toHaveClass('lg:max-w-screen-md') // New width constraint for large screens
       expect(drawerContent).toHaveClass('lg:mx-auto')   // New centering for large screens
     })
 
@@ -58,7 +58,7 @@ describe('SquadCreationDrawer', () => {
       const className = drawerContent.className
 
       // Verify the className contains the responsive classes
-      expect(className).toContain('lg:max-w-7xl')
+      expect(className).toContain('lg:max-w-screen-md')
       expect(className).toContain('lg:mx-auto')
       expect(className).toContain('max-h-[85vh]')
     })

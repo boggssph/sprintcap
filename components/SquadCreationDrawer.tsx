@@ -107,7 +107,7 @@ export default function SquadCreationDrawer({
 
   return (
     <Drawer open={open} onOpenChange={handleOpenChange} data-testid="squad-creation-drawer">
-      <DrawerContent className="max-h-[85vh] lg:max-w-7xl lg:mx-auto" data-testid="drawer-content">
+      <DrawerContent className="max-h-[85vh] lg:max-w-screen-md lg:mx-auto" data-testid="drawer-content">
         <DrawerHeader>
           <DrawerTitle>Create New Squad</DrawerTitle>
         </DrawerHeader>
