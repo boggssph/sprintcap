@@ -125,7 +125,7 @@ export default function SprintCreationDrawer({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} data-testid="sprint-creation-drawer">
-      <DrawerContent className="max-h-[145vh] lg:max-w-screen-md lg:mx-auto" data-testid="sprint-drawer-content">
+      <DrawerContent className="h-[145vh] lg:max-w-screen-md lg:mx-auto" data-testid="sprint-drawer-content">
         <DrawerHeader>
           <DrawerTitle>Create New Sprint</DrawerTitle>
         </DrawerHeader>
