@@ -4,14 +4,14 @@ import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Pencil, Loader2 } from 'lucide-react'
@@ -72,8 +72,8 @@ export default function DisplayNameEditor() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
+    <Drawer open={open} onOpenChange={handleOpenChange}>
+      <DrawerTrigger asChild>
         <Button
           variant="ghost"
           size="icon"
@@ -84,14 +84,14 @@ export default function DisplayNameEditor() {
           <Pencil className="h-3 w-3" />
           <span className="sr-only">Edit display name</span>
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]" data-testid="display-name-dialog">
-        <DialogHeader>
-          <DialogTitle>Edit Display Name</DialogTitle>
-          <DialogDescription>
+      </DrawerTrigger>
+      <DrawerContent className="sm:max-w-[425px]" data-testid="display-name-dialog">
+        <DrawerHeader>
+          <DrawerTitle>Edit Display Name</DrawerTitle>
+          <DrawerDescription>
             Update your display name. This will be shown throughout the application.
-          </DialogDescription>
-        </DialogHeader>
+          </DrawerDescription>
+        </DrawerHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="displayName" className="text-right">
@@ -114,7 +114,7 @@ export default function DisplayNameEditor() {
             </div>
           )}
         </div>
-        <DialogFooter>
+        <DrawerFooter>
           <Button
             type="button"
             variant="outline"
@@ -138,8 +138,8 @@ export default function DisplayNameEditor() {
               'Save changes'
             )}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   )
 }
