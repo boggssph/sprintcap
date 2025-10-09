@@ -4,6 +4,7 @@ import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Target } from "lucide-react";
 import ProfileDisplay from "./ProfileDisplay";
+import DisplayNameEditor from "./DisplayNameEditor";
 // Sidebar was replaced by top navigation; keep header independent of sidebar context.
 
 export default function ScrumMasterHeader() {
@@ -17,6 +18,7 @@ export default function ScrumMasterHeader() {
           <Target className="h-6 w-6 text-indigo-600" />
         </Button>
         <ProfileDisplay size="md" />
+        <DisplayNameEditor />
         {/* Visible app title on small screens for context */}
         <div className="ml-2 md:hidden">
           <div className="text-sm font-semibold text-slate-800">SprintCap</div>
