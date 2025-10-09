@@ -27,10 +27,12 @@ export default function DisplayNameEditor() {
     ? ('displayName' in session.user ? (session.user as { displayName?: string }).displayName : undefined) || ('name' in session.user ? (session.user as { name?: string }).name : undefined) || 'No name'
     : 'No name'
 
-  const handleOpen = () => {
-    setDisplayName(currentDisplayName)
-    setError('')
-    setOpen(true)
+  const handleOpenChange = (newOpen: boolean) => {
+    if (newOpen) {
+      setDisplayName(currentDisplayName)
+      setError('')
+    }
+    setOpen(newOpen)
   }
 
   const handleSave = async () => {
@@ -70,19 +72,18 @@ export default function DisplayNameEditor() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <button
-          onClick={handleOpen}
-          className="inline-flex items-center gap-1 text-slate-600 hover:text-slate-900 transition-colors"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 p-0 hover:bg-slate-100"
           title="Edit display name"
           data-testid="edit-display-name"
         >
-          <span className="text-sm font-medium">
-            {currentDisplayName}
-          </span>
           <Pencil className="h-3 w-3" />
-        </button>
+          <span className="sr-only">Edit display name</span>
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]" data-testid="display-name-dialog">
         <DialogHeader>
