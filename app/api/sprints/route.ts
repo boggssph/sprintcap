@@ -141,13 +141,44 @@ export async function POST(request: NextRequest) {
 
     // Handle specific service errors
     if (error instanceof Error) {
+      // Check if it's a SprintServiceError with a specific code
+      const isSprintServiceError = error.constructor.name === 'SprintServiceError' || error.name === 'SprintServiceError'
+      if (isSprintServiceError && 'code' in error) {
+        const serviceError = error as Error & { code: string }
+        if (serviceError.code === 'CONFLICT') {
+          return NextResponse.json(
+            { error: 'Conflict', message: error.message },
+            { status: 409 }
+          )
+        }
+        if (serviceError.code === 'PERMISSION_DENIED') {
+          return NextResponse.json(
+            { error: 'Forbidden', message: error.message },
+            { status: 403 }
+          )
+        }
+        if (serviceError.code === 'NOT_FOUND') {
+          return NextResponse.json(
+            { error: 'Not Found', message: error.message },
+            { status: 404 }
+          )
+        }
+        if (serviceError.code === 'VALIDATION_ERROR') {
+          return NextResponse.json(
+            { error: 'Validation Error', message: error.message },
+            { status: 400 }
+          )
+        }
+      }
+
+      // Fallback to message-based checking for backward compatibility
       if (error.message.includes('Squad not found') || error.message.includes('not authorized') || error.message.includes('Access denied')) {
         return NextResponse.json(
           { error: 'Forbidden', message: error.message },
           { status: 403 }
         )
       }
-      if (error.message.includes('already exists') || error.message.includes('already exists in this squad')) {
+      if (error.message.includes('already exists') || error.message.includes('already exists in this squad') || error.message.includes('overlap')) {
         return NextResponse.json(
           { error: 'Conflict', message: error.message },
           { status: 409 }
