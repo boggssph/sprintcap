@@ -145,28 +145,30 @@ export async function createSprint(
   }
 
   console.log('Checking for overlapping sprints...')
-  // Check for overlapping sprints (simplified check)
+  // TEMPORARILY DISABLE OVERLAPPING CHECK
   // Find any sprint in the same squad that overlaps with the new date range
-  const overlappingSprint = await prisma.sprint.findFirst({
-    where: {
-      squadId: data.squadId,
-      OR: [
-        // Existing sprint starts before new sprint ends AND ends after new sprint starts
-        {
-          startDate: { lt: endDate },
-          endDate: { gt: startDate }
-        }
-      ]
-    }
-  })
+  // const overlappingSprint = await prisma.sprint.findFirst({
+  //   where: {
+  //     squadId: data.squadId,
+  //     OR: [
+  //       // Existing sprint starts before new sprint ends AND ends after new sprint starts
+  //       {
+  //         startDate: { lt: endDate },
+  //         endDate: { gt: startDate }
+  //       }
+  //     ]
+  //   }
+  // })
 
-  if (overlappingSprint) {
-    console.log('Overlapping sprint found:', overlappingSprint.name)
-    throw new SprintServiceError(
-      `Sprint dates overlap with existing sprint '${overlappingSprint.name}'`,
-      'CONFLICT'
-    )
-  }
+  // if (overlappingSprint) {
+  //   console.log('Overlapping sprint found:', overlappingSprint.name)
+  //   throw new SprintServiceError(
+  //     `Sprint dates overlap with existing sprint '${overlappingSprint.name}'`,
+  //     'CONFLICT'
+  //   )
+  // }
+
+  console.log('Overlapping check disabled for debugging')
 
   console.log('Getting squad members...')
   // Get active squad members for automatic population
