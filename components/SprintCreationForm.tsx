@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { MainShellSection } from './MainShell'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Combobox } from '@/components/ui/combobox'
 
 
 type SprintFormSquad = {
@@ -212,23 +212,17 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
             {/* Squad selection dropdown */}
             <div className="space-y-2">
               <Label htmlFor="squadId">Squad</Label>
-              <Select
+              <Combobox
+                options={squads.map((squad) => ({
+                  label: `${squad.name} ${squad.alias ? `(${squad.alias})` : ''} - ${squad.memberCount} member${squad.memberCount === 1 ? '' : 's'}`,
+                  value: squad.id,
+                }))}
                 value={formData.squadId}
                 onValueChange={(value) => handleInputChange('squadId', value)}
-                name="squadId"
+                placeholder="Select a squad"
                 disabled={squads.length === 0}
-              >
-                <SelectTrigger id="squadId" className={`${errors.squadId ? 'border-red-500' : ''} bg-white shadow-sm` }>
-                  <SelectValue placeholder="Select a squad" />
-                </SelectTrigger>
-                  <SelectContent className="bg-white shadow-lg">
-                  {squads.map((squad) => (
-                    <SelectItem key={squad.id} value={squad.id}>
-                      {squad.name} {squad.alias ? `(${squad.alias})` : ''} - {squad.memberCount} member{squad.memberCount === 1 ? '' : 's'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                className={`${errors.squadId ? 'border-red-500' : ''} bg-white shadow-sm`}
+              />
               {errors.squadId && <p className="text-sm text-red-500">{errors.squadId}</p>}
             </div>
             {/* Members list - tests expect loading / members / empty / error states */}

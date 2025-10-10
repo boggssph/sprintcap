@@ -12,13 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Combobox } from '@/components/ui/combobox'
 
 export default function RequestAccessPage() {
   const router = useRouter()
@@ -117,15 +111,15 @@ export default function RequestAccessPage() {
 
             <div className="space-y-2">
               <Label htmlFor="role">Requested Role</Label>
-              <Select value={requestedRole} onValueChange={setRequestedRole}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="SCRUM_MASTER">Scrum Master</SelectItem>
-                  <SelectItem value="MEMBER">Squad Member</SelectItem>
-                </SelectContent>
-              </Select>
+              <Combobox
+                options={[
+                  { label: "Scrum Master", value: "SCRUM_MASTER" },
+                  { label: "Squad Member", value: "MEMBER" },
+                ]}
+                value={requestedRole}
+                onValueChange={setRequestedRole}
+                placeholder="Select a role"
+              />
             </div>
 
             {error && (

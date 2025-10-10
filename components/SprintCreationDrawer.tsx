@@ -31,13 +31,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -318,7 +312,7 @@ function SprintCreationDrawerInner({
   return (
     <>
       <Drawer open={open} onOpenChange={handleOpenChange}>
-        <DrawerContent className="max-h-[95vh] w-full max-w-2xl mx-auto">
+        <DrawerContent className="max-h-[95vh] w-full max-w-2xl mx-auto overflow-visible">
           <DrawerHeader className="px-6 py-4">
             <DrawerTitle className="text-2xl font-semibold">Create New Sprint</DrawerTitle>
             <DrawerDescription>
@@ -347,50 +341,40 @@ function SprintCreationDrawerInner({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-base font-medium">Squad</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                        disabled={isSubmitting || isLoadingSquads}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="h-12 text-base">
-                            <SelectValue
-                              placeholder={
-                                isLoadingSquads
-                                  ? "Loading squads..."
-                                  : squadError
-                                    ? "Failed to load squads"
-                                    : "Select a squad"
-                              }
-                            />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {squadError ? (
-                            <div className="p-2 text-sm text-destructive">
-                              {squadError}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={fetchSquads}
-                                className="ml-2"
-                              >
-                                Retry
-                              </Button>
-                            </div>
-                          ) : squads.length === 0 ? (
-                            <div className="p-2 text-sm text-muted-foreground">
-                              No squads available
-                            </div>
-                          ) : (
-                            squads.map((squad) => (
-                              <SelectItem key={squad.id} value={squad.id} className="text-base">
-                                {squad.name} ({squad.alias})
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        {isLoadingSquads ? (
+                          <div className="h-12 flex items-center justify-center text-base text-muted-foreground border rounded-md">
+                            Loading squads...
+                          </div>
+                        ) : squadError ? (
+                          <div className="h-12 flex items-center justify-between text-base text-destructive border rounded-md px-3">
+                            <span>Failed to load squads</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={fetchSquads}
+                            >
+                              Retry
+                            </Button>
+                          </div>
+                        ) : squads.length === 0 ? (
+                          <div className="h-12 flex items-center justify-center text-base text-muted-foreground border rounded-md">
+                            No squads available
+                          </div>
+                        ) : (
+                          <Combobox
+                            options={squads.map((squad) => ({
+                              label: `${squad.name} (${squad.alias})`,
+                              value: squad.id,
+                            }))}
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder="Select a squad"
+                            disabled={isSubmitting}
+                            className="h-12 text-base"
+                          />
+                        )}
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Combobox } from '@/components/ui/combobox'
 import { Label } from '@/components/ui/label'
 import { Users, Shield, Copy } from 'lucide-react'
 import CenteredContainer from '@/components/CenteredContainer'
@@ -180,16 +180,16 @@ export default function AdminPage(){
                   </div>
                   <div>
                     <Label htmlFor="role">Role</Label>
-                    <Select value={role} onValueChange={setRole}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="MEMBER">Member</SelectItem>
-                        <SelectItem value="SCRUM_MASTER">Scrum Master</SelectItem>
-                        <SelectItem value="ADMIN">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Combobox
+                      options={[
+                        { label: "Member", value: "MEMBER" },
+                        { label: "Scrum Master", value: "SCRUM_MASTER" },
+                        { label: "Admin", value: "ADMIN" },
+                      ]}
+                      value={role}
+                      onValueChange={setRole}
+                      placeholder="Select role"
+                    />
                   </div>
                   <div className="flex gap-2">
                     <Button type="submit" disabled={loading}>
@@ -220,17 +220,18 @@ export default function AdminPage(){
                       value={q}
                       onChange={(e) => setQ(e.target.value)}
                     />
-                    <Select value={filterStatus || ''} onValueChange={(value) => setFilterStatus(value || undefined)}>
-                      <SelectTrigger className="w-32">
-                        <SelectValue placeholder="All" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">All</SelectItem>
-                        <SelectItem value="PENDING">Pending</SelectItem>
-                        <SelectItem value="ACCEPTED">Accepted</SelectItem>
-                        <SelectItem value="EXPIRED">Expired</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Combobox
+                      options={[
+                        { label: "All", value: "" },
+                        { label: "Pending", value: "PENDING" },
+                        { label: "Accepted", value: "ACCEPTED" },
+                        { label: "Expired", value: "EXPIRED" },
+                      ]}
+                      value={filterStatus || ''}
+                      onValueChange={(value) => setFilterStatus(value || undefined)}
+                      placeholder="All"
+                      className="w-32"
+                    />
                     <Button onClick={() => { setCursor(null); fetchInvites() }}>Apply</Button>
                   </div>
 
