@@ -172,17 +172,23 @@ export async function createSprint(
   // Get active squad members for automatic population
   const squadMembers = await prisma.squadMember.findMany({
     where: { squadId: data.squadId },
-    include: {
-      user: {
-        select: { displayName: true, email: true }
-      }
-    }
+    select: { userId: true }
   })
 
   console.log('Squad members found:', squadMembers.length)
-  // Filter out members with invalid users (orphaned records)
-  const validSquadMembers = squadMembers.filter(member => member.user !== null)
-  console.log('Valid squad members:', validSquadMembers.length)
+
+  // Validate that all userIds exist (avoid orphaned records)
+  let validSquadMembers: { userId: string }[] = []
+  if (squadMembers.length > 0) {
+    const userIds = squadMembers.map(m => m.userId)
+    const existingUsers = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true }
+    })
+    const existingUserIds = new Set(existingUsers.map(u => u.id))
+    validSquadMembers = squadMembers.filter(m => existingUserIds.has(m.userId))
+    console.log('Valid squad members after user validation:', validSquadMembers.length)
+  }
 
   // If no members, set a warning to be returned in the API response
   let warning: string | undefined = undefined;
@@ -209,7 +215,7 @@ export async function createSprint(
       console.log('Sprint created:', sprint.id)
       // Create sprint members for all active squad members
       if (validSquadMembers.length > 0) {
-        console.log('Creating sprint members for users:', validSquadMembers.map(m => ({ userId: m.userId, displayName: m.user?.displayName })))
+        console.log('Creating sprint members for users:', validSquadMembers.map(m => m.userId))
         await tx.sprintMember.createMany({
           data: validSquadMembers.map(member => ({
             sprintId: sprint.id,
