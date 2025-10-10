@@ -136,28 +136,26 @@ export async function createSprint(
     )
   }
 
-  // Check for overlapping sprints (name format already normalized above)
+  // Check for overlapping sprints (simplified check)
+  // Find any sprint in the same squad that overlaps with the new date range
   const overlappingSprint = await prisma.sprint.findFirst({
     where: {
       squadId: data.squadId,
       OR: [
+        // Case 1: Existing sprint contains the new start date
         {
-          AND: [
-            { startDate: { lte: startDate } },
-            { endDate: { gt: startDate } }
-          ]
+          startDate: { lte: startDate },
+          endDate: { gt: startDate }
         },
+        // Case 2: Existing sprint contains the new end date
         {
-          AND: [
-            { startDate: { lt: endDate } },
-            { endDate: { gte: endDate } }
-          ]
+          startDate: { lt: endDate },
+          endDate: { gte: endDate }
         },
+        // Case 3: New sprint completely contains existing sprint
         {
-          AND: [
-            { startDate: { gte: startDate } },
-            { endDate: { lte: endDate } }
-          ]
+          startDate: { gte: startDate },
+          endDate: { lte: endDate }
         }
       ]
     }

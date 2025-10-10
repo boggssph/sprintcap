@@ -153,6 +153,19 @@ export async function POST(request: NextRequest) {
           { status: 409 }
         )
       }
+      // Handle Prisma errors
+      if (error.message.includes('P2002')) {
+        return NextResponse.json(
+          { error: 'Conflict', message: 'A sprint with this name already exists in this squad' },
+          { status: 409 }
+        )
+      }
+      if (error.message.includes('P2025') || error.message.includes('Record to delete does not exist')) {
+        return NextResponse.json(
+          { error: 'Not Found', message: 'Squad not found' },
+          { status: 404 }
+        )
+      }
     }
 
     return NextResponse.json(
