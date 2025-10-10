@@ -46,7 +46,9 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
     sprintNumber: '',
     squadId: '',
     startDate: '',
-    endDate: ''
+    startTime: '',
+    endDate: '',
+    endTime: ''
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -93,7 +95,7 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.sprintNumber.trim()) {
-      newErrors.sprintNumber = 'Sprint number is required';
+      newErrors.sprintNumber = 'Sprint name is required';
     }
     if (!formData.squadId) {
       newErrors.squadId = 'Please select a squad';
@@ -101,14 +103,20 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
     if (!formData.startDate) {
       newErrors.startDate = 'Start date is required';
     }
+    if (!formData.startTime) {
+      newErrors.startTime = 'Start time is required';
+    }
     if (!formData.endDate) {
       newErrors.endDate = 'End date is required';
     }
-    if (formData.startDate && formData.endDate) {
-      const start = new Date(formData.startDate);
-      const end = new Date(formData.endDate);
+    if (!formData.endTime) {
+      newErrors.endTime = 'End time is required';
+    }
+    if (formData.startDate && formData.startTime && formData.endDate && formData.endTime) {
+      const start = new Date(`${formData.startDate}T${formData.startTime}`);
+      const end = new Date(`${formData.endDate}T${formData.endTime}`);
       if (end <= start) {
-        newErrors.endDate = 'End date must be after start date';
+        newErrors.endDate = 'End date and time must be after start date and time';
       }
     }
     setErrors(newErrors);
@@ -131,8 +139,8 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
         body: JSON.stringify({
           name: fullSprintName,
           squadId: formData.squadId,
-          startDate: formData.startDate,
-          endDate: formData.endDate
+          startDate: `${formData.startDate}T${formData.startTime}`,
+          endDate: `${formData.endDate}T${formData.endTime}`
         })
       });
       if (res.ok) {
@@ -145,7 +153,9 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
           sprintNumber: '',
           squadId: '',
           startDate: '',
-          endDate: ''
+          startTime: '',
+          endDate: '',
+          endTime: ''
         });
         onSprintCreated?.();
       } else {
@@ -249,9 +259,9 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
                   )
                 ) : null}
             </div>
-            {/* Sprint number input with prefix */}
+            {/* Sprint name input with prefix */}
             <div className="space-y-2">
-              <Label htmlFor="sprintNumber">Sprint Number</Label>
+              <Label htmlFor="sprintNumber">Sprint Name</Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm pointer-events-none">
                   {selectedSquad?.alias ? `${selectedSquad.alias}-Sprint-` : 'Select squad first'}
@@ -274,27 +284,53 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
               {errors.sprintNumber && <p className="text-sm text-red-500">{errors.sprintNumber}</p>}
             </div>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="startDate">Start Date & Time</Label>
-                <Input
-                  id="startDate"
-                  type="datetime-local"
-                  value={formData.startDate}
-                  onChange={(e) => handleInputChange('startDate', e.target.value)}
-                  className={errors.startDate ? 'border-red-500' : ''}
-                />
-                {errors.startDate && <p className="text-sm text-red-500">{errors.startDate}</p>}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="startDate">Start Date</Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => handleInputChange('startDate', e.target.value)}
+                    className={errors.startDate ? 'border-red-500' : ''}
+                  />
+                  {errors.startDate && <p className="text-sm text-red-500">{errors.startDate}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="startTime">Start Time</Label>
+                  <Input
+                    id="startTime"
+                    type="time"
+                    value={formData.startTime}
+                    onChange={(e) => handleInputChange('startTime', e.target.value)}
+                    className={errors.startTime ? 'border-red-500' : ''}
+                  />
+                  {errors.startTime && <p className="text-sm text-red-500">{errors.startTime}</p>}
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="endDate">End Date & Time</Label>
-                <Input
-                  id="endDate"
-                  type="datetime-local"
-                  value={formData.endDate}
-                  onChange={(e) => handleInputChange('endDate', e.target.value)}
-                  className={errors.endDate ? 'border-red-500' : ''}
-                />
-                {errors.endDate && <p className="text-sm text-red-500">{errors.endDate}</p>}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="endDate">End Date</Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => handleInputChange('endDate', e.target.value)}
+                    className={errors.endDate ? 'border-red-500' : ''}
+                  />
+                  {errors.endDate && <p className="text-sm text-red-500">{errors.endDate}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="endTime">End Time</Label>
+                  <Input
+                    id="endTime"
+                    type="time"
+                    value={formData.endTime}
+                    onChange={(e) => handleInputChange('endTime', e.target.value)}
+                    className={errors.endTime ? 'border-red-500' : ''}
+                  />
+                  {errors.endTime && <p className="text-sm text-red-500">{errors.endTime}</p>}
+                </div>
               </div>
             </div>
             {errors.submit && (

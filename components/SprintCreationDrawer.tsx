@@ -46,35 +46,43 @@ import { cn } from "@/lib/utils"
 
 // Enhanced form schema with comprehensive validation
 const formSchema = z.object({
-  name: z.string()
+  sprintNumber: z.string()
     .min(1, "Sprint name is required")
-    .max(100, "Name must be 100 characters or less")
-    .refine((name) => name.trim().length >= 3, {
-      message: "Sprint name should be at least 3 characters"
+    .max(50, "Number must be 50 characters or less")
+    .refine((num) => num.trim().length >= 1, {
+      message: "Sprint name is required"
     }),
   squadId: z.string().min(1, "Please select a squad"),
-  startDate: z.string().min(1, "Start date is required"),
-  endDate: z.string().min(1, "End date is required"),
+  startDate: z.date().refine((date) => date >= new Date(), {
+    message: "Start date cannot be in the past"
+  }),
+  startTime: z.string().min(1, "Start time is required"),
+  endDate: z.date().refine((date) => date >= new Date(), {
+    message: "End date cannot be in the past"
+  }),
+  endTime: z.string().min(1, "End time is required"),
 })
 .refine((data) => {
   const start = new Date(data.startDate);
+  const [startHours, startMinutes] = data.startTime.split(':').map(Number);
+  start.setHours(startHours, startMinutes);
   const end = new Date(data.endDate);
+  const [endHours, endMinutes] = data.endTime.split(':').map(Number);
+  end.setHours(endHours, endMinutes);
   return end > start;
 }, {
-  message: "End date must be after start date",
+  message: "End date and time must be after start date and time",
   path: ["endDate"]
 })
 .refine((data) => {
   const start = new Date(data.startDate);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return start >= today;
+  const now = new Date();
+  return start >= now;
 }, {
-  message: "Start date cannot be in the past",
+  message: "Start date and time cannot be in the past",
   path: ["startDate"]
 })
 .refine((data) => {
-  if (!data.startDate || !data.endDate) return true;
   const start = new Date(data.startDate);
   const end = new Date(data.endDate);
   const durationDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
@@ -148,6 +156,7 @@ function SprintCreationDrawerInner({
   const [squads, setSquads] = React.useState<Squad[]>([]);
   const [isLoadingSquads, setIsLoadingSquads] = React.useState(false);
   const [squadError, setSquadError] = React.useState<string | null>(null);
+  const [selectedSquad, setSelectedSquad] = React.useState<Squad | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = React.useState(false);
   const [validationErrors, setValidationErrors] = React.useState<Record<string, string>>({});
 
@@ -157,10 +166,12 @@ function SprintCreationDrawerInner({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      sprintNumber: "",
       squadId: "",
-      startDate: "",
-      endDate: "",
+      startDate: undefined,
+      startTime: "",
+      endDate: undefined,
+      endTime: "",
     },
   });
 
@@ -230,6 +241,13 @@ function SprintCreationDrawerInner({
     }
   }, [open, loadDraft]);
 
+  // Update selectedSquad when squadId changes
+  React.useEffect(() => {
+    const squadId = form.watch('squadId');
+    const squad = squads.find(s => s.id === squadId) || null;
+    setSelectedSquad(squad);
+  }, [form.watch('squadId'), squads]);
+
   // Real-time field validation
   const validateField = React.useCallback(async (field: string) => {
     try {
@@ -249,12 +267,32 @@ function SprintCreationDrawerInner({
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
+      const fullSprintName = selectedSquad?.alias && values.sprintNumber.trim() 
+        ? `${selectedSquad.alias}-Sprint-${values.sprintNumber.trim()}`
+        : values.sprintNumber.trim(); // fallback
+
+      // Convert Date objects and time strings to ISO datetime strings
+      const startDate = values.startDate;
+      const [startHours, startMinutes] = values.startTime.split(':').map(Number);
+      startDate.setHours(startHours, startMinutes, 0, 0);
+      const startDateTime = startDate.toISOString();
+
+      const endDate = values.endDate;
+      const [endHours, endMinutes] = values.endTime.split(':').map(Number);
+      endDate.setHours(endHours, endMinutes, 0, 0);
+      const endDateTime = endDate.toISOString();
+
       const response = await fetch('/api/sprints', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          name: fullSprintName,
+          squadId: values.squadId,
+          startDate: startDateTime,
+          endDate: endDateTime,
+        }),
       });
 
       if (response.ok) {
@@ -267,7 +305,8 @@ function SprintCreationDrawerInner({
         const errorData = await response.json();
         if (errorData.details) {
           Object.entries(errorData.details).forEach(([field, message]) => {
-            form.setError(field as keyof z.infer<typeof formSchema>, {
+            const formField = field === 'name' ? 'sprintNumber' : field;
+            form.setError(formField as keyof z.infer<typeof formSchema>, {
               message: message as string
             });
           });
@@ -382,26 +421,39 @@ function SprintCreationDrawerInner({
 
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="sprintNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-base font-medium">Sprint Name</FormLabel>
+                      <FormLabel htmlFor="sprintNumber" className="text-base font-medium">Sprint Name</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="e.g., Sprint 2025.01"
-                          className="h-12 text-base"
-                          disabled={isSubmitting}
-                          aria-describedby="name-description name-error"
-                          {...field}
-                          onBlur={() => validateField('name')}
-                        />
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm pointer-events-none">
+                            {selectedSquad?.alias ? `${selectedSquad.alias}-Sprint-` : 'Select squad first'}
+                          </span>
+                          <Input
+                            id="sprintNumber"
+                            type="text"
+                            placeholder={selectedSquad?.alias ? "e.g., 1, 2, 2025.10" : ""}
+                            value={field.value}
+                            onChange={field.onChange}
+                            className={`h-12 text-base pl-32 ${isSubmitting ? 'opacity-50' : ''}`}
+                            disabled={isSubmitting || !selectedSquad?.alias}
+                            aria-describedby="sprintNumber-description sprintNumber-error"
+                            onBlur={() => validateField('sprintNumber')}
+                          />
+                        </div>
                       </FormControl>
-                      <div id="name-description" className="sr-only">
-                        Enter a descriptive name for your sprint
+                      <div id="sprintNumber-description" className="sr-only">
+                        Enter the sprint number to create the full sprint name
                       </div>
-                      {validationErrors.name && (
-                        <p className="text-sm font-medium text-destructive" id="name-error">
-                          {validationErrors.name}
+                      {selectedSquad?.alias && field.value.trim() && (
+                        <div className="text-xs text-gray-600 mt-1">
+                          Full Sprint Name: <span className="font-mono text-gray-900">{selectedSquad.alias}-Sprint-{field.value.trim()}</span>
+                        </div>
+                      )}
+                      {validationErrors.sprintNumber && (
+                        <p className="text-sm font-medium text-destructive" id="sprintNumber-error">
+                          {validationErrors.sprintNumber}
                         </p>
                       )}
                       <FormMessage />
@@ -410,113 +462,154 @@ function SprintCreationDrawerInner({
                 />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="startDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel className="text-base font-medium">Start Date</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "h-12 pl-3 text-left font-normal text-base",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                                disabled={isSubmitting}
-                              >
-                                {field.value ? (
-                                  format(new Date(field.value), "PPP")
-                                ) : (
-                                  <span>Pick a start date</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value ? new Date(field.value) : undefined}
-                              onSelect={(date) => {
-                                if (date) {
-                                  field.onChange(date.toISOString().split('T')[0]);
-                                  // Auto-set end date to 2 weeks later if not set
-                                  if (!form.getValues('endDate')) {
-                                    const endDate = new Date(date);
-                                    endDate.setDate(endDate.getDate() + 14);
-                                    form.setValue('endDate', endDate.toISOString().split('T')[0]);
+                  <div className="space-y-2 flex flex-col">
+                    <FormField
+                      control={form.control}
+                      name="startDate"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel className="text-base font-medium">Start Date</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "h-12 pl-3 text-left font-normal text-base",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                  disabled={isSubmitting}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "PPP")
+                                  ) : (
+                                    <span>Pick a start date</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={(date) => {
+                                  if (date) {
+                                    // Store Date object directly to avoid timezone issues
+                                    field.onChange(date);
+                                    // Auto-set end date to 2 weeks later if not set
+                                    if (!form.getValues('endDate')) {
+                                      const endDate = new Date(date);
+                                      endDate.setDate(endDate.getDate() + 14);
+                                      form.setValue('endDate', endDate);
+                                    }
                                   }
-                                }
-                              }}
-                              disabled={(date) => {
-                                const today = new Date();
-                                today.setHours(0, 0, 0, 0);
-                                return date < today;
-                              }}
-                              initialFocus
+                                }}
+                                disabled={(date) => {
+                                  const today = new Date();
+                                  today.setHours(0, 0, 0, 0);
+                                  return date < today;
+                                }}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="startTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-medium">Start Time</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="time"
+                              className="h-12 text-base"
+                              disabled={isSubmitting}
+                              {...field}
                             />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="endDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel className="text-base font-medium">End Date</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "h-12 pl-3 text-left font-normal text-base",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                                disabled={isSubmitting}
-                              >
-                                {field.value ? (
-                                  format(new Date(field.value), "PPP")
-                                ) : (
-                                  <span>Pick an end date</span>
-                                )}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value ? new Date(field.value) : undefined}
-                              onSelect={(date) => {
-                                if (date) {
-                                  field.onChange(date.toISOString().split('T')[0]);
-                                }
-                              }}
-                              disabled={(date) => {
-                                const startDate = form.getValues('startDate');
-                                if (startDate) {
-                                  return date <= new Date(startDate);
-                                }
-                                const today = new Date();
-                                today.setHours(0, 0, 0, 0);
-                                return date < today;
-                              }}
-                              initialFocus
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="space-y-2 flex flex-col">
+                    <FormField
+                      control={form.control}
+                      name="endDate"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel className="text-base font-medium">End Date</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "h-12 pl-3 text-left font-normal text-base",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                  disabled={isSubmitting}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "PPP")
+                                  ) : (
+                                    <span>Pick an end date</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={(date) => {
+                                  if (date) {
+                                    // Store Date object directly to avoid timezone issues
+                                    field.onChange(date);
+                                  }
+                                }}
+                                disabled={(date) => {
+                                  const startDate = form.getValues('startDate');
+                                  if (startDate) {
+                                    return date <= startDate;
+                                  }
+                                  const today = new Date();
+                                  today.setHours(0, 0, 0, 0);
+                                  return date < today;
+                                }}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="endTime"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-medium">End Time</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="time"
+                              className="h-12 text-base"
+                              disabled={isSubmitting}
+                              {...field}
                             />
-                          </PopoverContent>
-                        </Popover>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 pt-6">

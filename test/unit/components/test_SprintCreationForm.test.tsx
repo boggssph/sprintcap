@@ -6,18 +6,19 @@ import SprintCreationForm from '@/components/SprintCreationForm'
 // make React available globally for JSX runtime in test environment
 globalThis.React = React
 
-
 // Mock fetch globally for all tests
 const fetchMock = vi.fn()
 beforeAll(() => {
   global.fetch = fetchMock
 })
 
-describe('SprintCreationForm - Formatted Name Input', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
+beforeEach(() => {
+  vi.clearAllMocks()
+  // Reset fetch mock for each test
+  fetchMock.mockReset()
+})
 
+describe('SprintCreationForm - Formatted Name Input', () => {
   it('displays formatted name input with gray prefix when squad is selected', async () => {
     // Mock successful squads fetch
     const mockSquads = [
@@ -36,14 +37,30 @@ describe('SprintCreationForm - Formatted Name Input', () => {
 
     render(<SprintCreationForm />)
 
-    // Wait for squads to load
+    // Wait for squads to load - check that combobox is not showing "No squads available"
+    await waitFor(() => {
+      expect(screen.queryByText('No squads available. Please contact an administrator to create a squad for you.')).not.toBeInTheDocument()
+    })
+
+    // Open the combobox to see options
+    const comboboxButton = screen.getByRole('combobox')
+    fireEvent.click(comboboxButton)
+
+    // Now check that the squad option is visible in the dropdown
     await waitFor(() => {
       expect(screen.getByText('Frontend Team (FE) - 5 members')).toBeInTheDocument()
     })
 
-    // For validation purposes, test that the component renders correctly
-    // The actual squad selection behavior is tested in integration/E2E tests
-    expect(screen.getByLabelText(/sprint number/i)).toBeInTheDocument()
+    // Select the squad by clicking on the option
+    fireEvent.click(screen.getByText('Frontend Team (FE) - 5 members'))
+
+    // Wait for the combobox to close and selection to be applied
+    await waitFor(() => {
+      expect(screen.getByRole('combobox')).toHaveTextContent('Frontend Team (FE) - 5 members')
+    })
+
+    // Now test that the formatted name input is displayed with gray prefix
+    expect(screen.getByLabelText(/sprint name/i)).toBeInTheDocument()
     expect(screen.getByRole('combobox')).toBeInTheDocument()
     expect(screen.getByLabelText(/start date/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/end date/i)).toBeInTheDocument()
@@ -67,10 +84,22 @@ describe('SprintCreationForm - Formatted Name Input', () => {
 
     render(<SprintCreationForm />)
 
-    // Wait for squads to load
+    // Wait for squads to load - check that combobox is not showing "No squads available"
+    await waitFor(() => {
+      expect(screen.queryByText('No squads available. Please contact an administrator to create a squad for you.')).not.toBeInTheDocument()
+    })
+
+    // Open the combobox to verify squads are loaded
+    const comboboxButton = screen.getByRole('combobox')
+    fireEvent.click(comboboxButton)
+
+    // Check that the squad option is visible in the dropdown
     await waitFor(() => {
       expect(screen.getByText('Frontend Team (FE) - 5 members')).toBeInTheDocument()
     })
+
+    // Close the dropdown
+    fireEvent.click(document.body)
 
     // Check that the placeholder text shows "Select squad first"
     const placeholderElement = screen.getByText('Select squad first')
@@ -106,7 +135,16 @@ describe('SprintCreationForm - Formatted Name Input', () => {
 
     render(<SprintCreationForm />)
 
-    // Wait for squads to load
+    // Wait for squads to load - check that combobox is not showing "No squads available"
+    await waitFor(() => {
+      expect(screen.queryByText('No squads available. Please contact an administrator to create a squad for you.')).not.toBeInTheDocument()
+    })
+
+    // Open the combobox to see options
+    const comboboxButton = screen.getByRole('combobox')
+    fireEvent.click(comboboxButton)
+
+    // Check that both squad options are visible in the dropdown
     await waitFor(() => {
       expect(screen.getByText('Frontend Team (FE) - 5 members')).toBeInTheDocument()
       expect(screen.getByText('Backend Team (BE) - 3 members')).toBeInTheDocument()
@@ -142,22 +180,22 @@ describe('SprintCreationForm - Formatted Name Input', () => {
 
     render(<SprintCreationForm />)
 
-    // Wait for squads to load and select squad
+    // Wait for squads to load - check that combobox is not showing "No squads available"
+    await waitFor(() => {
+      expect(screen.queryByText('No squads available. Please contact an administrator to create a squad for you.')).not.toBeInTheDocument()
+    })
+
+    // Open the combobox and select squad
+    const comboboxButton = screen.getByRole('combobox')
+    fireEvent.click(comboboxButton)
+    
+    // Click on the squad option in the dropdown
     await waitFor(() => {
       expect(screen.getByText('Frontend Team (FE) - 5 members')).toBeInTheDocument()
     })
-
-    const squadSelect = screen.getByRole('combobox')
-    fireEvent.click(squadSelect)
     
-    // Click on the option in the dropdown (not the hidden select)
-    const dropdownOptions = screen.getAllByText('Frontend Team (FE) - 5 members')
-    const dropdownOption = dropdownOptions.find(option => 
-      option.tagName === 'SPAN' || option.closest('[role="option"]')
-    )
-    if (dropdownOption) {
-      fireEvent.click(dropdownOption)
-    }
+    const squadOption = screen.getByText('Frontend Team (FE) - 5 members')
+    fireEvent.click(squadOption)
 
     // Enter sprint number
     const sprintNumberInput = screen.getByPlaceholderText('e.g., 1, 2, 2025.10')
@@ -165,9 +203,13 @@ describe('SprintCreationForm - Formatted Name Input', () => {
 
     // Fill in dates
     const startDateInput = screen.getByLabelText(/start date/i)
+    const startTimeInput = screen.getByLabelText(/start time/i)
     const endDateInput = screen.getByLabelText(/end date/i)
-    fireEvent.change(startDateInput, { target: { value: '2025-01-01T09:00' } })
-    fireEvent.change(endDateInput, { target: { value: '2025-01-15T17:00' } })
+    const endTimeInput = screen.getByLabelText(/end time/i)
+    fireEvent.change(startDateInput, { target: { value: '2025-01-01' } })
+    fireEvent.change(startTimeInput, { target: { value: '09:00' } })
+    fireEvent.change(endDateInput, { target: { value: '2025-01-15' } })
+    fireEvent.change(endTimeInput, { target: { value: '17:00' } })
 
     // Submit form
     const submitButton = screen.getByRole('button', { name: /create sprint/i })
@@ -213,18 +255,22 @@ describe('SprintCreationForm - Formatted Name Input', () => {
 
       render(<SprintCreationForm />);
 
-      // Wait for squads to load and select one
+      // Wait for squads to load - check that combobox is not showing "No squads available"
       await waitFor(() => {
-        expect(screen.getByText('Frontend Team (FE) - 3 members')).toBeInTheDocument();
+        expect(screen.queryByText('No squads available. Please contact an administrator to create a squad for you.')).not.toBeInTheDocument()
       });
 
-      // Select the squad using the combobox
-      const squadSelect = screen.getByRole('combobox');
-      fireEvent.click(squadSelect);
+      // Open combobox and select squad
+      const comboboxButton = screen.getByRole('combobox');
+      fireEvent.click(comboboxButton);
 
       // Find and click the option in the dropdown
-      const option = screen.getByRole('option', { name: /Frontend Team \(FE\) - 3 members/ });
-      fireEvent.click(option);
+      await waitFor(() => {
+        expect(screen.getByText('Frontend Team (FE) - 3 members')).toBeInTheDocument()
+      });
+      
+      const squadOption = screen.getByText('Frontend Team (FE) - 3 members');
+      fireEvent.click(squadOption);
 
       // Should show loading state
       await waitFor(() => {
@@ -263,17 +309,22 @@ describe('SprintCreationForm - Formatted Name Input', () => {
 
       render(<SprintCreationForm />)
 
-      // Wait for squads to load
+      // Wait for squads to load - check that combobox is not showing "No squads available"
+      await waitFor(() => {
+        expect(screen.queryByText('No squads available. Please contact an administrator to create a squad for you.')).not.toBeInTheDocument()
+      });
+
+      // Open combobox and select squad
+      const comboboxButton = screen.getByRole('combobox')
+      fireEvent.click(comboboxButton)
+
+      // Find and click the option in the dropdown
       await waitFor(() => {
         expect(screen.getByText('Frontend Team (FE) - 2 members')).toBeInTheDocument()
-      })
-
-      // Select the squad
-      const squadSelect = screen.getByRole('combobox')
-      fireEvent.click(squadSelect)
-
-      const option = screen.getByRole('option', { name: /Frontend Team \(FE\) - 2 members/ })
-      fireEvent.click(option)
+      });
+      
+      const squadOption = screen.getByText('Frontend Team (FE) - 2 members');
+      fireEvent.click(squadOption);
 
       // Should display members
       await waitFor(() => {
@@ -311,17 +362,22 @@ describe('SprintCreationForm - Formatted Name Input', () => {
 
       render(<SprintCreationForm />)
 
-      // Wait for squads to load
+      // Wait for squads to load - check that combobox is not showing "No squads available"
+      await waitFor(() => {
+        expect(screen.queryByText('No squads available. Please contact an administrator to create a squad for you.')).not.toBeInTheDocument()
+      });
+
+      // Open combobox and select squad
+      const comboboxButton = screen.getByRole('combobox')
+      fireEvent.click(comboboxButton)
+
+      // Find and click the option in the dropdown
       await waitFor(() => {
         expect(screen.getByText('Empty Squad (ES) - 0 members')).toBeInTheDocument()
-      })
-
-      // Select the empty squad
-      const squadSelect = screen.getByRole('combobox')
-      fireEvent.click(squadSelect)
-
-      const option = screen.getByRole('option', { name: /Empty Squad \(ES\) - 0 members/ })
-      fireEvent.click(option)
+      });
+      
+      const squadOption = screen.getByText('Empty Squad (ES) - 0 members');
+      fireEvent.click(squadOption);
 
       // Should show "No members found" message
       await waitFor(() => {
@@ -350,17 +406,22 @@ describe('SprintCreationForm - Formatted Name Input', () => {
 
       render(<SprintCreationForm />)
 
-      // Wait for squads to load
+      // Wait for squads to load - check that combobox is not showing "No squads available"
+      await waitFor(() => {
+        expect(screen.queryByText('No squads available. Please contact an administrator to create a squad for you.')).not.toBeInTheDocument()
+      });
+
+      // Open combobox and select squad
+      const comboboxButton = screen.getByRole('combobox')
+      fireEvent.click(comboboxButton)
+
+      // Find and click the option in the dropdown
       await waitFor(() => {
         expect(screen.getByText('Frontend Team (FE) - 2 members')).toBeInTheDocument()
-      })
-
-      // Select the squad
-      const squadSelect = screen.getByRole('combobox')
-      fireEvent.click(squadSelect)
-
-      const option = screen.getByRole('option', { name: /Frontend Team \(FE\) - 2 members/ })
-      fireEvent.click(option)
+      });
+      
+      const squadOption = screen.getByText('Frontend Team (FE) - 2 members');
+      fireEvent.click(squadOption);
 
       // Should show specific error message when member fetch fails
       await waitFor(() => {

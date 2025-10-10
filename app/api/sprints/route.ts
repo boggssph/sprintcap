@@ -141,13 +141,13 @@ export async function POST(request: NextRequest) {
 
     // Handle specific service errors
     if (error instanceof Error) {
-      if (error.message.includes('Squad not found') || error.message.includes('not authorized')) {
+      if (error.message.includes('Squad not found') || error.message.includes('not authorized') || error.message.includes('Access denied')) {
         return NextResponse.json(
           { error: 'Forbidden', message: error.message },
           { status: 403 }
         )
       }
-      if (error.message.includes('already exists')) {
+      if (error.message.includes('already exists') || error.message.includes('already exists in this squad')) {
         return NextResponse.json(
           { error: 'Conflict', message: error.message },
           { status: 409 }

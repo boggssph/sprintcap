@@ -180,9 +180,12 @@ export async function createSprint(
     }
   })
 
+  // Filter out members with invalid users (orphaned records)
+  const validSquadMembers = squadMembers.filter(member => member.user !== null)
+
   // If no members, set a warning to be returned in the API response
   let warning: string | undefined = undefined;
-  if (squadMembers.length === 0) {
+  if (validSquadMembers.length === 0) {
     warning = 'Sprint created with no members. Add members manually if needed.';
   }
 
@@ -200,9 +203,9 @@ export async function createSprint(
     })
 
     // Create sprint members for all active squad members
-    if (squadMembers.length > 0) {
+    if (validSquadMembers.length > 0) {
       await tx.sprintMember.createMany({
-        data: squadMembers.map(member => ({
+        data: validSquadMembers.map(member => ({
           sprintId: sprint.id,
           userId: member.userId
         }))
@@ -211,7 +214,7 @@ export async function createSprint(
 
     return {
       sprint,
-      memberCount: squadMembers.length,
+      memberCount: validSquadMembers.length,
       squadName: squad.name
     }
   })

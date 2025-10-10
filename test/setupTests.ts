@@ -53,3 +53,25 @@ if (typeof window !== 'undefined' && typeof window.Element !== 'undefined') {
     }
   }
 }
+
+// jsdom doesn't implement ResizeObserver; cmdk uses it
+if (typeof window !== 'undefined' && typeof window.ResizeObserver === 'undefined') {
+  window.ResizeObserver = class ResizeObserver {
+    constructor(cb: ResizeObserverCallback) {
+      this.cb = cb
+    }
+    cb: ResizeObserverCallback
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+}
+
+// jsdom doesn't implement scrollIntoView; cmdk uses it
+if (typeof window !== 'undefined' && typeof window.Element !== 'undefined') {
+  if (!window.Element.prototype.scrollIntoView) {
+    window.Element.prototype.scrollIntoView = function() {
+      // No-op implementation
+    }
+  }
+}
