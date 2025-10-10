@@ -193,35 +193,40 @@ export async function createSprint(
   console.log('Creating sprint in transaction...')
   // Create sprint in transaction
   const result = await prisma.$transaction(async (tx) => {
-    console.log('Creating sprint...')
-    // Create the sprint
-    const sprint = await tx.sprint.create({
-      data: {
-        name: data.name,
-        squadId: data.squadId,
-        startDate,
-        endDate,
-        status: 'INACTIVE'
-      }
-    })
-
-    console.log('Sprint created:', sprint.id)
-    // Create sprint members for all active squad members
-    if (validSquadMembers.length > 0) {
-      console.log('Creating sprint members...')
-      await tx.sprintMember.createMany({
-        data: validSquadMembers.map(member => ({
-          sprintId: sprint.id,
-          userId: member.userId
-        }))
+    try {
+      console.log('Creating sprint...')
+      // Create the sprint
+      const sprint = await tx.sprint.create({
+        data: {
+          name: data.name,
+          squadId: data.squadId,
+          startDate,
+          endDate,
+          status: 'INACTIVE'
+        }
       })
-      console.log('Sprint members created')
-    }
 
-    return {
-      sprint,
-      memberCount: validSquadMembers.length,
-      squadName: squad.name
+      console.log('Sprint created:', sprint.id)
+      // Create sprint members for all active squad members
+      if (validSquadMembers.length > 0) {
+        console.log('Creating sprint members for users:', validSquadMembers.map(m => ({ userId: m.userId, displayName: m.user?.displayName })))
+        await tx.sprintMember.createMany({
+          data: validSquadMembers.map(member => ({
+            sprintId: sprint.id,
+            userId: member.userId
+          }))
+        })
+        console.log('Sprint members created')
+      }
+
+      return {
+        sprint,
+        memberCount: validSquadMembers.length,
+        squadName: squad.name
+      }
+    } catch (error) {
+      console.error('Error in transaction:', error)
+      throw error
     }
   })
 
