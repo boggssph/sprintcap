@@ -81,6 +81,8 @@ export async function createSprint(
   userRole: string,
   data: CreateSprintRequest
 ): Promise<SprintResponse> {
+  console.log('createSprint called with:', { userId, userRole, data })
+
   // Validate input
   const validationErrors = validateCreateSprintRequest(data)
   if (validationErrors.length > 0) {
@@ -95,19 +97,23 @@ export async function createSprint(
     throw new SprintServiceError('Only Scrum Masters can create sprints', 'PERMISSION_DENIED')
   }
 
+  console.log('Checking squad exists and user owns it...')
   // Verify squad exists and user owns it
   const squad = await prisma.squad.findUnique({
     where: { id: data.squadId }
   })
 
   if (!squad) {
+    console.log('Squad not found:', data.squadId)
     throw new SprintServiceError('Squad not found', 'NOT_FOUND')
   }
 
   if (squad.scrumMasterId !== userId) {
+    console.log('Access denied - user does not own squad:', { userId, squadScrumMasterId: squad.scrumMasterId })
     throw new SprintServiceError('Access denied: You do not own this squad', 'PERMISSION_DENIED')
   }
 
+  console.log('Checking for duplicate sprint name...')
   // Check for duplicate sprint name within the squad (normalize to spec format)
   const expectedName = data.name.trim();
   const existingSprint = await prisma.sprint.findFirst({
@@ -118,6 +124,7 @@ export async function createSprint(
   })
 
   if (existingSprint) {
+    console.log('Duplicate sprint name found:', expectedName)
     throw new SprintServiceError(
       `A sprint with the name '${expectedName}' already exists in this squad`,
       'CONFLICT'
@@ -127,6 +134,7 @@ export async function createSprint(
   const startDate = new Date(data.startDate)
   const endDate = new Date(data.endDate)
 
+  console.log('Validating dates:', { startDate, endDate })
   // Validate business rules for dates
   const dateErrors = validateSprintDates(startDate, endDate)
   if (dateErrors.length > 0) {
@@ -136,38 +144,31 @@ export async function createSprint(
     )
   }
 
+  console.log('Checking for overlapping sprints...')
   // Check for overlapping sprints (simplified check)
   // Find any sprint in the same squad that overlaps with the new date range
   const overlappingSprint = await prisma.sprint.findFirst({
     where: {
       squadId: data.squadId,
       OR: [
-        // Case 1: Existing sprint contains the new start date
-        {
-          startDate: { lte: startDate },
-          endDate: { gt: startDate }
-        },
-        // Case 2: Existing sprint contains the new end date
+        // Existing sprint starts before new sprint ends AND ends after new sprint starts
         {
           startDate: { lt: endDate },
-          endDate: { gte: endDate }
-        },
-        // Case 3: New sprint completely contains existing sprint
-        {
-          startDate: { gte: startDate },
-          endDate: { lte: endDate }
+          endDate: { gt: startDate }
         }
       ]
     }
   })
 
   if (overlappingSprint) {
+    console.log('Overlapping sprint found:', overlappingSprint.name)
     throw new SprintServiceError(
       `Sprint dates overlap with existing sprint '${overlappingSprint.name}'`,
       'CONFLICT'
     )
   }
 
+  console.log('Getting squad members...')
   // Get active squad members for automatic population
   const squadMembers = await prisma.squadMember.findMany({
     where: { squadId: data.squadId },
@@ -178,8 +179,10 @@ export async function createSprint(
     }
   })
 
+  console.log('Squad members found:', squadMembers.length)
   // Filter out members with invalid users (orphaned records)
   const validSquadMembers = squadMembers.filter(member => member.user !== null)
+  console.log('Valid squad members:', validSquadMembers.length)
 
   // If no members, set a warning to be returned in the API response
   let warning: string | undefined = undefined;
@@ -187,8 +190,10 @@ export async function createSprint(
     warning = 'Sprint created with no members. Add members manually if needed.';
   }
 
+  console.log('Creating sprint in transaction...')
   // Create sprint in transaction
   const result = await prisma.$transaction(async (tx) => {
+    console.log('Creating sprint...')
     // Create the sprint
     const sprint = await tx.sprint.create({
       data: {
@@ -200,14 +205,17 @@ export async function createSprint(
       }
     })
 
+    console.log('Sprint created:', sprint.id)
     // Create sprint members for all active squad members
     if (validSquadMembers.length > 0) {
+      console.log('Creating sprint members...')
       await tx.sprintMember.createMany({
         data: validSquadMembers.map(member => ({
           sprintId: sprint.id,
           userId: member.userId
         }))
       })
+      console.log('Sprint members created')
     }
 
     return {
@@ -217,6 +225,7 @@ export async function createSprint(
     }
   })
 
+  console.log('Sprint creation completed successfully')
   return {
     id: result.sprint.id,
     name: result.sprint.name,
