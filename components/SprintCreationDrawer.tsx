@@ -1,32 +1,55 @@
 "use client"
 
-import React, { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
+import * as React from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { format } from "date-fns"
+import { CalendarIcon } from "lucide-react"
+import { toast } from "sonner"
+
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
-  DrawerClose
-} from '@/components/ui/drawer'
+} from "@/components/ui/drawer"
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
-} from '@/components/ui/form'
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { cn } from "@/lib/utils"
+
+const formSchema = z.object({
+  name: z.string().min(1, "Sprint name is required"),
+  squadId: z.string().min(1, "Please select a squad"),
+  startDate: z.date({
+    required_error: "Start date is required",
+  }),
+  endDate: z.date({
+    required_error: "End date is required",
+  }),
+})
 
 interface SprintCreationDrawerProps {
   open: boolean
@@ -40,28 +63,22 @@ interface Squad {
   alias: string
 }
 
-interface SprintFormData {
-  name: string
-  squadId: string
-  startDate: string
-  endDate: string
-}
-
 export default function SprintCreationDrawer({
   open,
   onOpenChange,
   onSprintCreated
 }: SprintCreationDrawerProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [squads, setSquads] = useState<Squad[]>([])
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [squads, setSquads] = React.useState<Squad[]>([])
 
-  const form = useForm<SprintFormData>({
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      squadId: '',
-      startDate: '',
-      endDate: ''
-    }
+      name: "",
+      squadId: "",
+      startDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
+      endDate: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000), // Next week
+    },
   })
 
   const fetchSquads = async () => {
@@ -76,15 +93,28 @@ export default function SprintCreationDrawer({
     }
   }
 
-  const onSubmit = async (data: SprintFormData) => {
+  React.useEffect(() => {
+    if (open) {
+      fetchSquads()
+      form.reset()
+    }
+  }, [open, form])
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true)
     try {
+      const submitData = {
+        ...values,
+        startDate: values.startDate.toISOString().split('T')[0],
+        endDate: values.endDate.toISOString().split('T')[0]
+      }
+
       const response = await fetch('/api/sprints', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(submitData)
       })
 
       if (response.ok) {
@@ -96,7 +126,7 @@ export default function SprintCreationDrawer({
         const errorData = await response.json()
         if (errorData.details) {
           Object.entries(errorData.details).forEach(([field, message]) => {
-            form.setError(field as keyof SprintFormData, {
+            form.setError(field as keyof z.infer<typeof formSchema>, {
               message: message as string
             })
           })
@@ -123,64 +153,36 @@ export default function SprintCreationDrawer({
       if (!confirmed) return
     }
     onOpenChange(newOpen)
-    if (newOpen) {
-      fetchSquads()
-      form.reset()
-    }
-    if (!newOpen) {
-      form.reset()
-    }
   }
 
-  const today = new Date().toISOString().split('T')[0]
-
   return (
-    <Drawer open={open} onOpenChange={handleOpenChange} data-testid="sprint-creation-drawer">
-      <DrawerContent className="max-h-[85vh] lg:max-w-screen-md lg:mx-auto" data-testid="sprint-drawer-content">
-        <DrawerHeader>
-          <DrawerTitle>Create New Sprint</DrawerTitle>
+    <Drawer open={open} onOpenChange={handleOpenChange}>
+      <DrawerContent className="max-h-[95vh] w-full max-w-2xl mx-auto">
+        <DrawerHeader className="px-6 py-4">
+          <DrawerTitle className="text-2xl font-semibold">Create New Sprint</DrawerTitle>
+          <DrawerDescription>
+            Fill in the details below to create a new sprint for your team.
+          </DrawerDescription>
         </DrawerHeader>
 
-        <div className="px-4 pb-4">
+        <div className="px-6 pb-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                rules={{ required: 'Sprint name is required' }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Sprint Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g., Sprint 2025.01"
-                        {...field}
-                        disabled={isSubmitting}
-                        data-testid="sprint-name-input"
-                        autoFocus
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="squadId"
-                rules={{ required: 'Please select a squad' }}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Squad</FormLabel>
+                    <FormLabel className="text-base font-medium">Squad</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
                       <FormControl>
-                        <SelectTrigger data-testid="sprint-squad-dropdown">
+                        <SelectTrigger className="h-12 text-base">
                           <SelectValue placeholder="Select a squad" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {squads.map((squad) => (
-                          <SelectItem key={squad.id} value={squad.id}>
+                          <SelectItem key={squad.id} value={squad.id} className="text-base">
                             {squad.name} ({squad.alias})
                           </SelectItem>
                         ))}
@@ -191,23 +193,64 @@ export default function SprintCreationDrawer({
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-base font-medium">Sprint Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., Sprint 2025.01"
+                        className="h-12 text-base"
+                        disabled={isSubmitting}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
                   name="startDate"
-                  rules={{ required: 'Start date is required' }}
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Start Date</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          min={today}
-                          {...field}
-                          disabled={isSubmitting}
-                          data-testid="sprint-start-date"
-                        />
-                      </FormControl>
+                    <FormItem className="flex flex-col">
+                      <FormLabel className="text-base font-medium">Start Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "h-12 pl-3 text-left font-normal text-base",
+                                !field.value && "text-muted-foreground"
+                              )}
+                              disabled={isSubmitting}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date < new Date(new Date().setHours(0, 0, 0, 0))
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -216,42 +259,61 @@ export default function SprintCreationDrawer({
                 <FormField
                   control={form.control}
                   name="endDate"
-                  rules={{ required: 'End date is required' }}
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>End Date</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          min={today}
-                          {...field}
-                          disabled={isSubmitting}
-                          data-testid="sprint-end-date"
-                        />
-                      </FormControl>
+                    <FormItem className="flex flex-col">
+                      <FormLabel className="text-base font-medium">End Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "h-12 pl-3 text-left font-normal text-base",
+                                !field.value && "text-muted-foreground"
+                              )}
+                              disabled={isSubmitting}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date < new Date(new Date().setHours(0, 0, 0, 0))
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
 
-              <div className="flex gap-2 pt-4">
-                <DrawerClose asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1"
-                    disabled={isSubmitting}
-                    data-testid="sprint-cancel-button"
-                  >
-                    Cancel
-                  </Button>
-                </DrawerClose>
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 pt-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isSubmitting}
+                  className="h-12 text-base"
+                >
+                  Cancel
+                </Button>
                 <Button
                   type="submit"
-                  className="flex-1"
                   disabled={isSubmitting}
-                  data-testid="sprint-submit-button"
+                  className="h-12 text-base"
                 >
                   {isSubmitting ? 'Creating...' : 'Create Sprint'}
                 </Button>

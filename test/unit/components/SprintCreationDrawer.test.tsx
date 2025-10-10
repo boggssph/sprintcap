@@ -101,25 +101,21 @@ describe('SprintCreationDrawer', () => {
       />
     )
 
-    // Wait for squads to load
+    // Fill form
+    await user.type(screen.getByLabelText('Sprint Name'), 'Test Sprint')
+    
+    // Select squad
+    const squadSelect = screen.getByRole('combobox', { name: 'Squad' })
+    await user.click(squadSelect)
+    
+    // Wait for squads to load and dropdown to open
     await waitFor(() => {
       expect(screen.getByText('Alpha Team (alpha)')).toBeInTheDocument()
     })
-
-    // Fill form
-    await user.type(screen.getByLabelText('Sprint Name'), 'Test Sprint')
-    await user.click(screen.getByRole('combobox'))
+    
     await user.click(screen.getByText('Alpha Team (alpha)'))
 
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    const nextWeek = new Date()
-    nextWeek.setDate(nextWeek.getDate() + 8)
-
-    await user.type(screen.getByLabelText('Start Date'), tomorrow.toISOString().split('T')[0])
-    await user.type(screen.getByLabelText('End Date'), nextWeek.toISOString().split('T')[0])
-
-    // Submit
+    // Submit (dates have default values)
     await user.click(screen.getByRole('button', { name: 'Create Sprint' }))
 
     await waitFor(() => {
@@ -150,16 +146,17 @@ describe('SprintCreationDrawer', () => {
 
     // Fill and submit form
     await user.type(screen.getByLabelText('Sprint Name'), 'Test Sprint')
-    await user.click(screen.getByRole('combobox'))
+    
+    // Select squad
+    const squadSelect = screen.getByRole('combobox', { name: 'Squad' })
+    await user.click(squadSelect)
+    
+    // Wait for dropdown to open and squads to be visible
+    await waitFor(() => {
+      expect(screen.getByText('Alpha Team (alpha)')).toBeInTheDocument()
+    })
+    
     await user.click(screen.getByText('Alpha Team (alpha)'))
-
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    const nextWeek = new Date()
-    nextWeek.setDate(nextWeek.getDate() + 8)
-
-    await user.type(screen.getByLabelText('Start Date'), tomorrow.toISOString().split('T')[0])
-    await user.type(screen.getByLabelText('End Date'), nextWeek.toISOString().split('T')[0])
 
     await user.click(screen.getByRole('button', { name: 'Create Sprint' }))
 

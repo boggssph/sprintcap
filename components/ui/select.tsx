@@ -109,12 +109,11 @@ const SelectValue: React.FC<{ placeholder?: string } & React.HTMLAttributes<HTML
 const SelectContent: React.FC<React.PropsWithChildren<{ className?: string }>> = ({ children, className }) => {
   const ctx = React.useContext(SelectContext)
   if (!ctx) return null
-  const { listboxId } = ctx
+  const { open, listboxId } = ctx
 
-  // Render listbox content into the DOM always (tests expect options to be
-  // present after squads load). Visual open/close is still controlled by
-  // the trigger's aria-expanded and client-side styling can hide/show via CSS
-  // if desired. Keeping it simple here to match previous behavior.
+  // Only render when open to prevent overlapping issues
+  if (!open) return null
+
   return (
     <div
       id={listboxId}
