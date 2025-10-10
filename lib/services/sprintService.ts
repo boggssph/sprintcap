@@ -81,9 +81,6 @@ export async function createSprint(
   userRole: string,
   data: CreateSprintRequest
 ): Promise<SprintResponse> {
-  console.log('createSprint called with:', { userId, userRole, data })
-
-  // Validate input
   const validationErrors = validateCreateSprintRequest(data)
   if (validationErrors.length > 0) {
     throw new SprintServiceError(

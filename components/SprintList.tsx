@@ -137,7 +137,7 @@ export default function SprintList({ refreshTrigger, onCreateSprint }: SprintLis
 
       <div className="flex flex-col gap-6">
         {sprintsBySquad.map((squad) => (
-          <Card key={squad.squadId} data-testid={`squad-card-${squad.squadId}`} className="max-w-[768px]">
+          <Card key={squad.squadId} data-testid={`squad-card-${squad.squadId}`}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 {squad.squadName}
