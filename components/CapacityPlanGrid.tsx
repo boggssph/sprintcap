@@ -5,7 +5,7 @@ import CapacityPlanCard from "./CapacityPlanCard"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Plus } from "lucide-react"
+import { Search } from "lucide-react"
 
 interface Ticket {
   id: string
@@ -80,12 +80,6 @@ export default function CapacityPlanGrid({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Capacity Tickets</h2>
-        {onCreateTicket && (
-          <Button onClick={onCreateTicket} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Add Ticket
-          </Button>
-        )}
       </div>
 
       {/* Filters */}
