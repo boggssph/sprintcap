@@ -72,6 +72,7 @@ export async function GET(request: NextRequest) {
           id: sprint.squad.id,
           name: sprint.squad.name,
           alias: sprint.squad.alias,
+          members: sprint.squad.members,
         },
       })),
     })

@@ -3,18 +3,26 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ExternalLink, Edit, Trash2 } from "lucide-react"
+import { Edit, Trash2 } from "lucide-react"
 
 interface CapacityPlanCardProps {
   ticket: {
     id: string
-    title: string
-    description?: string
-    status: string
-    assignee?: string
-    jiraKey?: string
+    jiraId: string
+    hours: number
+    workType: string
+    parentType: string
+    plannedUnplanned: string
+    memberId: string | null
+    sprintId: string
     createdAt: Date
     updatedAt: Date
+    member?: {
+      id: string
+      displayName: string
+      name: string
+      email: string
+    }
   }
   onEdit?: (ticketId: string) => void
   onDelete?: (ticketId: string) => void
@@ -25,18 +33,27 @@ export default function CapacityPlanCard({
   onEdit,
   onDelete
 }: CapacityPlanCardProps) {
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'to do':
-      case 'todo':
-        return 'bg-gray-100 text-gray-800'
-      case 'in progress':
-      case 'inprogress':
+  const getWorkTypeColor = (workType: string) => {
+    switch (workType.toLowerCase()) {
+      case 'backend':
         return 'bg-blue-100 text-blue-800'
-      case 'done':
+      case 'frontend':
         return 'bg-green-100 text-green-800'
-      case 'blocked':
+      case 'testing':
+        return 'bg-purple-100 text-purple-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getParentTypeColor = (parentType: string) => {
+    switch (parentType.toLowerCase()) {
+      case 'bug':
         return 'bg-red-100 text-red-800'
+      case 'story':
+        return 'bg-blue-100 text-blue-800'
+      case 'task':
+        return 'bg-yellow-100 text-yellow-800'
       default:
         return 'bg-gray-100 text-gray-800'
     }
@@ -48,16 +65,13 @@ export default function CapacityPlanCard({
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <CardTitle className="text-sm font-medium truncate">
-              {ticket.title}
+              {ticket.jiraId}
             </CardTitle>
-            {ticket.jiraKey && (
-              <div className="flex items-center gap-1 mt-1">
-                <ExternalLink className="h-3 w-3 text-gray-400" />
-                <span className="text-xs text-gray-500 font-mono">
-                  {ticket.jiraKey}
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-1 mt-1">
+              <span className="text-xs text-gray-500">
+                {ticket.hours}h
+              </span>
+            </div>
           </div>
           <div className="flex gap-1">
             {onEdit && (
@@ -87,26 +101,27 @@ export default function CapacityPlanCard({
       </CardHeader>
       <CardContent className="pt-0">
         <div className="space-y-3">
-          {ticket.description && (
-            <p className="text-sm text-gray-600 line-clamp-2">
-              {ticket.description}
-            </p>
-          )}
-
-          <div className="flex items-center justify-between">
-            <Badge className={getStatusColor(ticket.status)}>
-              {ticket.status}
+          <div className="flex flex-wrap gap-1">
+            <Badge className={getWorkTypeColor(ticket.workType)}>
+              {ticket.workType}
             </Badge>
-
-            {ticket.assignee && (
-              <span className="text-xs text-gray-500">
-                {ticket.assignee}
-              </span>
-            )}
+            <Badge className={getParentTypeColor(ticket.parentType)}>
+              {ticket.parentType}
+            </Badge>
+            <Badge variant={ticket.plannedUnplanned === 'PLANNED' ? 'default' : 'secondary'}>
+              {ticket.plannedUnplanned}
+            </Badge>
           </div>
 
-          <div className="text-xs text-gray-400">
-            Updated {new Date(ticket.updatedAt).toLocaleDateString()}
+          {ticket.member && (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span>Assigned to:</span>
+              <span className="font-medium">{ticket.member.displayName}</span>
+            </div>
+          )}
+
+          <div className="text-xs text-gray-500">
+            Created {new Date(ticket.createdAt).toLocaleDateString()}
           </div>
         </div>
       </CardContent>

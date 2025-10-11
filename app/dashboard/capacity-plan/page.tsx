@@ -27,13 +27,21 @@ interface Sprint {
 
 interface Ticket {
   id: string
-  title: string
-  description?: string
-  status: string
-  assignee?: string
-  jiraKey?: string
+  jiraId: string
+  hours: number
+  workType: string
+  parentType: string
+  plannedUnplanned: string
+  memberId: string | null
+  sprintId: string
   createdAt: Date
   updatedAt: Date
+  member?: {
+    id: string
+    displayName: string
+    name: string
+    email: string
+  }
 }
 
 export default function CapacityPlanPage() {
@@ -79,7 +87,7 @@ export default function CapacityPlanPage() {
 
     setIsTicketsLoading(true)
     try {
-      const response = await fetch(`/api/capacity-plan/${sprintId}/tickets`)
+      const response = await fetch(`/api/sprints/${sprintId}/tickets`)
       if (response.ok) {
         const data = await response.json()
         setTickets(data.tickets)
@@ -101,19 +109,22 @@ export default function CapacityPlanPage() {
   }
 
   const handleDeleteTicket = async (ticketId: string) => {
+    if (!sprintId) return
+
     if (!confirm('Are you sure you want to delete this ticket?')) return
 
     try {
-      const response = await fetch(`/api/capacity-plan/${sprintId}/tickets/${ticketId}`, {
+      const response = await fetch(`/api/sprints/${sprintId}/tickets/${ticketId}`, {
         method: 'DELETE'
       })
 
       if (response.ok) {
-        // Refresh tickets
         await fetchSprintTickets()
+      } else {
+        console.error('Failed to delete ticket')
       }
     } catch (error) {
-      console.error('Failed to delete ticket:', error)
+      console.error('Error deleting ticket:', error)
     }
   }
 

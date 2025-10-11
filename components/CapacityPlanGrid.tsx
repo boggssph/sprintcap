@@ -9,13 +9,21 @@ import { Search, Plus } from "lucide-react"
 
 interface Ticket {
   id: string
-  title: string
-  description?: string
-  status: string
-  assignee?: string
-  jiraKey?: string
+  jiraId: string
+  hours: number
+  workType: string
+  parentType: string
+  plannedUnplanned: string
+  memberId: string | null
+  sprintId: string
   createdAt: Date
   updatedAt: Date
+  member?: {
+    id: string
+    displayName: string
+    name: string
+    email: string
+  }
 }
 
 interface CapacityPlanGridProps {
@@ -38,16 +46,15 @@ export default function CapacityPlanGrid({
   const [assigneeFilter, setAssigneeFilter] = useState<string>("all")
 
   // Get unique assignees for filter
-  const assignees = Array.from(new Set(tickets.map(ticket => ticket.assignee).filter(Boolean)))
+  const assignees = Array.from(new Set(tickets.map(ticket => ticket.member?.displayName).filter(Boolean)))
 
   // Filter tickets based on search and filters
   const filteredTickets = tickets.filter(ticket => {
-    const matchesSearch = ticket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         ticket.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         ticket.jiraKey?.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesSearch = ticket.jiraId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         ticket.member?.displayName?.toLowerCase().includes(searchTerm.toLowerCase())
 
-    const matchesStatus = statusFilter === "all" || ticket.status.toLowerCase() === statusFilter.toLowerCase()
-    const matchesAssignee = assigneeFilter === "all" || ticket.assignee === assigneeFilter
+    const matchesStatus = statusFilter === "all" || ticket.workType.toLowerCase() === statusFilter.toLowerCase()
+    const matchesAssignee = assigneeFilter === "all" || ticket.member?.displayName === assigneeFilter
 
     return matchesSearch && matchesStatus && matchesAssignee
   })
@@ -94,25 +101,24 @@ export default function CapacityPlanGrid({
         </div>
 
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-40">
-            <SelectValue placeholder="Status" />
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="Work Type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="to do">To Do</SelectItem>
-            <SelectItem value="in progress">In Progress</SelectItem>
-            <SelectItem value="done">Done</SelectItem>
-            <SelectItem value="blocked">Blocked</SelectItem>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="backend">Backend</SelectItem>
+            <SelectItem value="frontend">Frontend</SelectItem>
+            <SelectItem value="testing">Testing</SelectItem>
           </SelectContent>
         </Select>
 
         <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
-          <SelectTrigger className="w-full sm:w-40">
+          <SelectTrigger className="w-[140px]">
             <SelectValue placeholder="Assignee" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Assignees</SelectItem>
-            {assignees.map(assignee => (
+            {assignees.map((assignee) => (
               <SelectItem key={assignee} value={assignee!}>
                 {assignee}
               </SelectItem>

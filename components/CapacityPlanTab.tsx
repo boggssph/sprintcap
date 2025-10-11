@@ -20,18 +20,32 @@ interface Sprint {
     id: string
     name: string
     alias: string
+    members: Array<{
+      user: {
+        id: string
+        displayName: string | null
+      }
+    }>
   }
 }
 
 interface Ticket {
   id: string
-  title: string
-  description?: string
-  status: string
-  assignee?: string
-  jiraKey?: string
+  jiraId: string
+  hours: number
+  workType: string
+  parentType: string
+  plannedUnplanned: string
+  memberId: string | null
+  sprintId: string
   createdAt: Date
   updatedAt: Date
+  member?: {
+    id: string
+    displayName: string
+    name: string
+    email: string
+  }
 }
 
 export default function CapacityPlanTab() {
@@ -69,7 +83,7 @@ export default function CapacityPlanTab() {
   const fetchSprintTickets = async (sprintId: string) => {
     setIsTicketsLoading(true)
     try {
-      const response = await fetch(`/api/capacity-plan/${sprintId}/tickets`)
+      const response = await fetch(`/api/sprints/${sprintId}/tickets`)
       if (response.ok) {
         const data = await response.json()
         setTickets(data.tickets)
@@ -97,16 +111,18 @@ export default function CapacityPlanTab() {
     if (!confirm('Are you sure you want to delete this ticket?')) return
 
     try {
-      const response = await fetch(`/api/capacity-plan/${selectedSprint.id}/tickets/${ticketId}`, {
+      const response = await fetch(`/api/sprints/${selectedSprint.id}/tickets/${ticketId}`, {
         method: 'DELETE'
       })
 
       if (response.ok) {
-        // Refresh tickets
-        await fetchSprintTickets(selectedSprint.id)
+        // Refresh tickets after deletion
+        fetchSprintTickets(selectedSprint.id)
+      } else {
+        console.error('Failed to delete ticket')
       }
     } catch (error) {
-      console.error('Failed to delete ticket:', error)
+      console.error('Error deleting ticket:', error)
     }
   }
 
@@ -194,12 +210,12 @@ export default function CapacityPlanTab() {
               Tickets for {selectedSprint.name}
             </h3>
             <Button
-              variant="primary"
+              variant="default"
               size="sm"
-              onClick={handleOpenCreateDialog}
+              onClick={handleCreateTicket}
             >
               <Plus className="h-4 w-4 mr-2" />
-              New Ticket
+              Add Ticket
             </Button>
           </div>
 
@@ -219,6 +235,12 @@ export default function CapacityPlanTab() {
           open={isCreateDrawerOpen}
           onOpenChange={setIsCreateDrawerOpen}
           sprintId={selectedSprint.id}
+          squadMembers={selectedSprint.squad.members
+            .filter(member => member.user.displayName)
+            .map(member => ({
+              id: member.user.id,
+              displayName: member.user.displayName!,
+            }))}
           onTicketCreated={() => {
             // Refresh tickets after creation
             fetchSprintTickets(selectedSprint.id)

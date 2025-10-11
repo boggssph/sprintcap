@@ -69,6 +69,12 @@ export class CapacityPlanService {
       id: string;
       name: string;
       alias: string;
+      members: Array<{
+        user: {
+          id: string;
+          displayName: string | null;
+        };
+      }>;
     };
   }>> {
     // First, get the sprints
@@ -94,6 +100,23 @@ export class CapacityPlanService {
             id: true,
             name: true,
             alias: true,
+            members: {
+              select: {
+                user: {
+                  select: {
+                    id: true,
+                    displayName: true,
+                  },
+                },
+              },
+              where: {
+                user: {
+                  displayName: {
+                    not: null,
+                  },
+                },
+              },
+            },
           },
         },
       },
