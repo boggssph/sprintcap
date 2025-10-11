@@ -8,7 +8,6 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-  DrawerFooter,
   DrawerClose
 } from '@/components/ui/drawer'
 import {
@@ -175,23 +174,25 @@ export default function SquadEditDrawer({
               onChangePlanningHours={(value) => form.setValue('planningHours', value)}
               onChangeRetrospectiveMinutes={(value) => form.setValue('retrospectiveMinutes', value)}
             />
-
-            <DrawerFooter>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                data-testid="save-squad-button"
-              >
-                {isSubmitting ? 'Saving...' : 'Save Changes'}
-              </Button>
-              <DrawerClose asChild>
-                <Button variant="outline" data-testid="cancel-squad-edit">
-                  Cancel
-                </Button>
-              </DrawerClose>
-            </DrawerFooter>
           </form>
         </Form>
+
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 p-6 pt-0">
+          <DrawerClose asChild>
+            <Button variant="outline" data-testid="cancel-squad-edit" className="h-12 text-base">
+              Cancel
+            </Button>
+          </DrawerClose>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            data-testid="save-squad-button"
+            className="h-12 text-base min-w-[140px]"
+            onClick={form.handleSubmit(onSubmit)}
+          >
+            {isSubmitting ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
       </DrawerContent>
     </Drawer>
   )
