@@ -1,0 +1,286 @@
+openapi: 3.0.3
+info:
+  title: Jira Tickets API
+  version: 1.0.0
+  description: API for managing Jira tickets within sprints
+
+servers:
+  - url: /api
+    description: SprintCap API
+
+paths:
+  /sprints/{sprintId}/tickets:
+    get:
+      summary: Get all tickets for a sprint
+      parameters:
+        - name: sprintId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of tickets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tickets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Ticket'
+        '403':
+          description: Forbidden - not authorized for this sprint
+        '404':
+          description: Sprint not found
+
+    post:
+      summary: Create a new ticket for a sprint
+      parameters:
+        - name: sprintId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTicketRequest'
+      responses:
+        '201':
+          description: Ticket created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '400':
+          description: Invalid request data
+        '403':
+          description: Forbidden - not authorized to create tickets for this sprint
+        '409':
+          description: Conflict - ticket with this Jira ID already exists in sprint
+        '404':
+          description: Sprint not found
+
+  /sprints/{sprintId}/tickets/{ticketId}:
+    get:
+      summary: Get a specific ticket
+      parameters:
+        - name: sprintId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Ticket details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '403':
+          description: Forbidden - not authorized for this ticket
+        '404':
+          description: Ticket or sprint not found
+
+    put:
+      summary: Update a ticket
+      parameters:
+        - name: sprintId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTicketRequest'
+      responses:
+        '200':
+          description: Ticket updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '400':
+          description: Invalid request data
+        '403':
+          description: Forbidden - not authorized to update this ticket
+        '404':
+          description: Ticket or sprint not found
+        '409':
+          description: Conflict - updated Jira ID conflicts with existing ticket
+
+    delete:
+      summary: Delete a ticket
+      parameters:
+        - name: sprintId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Ticket deleted successfully
+        '403':
+          description: Forbidden - not authorized to delete this ticket
+        '404':
+          description: Ticket or sprint not found
+
+  /scrum-master/sprints/available:
+    get:
+      summary: Get sprints available for ticket creation (active and future sprints for user's squads)
+      responses:
+        '200':
+          description: List of available sprints
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sprints:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SprintSummary'
+        '403':
+          description: Forbidden - user is not a Scrum Master
+
+components:
+  schemas:
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        jiraId:
+          type: string
+          description: Free text Jira reference
+        hours:
+          type: number
+          format: float
+          minimum: 0
+        workType:
+          type: string
+          enum: [BACKEND, FRONTEND, TESTING]
+        parentType:
+          type: string
+          enum: [BUG, STORY, TASK]
+        plannedUnplanned:
+          type: string
+          enum: [PLANNED, UNPLANNED]
+        memberId:
+          type: string
+          format: uuid
+          nullable: true
+        memberName:
+          type: string
+          nullable: true
+        sprintId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateTicketRequest:
+      type: object
+      required:
+        - jiraId
+        - hours
+        - workType
+        - parentType
+        - plannedUnplanned
+      properties:
+        jiraId:
+          type: string
+          description: Free text Jira reference
+        hours:
+          type: number
+          format: float
+          minimum: 0
+        workType:
+          type: string
+          enum: [BACKEND, FRONTEND, TESTING]
+        parentType:
+          type: string
+          enum: [BUG, STORY, TASK]
+        plannedUnplanned:
+          type: string
+          enum: [PLANNED, UNPLANNED]
+        memberId:
+          type: string
+          format: uuid
+          nullable: true
+
+    UpdateTicketRequest:
+      type: object
+      properties:
+        jiraId:
+          type: string
+          description: Free text Jira reference
+        hours:
+          type: number
+          format: float
+          minimum: 0
+        workType:
+          type: string
+          enum: [BACKEND, FRONTEND, TESTING]
+        parentType:
+          type: string
+          enum: [BUG, STORY, TASK]
+        plannedUnplanned:
+          type: string
+          enum: [PLANNED, UNPLANNED]
+        memberId:
+          type: string
+          format: uuid
+          nullable: true
+
+    SprintSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        squadName:
+          type: string
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date

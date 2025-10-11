@@ -55,7 +55,23 @@ describe('contract: GET /api/squads', () => {
         name: 'Alpha Team',
         alias: 'alpha-team',
         createdAt: new Date('2024-01-01T00:00:00Z'),
-        _count: { members: 3 }
+        _count: { members: 3 },
+        members: [
+          {
+            user: {
+              id: 'user-1',
+              name: 'Scrum Master'
+            },
+            createdAt: new Date('2024-01-01T00:00:00Z')
+          },
+          {
+            user: {
+              id: 'user-2',
+              name: 'Developer 1'
+            },
+            createdAt: new Date('2024-01-02T00:00:00Z')
+          }
+        ]
       }
     ])
 

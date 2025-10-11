@@ -5,12 +5,14 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import SprintCreationForm from '@/components/SprintCreationForm'
 import SprintList from '@/components/SprintList'
+import { SprintDetail } from '@/components/SprintDetail'
 
 export default function ScrumMasterDashboardClient() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [selectedSprintId, setSelectedSprintId] = useState<string | null>(null)
 
   // Redirect if not authenticated
   if (status === 'loading') {
@@ -40,6 +42,30 @@ export default function ScrumMasterDashboardClient() {
     setRefreshTrigger(prev => prev + 1)
     // Close the dialog
     setDialogOpen(false)
+  }
+
+  const handleSprintSelected = (sprintId: string) => {
+    setSelectedSprintId(sprintId)
+  }
+
+  const handleBackToSprints = () => {
+    setSelectedSprintId(null)
+    // Refresh the sprint list when coming back
+    setRefreshTrigger(prev => prev + 1)
+  }
+
+  // If a sprint is selected, show the sprint detail view
+  if (selectedSprintId) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <SprintDetail
+            sprintId={selectedSprintId}
+            onBack={handleBackToSprints}
+          />
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -109,7 +135,11 @@ export default function ScrumMasterDashboardClient() {
         </div>
 
         <div>
-          <SprintList refreshTrigger={refreshTrigger} />
+          <SprintList
+            refreshTrigger={refreshTrigger}
+            onCreateSprint={() => setDialogOpen(true)}
+            onSprintSelected={handleSprintSelected}
+          />
         </div>
       </div>
     </div>

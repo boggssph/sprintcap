@@ -25,9 +25,10 @@ type SquadSprints = {
 type SprintListProps = {
   refreshTrigger?: number
   onCreateSprint?: () => void
+  onSprintSelected?: (sprintId: string) => void
 }
 
-export default function SprintList({ refreshTrigger, onCreateSprint }: SprintListProps) {
+export default function SprintList({ refreshTrigger, onCreateSprint, onSprintSelected }: SprintListProps) {
   const [sprints, setSprints] = useState<Sprint[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -150,8 +151,11 @@ export default function SprintList({ refreshTrigger, onCreateSprint }: SprintLis
                 {squad.sprints.map((sprint) => (
                   <div
                     key={sprint.id}
-                    className="flex items-center justify-between p-3 rounded-lg border bg-muted/50"
+                    className={`flex items-center justify-between p-3 rounded-lg border bg-muted/50 ${
+                      onSprintSelected ? 'cursor-pointer hover:bg-muted transition-colors' : ''
+                    }`}
                     data-testid={`sprint-card-${sprint.id}`}
+                    onClick={() => onSprintSelected?.(sprint.id)}
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-2">

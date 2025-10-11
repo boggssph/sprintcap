@@ -25,6 +25,7 @@ model User {
   sprintMembers SprintMember[]
   dayAllocations DayAllocation[]
   auditLogs  AuditLog[]
+  tickets    Ticket[]
 }
 
 enum UserRole {
@@ -62,6 +63,7 @@ model Sprint {
   startDate DateTime
   endDate   DateTime
   status    SprintStatus @default(INACTIVE)
+  isActive  Boolean     @default(false) // For capacity planning - determines if sprint appears in capacity plans
   squadId   String
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
@@ -69,6 +71,7 @@ model Sprint {
   squad     Squad         @relation(fields: [squadId], references: [id])
   members   SprintMember[]
   tickets   Ticket[]
+  capacityTickets CapacityTicket[] // NEW: Jira tickets for capacity planning
   absences  Absence[]
   assignments Assignment[]
 
@@ -79,6 +82,23 @@ enum SprintStatus {
   ACTIVE
   INACTIVE
   COMPLETED
+}
+
+enum WorkType {
+  BACKEND
+  FRONTEND
+  TESTING
+}
+
+enum ParentType {
+  BUG
+  STORY
+  TASK
+}
+
+enum PlannedUnplanned {
+  PLANNED
+  UNPLANNED
 }
 
 model SprintMember {
@@ -121,15 +141,39 @@ enum AbsenceType {
 }
 
 model Ticket {
-  id         String @id @default(uuid())
-  jiraId     String?
-  title      String
-  estimate   Float
-  category   String?
-  parentType String?
-  sprint     Sprint? @relation(fields: [sprintId], references: [id])
-  sprintId   String?
-  assignments Assignment[]
+  id              String           @id @default(uuid())
+  jiraId          String
+  hours           Float
+  workType        WorkType
+  parentType      ParentType
+  plannedUnplanned PlannedUnplanned
+  memberId        String?
+  sprintId        String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  // relations
+  sprint          Sprint           @relation(fields: [sprintId], references: [id])
+  member          User?            @relation(fields: [memberId], references: [id])
+  assignments     Assignment[]
+
+  @@unique([sprintId, jiraId]) // Prevent duplicate jiraId within same sprint
+}
+
+model CapacityTicket {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  status      String   // e.g., "To Do", "In Progress", "Done"
+  assignee    String?  // User name or email
+  jiraKey     String?  // JIRA-123 format
+  sprintId    String
+  sprint      Sprint   @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([sprintId])
+  @@map("capacity_tickets")
 }
 
 model Assignment {
