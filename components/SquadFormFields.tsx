@@ -46,8 +46,12 @@ export default function SquadFormFields({
       </div>
       <div className="space-y-1">
         <Label className="text-sm font-medium text-slate-700">Alias</Label>
-        <Input placeholder="e.g. frontend" value={alias} onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChangeAlias(e.target.value)} />
-        <p className="text-xs text-slate-500">Short unique handle used in URLs and mentions.</p>
+        <Input 
+          placeholder="e.g. frontend" 
+          value={alias} 
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChangeAlias(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))} 
+        />
+        <p className="text-xs text-slate-500">Short unique handle used in URLs and mentions. Only lowercase letters, numbers, and hyphens allowed.</p>
       </div>
 
       <div className="pt-4 border-t border-slate-200">
