@@ -42,6 +42,13 @@ model Squad {
   updatedAt DateTime @updatedAt
   scrumMasterId String
 
+  // Ceremony defaults (in minutes/hours as specified)
+  dailyScrumMinutes     Int     @default(15)    // Default: 15 minutes
+  refinementHours       Float   @default(1.0)   // Default: 1 hour per week
+  reviewDemoMinutes     Int     @default(30)    // Default: 30 minutes per sprint
+  planningHours         Float   @default(1.0)   // Default: 1 hour per week
+  retrospectiveMinutes  Int     @default(30)    // Default: 30 minutes per week
+
   members   SquadMember[]
   sprints   Sprint[]
   holidays  Holiday[]

@@ -5,6 +5,7 @@
 import { prisma } from '../prisma'
 import { validateCreateSprintRequest, validateSprintDates, CreateSprintRequest } from '../validations/sprint'
 import type { Sprint } from '@prisma/client'
+import { calculateCeremonyTime, DEFAULT_CEREMONY_VALUES } from './ceremonyCalculations'
 
 export interface SprintResponse {
   id: string
@@ -17,6 +18,14 @@ export interface SprintResponse {
   memberCount: number
   createdAt: string
   warning?: string
+  ceremonyBreakdown?: {
+    dailyScrumTotal: number
+    refinementTotal: number
+    reviewDemoTotal: number
+    planningTotal: number
+    retrospectiveTotal: number
+    totalCeremonyHours: number
+  }
 }
 
 export interface SprintDetailResponse {
@@ -108,7 +117,18 @@ export async function createSprint(
   console.log('Checking squad exists and user owns it...')
   // Verify squad exists and user owns it
   const squad = await prisma.squad.findUnique({
-    where: { id: data.squadId }
+    where: { id: data.squadId },
+    select: {
+      id: true,
+      name: true,
+      alias: true,
+      scrumMasterId: true,
+      dailyScrumMinutes: true,
+      refinementHours: true,
+      reviewDemoMinutes: true,
+      planningHours: true,
+      retrospectiveMinutes: true
+    }
   })
 
   if (!squad) {
@@ -180,6 +200,19 @@ export async function createSprint(
 
   console.log('Squad members found:', squadMembers.length)
 
+  // Calculate ceremony times using squad defaults
+  console.log('Calculating ceremony times...')
+  const ceremonyDefaults = {
+    dailyScrumMinutes: squad.dailyScrumMinutes ?? DEFAULT_CEREMONY_VALUES.dailyScrumMinutes,
+    refinementHours: squad.refinementHours ?? DEFAULT_CEREMONY_VALUES.refinementHours,
+    reviewDemoMinutes: squad.reviewDemoMinutes ?? DEFAULT_CEREMONY_VALUES.reviewDemoMinutes,
+    planningHours: squad.planningHours ?? DEFAULT_CEREMONY_VALUES.planningHours,
+    retrospectiveMinutes: squad.retrospectiveMinutes ?? DEFAULT_CEREMONY_VALUES.retrospectiveMinutes
+  }
+
+  const ceremonyCalculation = calculateCeremonyTime(ceremonyDefaults, startDate, endDate)
+  console.log('Ceremony calculation:', ceremonyCalculation)
+
   // Validate that all userIds exist (avoid orphaned records)
   let validSquadMembers: { userId: string }[] = []
   if (squadMembers.length > 0) {
@@ -250,7 +283,15 @@ export async function createSprint(
     status: result.sprint.status,
     memberCount: result.memberCount,
     createdAt: result.sprint.createdAt.toISOString(),
-    warning
+    warning,
+    ceremonyBreakdown: {
+      dailyScrumTotal: ceremonyCalculation.dailyScrumTotal,
+      refinementTotal: ceremonyCalculation.refinementTotal,
+      reviewDemoTotal: ceremonyCalculation.reviewDemoTotal,
+      planningTotal: ceremonyCalculation.planningTotal,
+      retrospectiveTotal: ceremonyCalculation.retrospectiveTotal,
+      totalCeremonyHours: ceremonyCalculation.totalCeremonyHours
+    }
   }
 }
 

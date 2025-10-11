@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Edit } from 'lucide-react'
 import SquadsEmptyState from './SquadsEmptyState'
 import SquadCreationDrawer from './SquadCreationDrawer'
+import SquadEditDrawer from './SquadEditDrawer'
 
 /**
  * Squad interface representing a team with member information
@@ -34,6 +36,8 @@ export default function SquadsTab() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [editDrawerOpen, setEditDrawerOpen] = useState(false)
+  const [selectedSquad, setSelectedSquad] = useState<Squad | null>(null)
 
   const fetchSquads = async () => {
     try {
@@ -64,7 +68,19 @@ export default function SquadsTab() {
   }, [])
 
   const handleSquadCreated = () => {
-    fetchSquads() // Refresh the list
+    fetchSquads()
+    setDrawerOpen(false)
+  }
+
+  const handleEditSquad = (squad: Squad) => {
+    setSelectedSquad(squad)
+    setEditDrawerOpen(true)
+  }
+
+  const handleSquadUpdated = () => {
+    fetchSquads()
+    setEditDrawerOpen(false)
+    setSelectedSquad(null)
   }
 
   if (loading) {
@@ -137,9 +153,19 @@ export default function SquadsTab() {
               <CardHeader data-testid="squad-card-header">
                 <CardTitle className="flex items-center justify-between" data-testid="squad-card-title">
                   <span>{squad.name}</span>
-                  <Badge variant="secondary" data-testid="squad-card-alias">
-                    {squad.alias}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" data-testid="squad-card-alias">
+                      {squad.alias}
+                    </Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditSquad(squad)}
+                      data-testid="edit-squad-button"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent data-testid="squad-card-content">
@@ -205,6 +231,15 @@ export default function SquadsTab() {
         onOpenChange={setDrawerOpen}
         onSquadCreated={handleSquadCreated}
       />
+
+      {selectedSquad && (
+        <SquadEditDrawer
+          open={editDrawerOpen}
+          onOpenChange={setEditDrawerOpen}
+          squad={selectedSquad}
+          onSquadUpdated={handleSquadUpdated}
+        />
+      )}
     </div>
   )
 }

@@ -7,6 +7,7 @@ import { MainShellSection } from './MainShell'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Combobox } from '@/components/ui/combobox'
+import { calculateCeremonyTime, DEFAULT_CEREMONY_VALUES } from '@/lib/services/ceremonyCalculations'
 
 
 type SprintFormSquad = {
@@ -37,10 +38,21 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
   const [members, setMembers] = useState<Array<{ id: string; name?: string; email?: string }>>([]);
   const [membersLoading, setMembersLoading] = useState(false);
   const [membersError, setMembersError] = useState<string | null>(null);
-
-
-
-
+  const [ceremonyBreakdown, setCeremonyBreakdown] = useState<{
+    dailyScrumTotal: number;
+    refinementTotal: number;
+    reviewDemoTotal: number;
+    planningTotal: number;
+    retrospectiveTotal: number;
+    totalCeremonyHours: number;
+  } | null>(null);
+  const [squadCeremonyDefaults, setSquadCeremonyDefaults] = useState<{
+    dailyScrumMinutes: number;
+    refinementHours: number;
+    reviewDemoMinutes: number;
+    planningHours: number;
+    retrospectiveMinutes: number;
+  } | null>(null);
 
   const [formData, setFormData] = useState({
     sprintNumber: '',
@@ -207,6 +219,44 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
     return () => { mounted = false }
   }, [squadsProp, selectedSquadIdProp])
 
+  // Fetch squad ceremony defaults when squad changes
+  useEffect(() => {
+    async function fetchSquadDefaults(squadId: string) {
+      try {
+        const response = await fetch(`/api/squads/${squadId}`)
+        if (response.ok) {
+          const data = await response.json()
+          setSquadCeremonyDefaults(data.squad.ceremonyDefaults)
+        }
+      } catch (error) {
+        console.error('Error fetching squad defaults:', error)
+      }
+    }
+
+    if (formData.squadId) {
+      fetchSquadDefaults(formData.squadId)
+    } else {
+      setSquadCeremonyDefaults(null)
+      setCeremonyBreakdown(null)
+    }
+  }, [formData.squadId])
+
+  // Calculate ceremony breakdown when dates or squad changes
+  useEffect(() => {
+    if (squadCeremonyDefaults && formData.startDate && formData.endDate) {
+      const startDate = new Date(`${formData.startDate}T${formData.startTime || '00:00'}`)
+      const endDate = new Date(`${formData.endDate}T${formData.endTime || '23:59'}`)
+      if (startDate < endDate) {
+        const breakdown = calculateCeremonyTime(squadCeremonyDefaults, startDate, endDate)
+        setCeremonyBreakdown(breakdown)
+      } else {
+        setCeremonyBreakdown(null)
+      }
+    } else {
+      setCeremonyBreakdown(null)
+    }
+  }, [squadCeremonyDefaults, formData.startDate, formData.startTime, formData.endDate, formData.endTime])
+
   // --- Render logic below ---
 
   // Non-dialog branch
@@ -333,6 +383,37 @@ export default function SprintCreationForm({ onSprintCreated, squadsProp, select
                 </div>
               </div>
             </div>
+            {ceremonyBreakdown && (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <h3 className="text-sm font-medium text-blue-900 mb-3">Ceremony Time Breakdown</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <span className="text-blue-700">Daily Scrum:</span>
+                    <span className="ml-2 font-mono text-blue-900">{ceremonyBreakdown.dailyScrumTotal}min</span>
+                  </div>
+                  <div>
+                    <span className="text-blue-700">Refinement:</span>
+                    <span className="ml-2 font-mono text-blue-900">{ceremonyBreakdown.refinementTotal}h</span>
+                  </div>
+                  <div>
+                    <span className="text-blue-700">Review & Demo:</span>
+                    <span className="ml-2 font-mono text-blue-900">{ceremonyBreakdown.reviewDemoTotal}min</span>
+                  </div>
+                  <div>
+                    <span className="text-blue-700">Sprint Planning:</span>
+                    <span className="ml-2 font-mono text-blue-900">{ceremonyBreakdown.planningTotal}h</span>
+                  </div>
+                  <div>
+                    <span className="text-blue-700">Retrospective:</span>
+                    <span className="ml-2 font-mono text-blue-900">{ceremonyBreakdown.retrospectiveTotal}min</span>
+                  </div>
+                  <div className="md:col-span-3 border-t border-blue-200 pt-2">
+                    <span className="text-blue-800 font-medium">Total Ceremony Time:</span>
+                    <span className="ml-2 font-mono text-blue-900 font-bold">{ceremonyBreakdown.totalCeremonyHours.toFixed(1)}h</span>
+                  </div>
+                </div>
+              </div>
+            )}
             {errors.submit && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-md">
                 <p className="text-sm text-red-600">{errors.submit}</p>
