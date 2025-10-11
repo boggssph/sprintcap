@@ -47,8 +47,8 @@ export function validateCreateSquadRequest(data: unknown): SquadValidationError[
     errors.push({ field: 'alias', message: 'Alias cannot be empty' })
   } else if (alias.length > 50) {
     errors.push({ field: 'alias', message: 'Alias must be 50 characters or less' })
-  } else if (!/^[a-z0-9-]+$/.test(alias)) {
-    errors.push({ field: 'alias', message: 'Alias must contain only lowercase letters, numbers, and hyphens' })
+  } else if (!/^[A-Z0-9-]+$/.test(alias)) {
+    errors.push({ field: 'alias', message: 'Alias must contain only uppercase letters, numbers, and hyphens' })
   }
 
   return errors
@@ -78,8 +78,8 @@ export function validateUpdateSquadRequest(data: unknown): SquadValidationError[
       errors.push({ field: 'alias', message: 'Alias cannot be empty' })
     } else if (alias.length > 50) {
       errors.push({ field: 'alias', message: 'Alias must be 50 characters or less' })
-    } else if (!/^[a-z0-9-]+$/.test(alias)) {
-      errors.push({ field: 'alias', message: 'Alias must contain only lowercase letters, numbers, and hyphens' })
+    } else if (!/^[A-Z0-9-]+$/.test(alias)) {
+      errors.push({ field: 'alias', message: 'Alias must contain only uppercase letters, numbers, and hyphens' })
     }
   }
 

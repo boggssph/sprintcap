@@ -57,7 +57,7 @@ export default function SquadEditDrawer({
   const form = useForm<SquadFormData>({
     defaultValues: {
       name: squad?.name || '',
-      alias: squad?.alias?.toLowerCase() || '',
+      alias: squad?.alias?.toUpperCase() || '',
       dailyScrumMinutes: 15,
       refinementHours: 1,
       reviewDemoMinutes: 30,
@@ -72,7 +72,7 @@ export default function SquadEditDrawer({
       // Initialize with basic squad data immediately
       form.reset({
         name: squad.name,
-        alias: squad.alias.toLowerCase(),
+        alias: squad.alias.toUpperCase(),
         dailyScrumMinutes: form.getValues('dailyScrumMinutes'),
         refinementHours: form.getValues('refinementHours'),
         reviewDemoMinutes: form.getValues('reviewDemoMinutes'),
