@@ -57,8 +57,8 @@ export default function SquadEditDrawer({
 
   const form = useForm<SquadFormData>({
     defaultValues: {
-      name: '',
-      alias: '',
+      name: squad?.name || '',
+      alias: squad?.alias || '',
       dailyScrumMinutes: 15,
       refinementHours: 1,
       reviewDemoMinutes: 30,
@@ -70,7 +70,18 @@ export default function SquadEditDrawer({
   // Update form when squad changes
   useEffect(() => {
     if (squad) {
-      // Fetch current squad details including ceremony defaults
+      // Initialize with basic squad data immediately
+      form.reset({
+        name: squad.name,
+        alias: squad.alias,
+        dailyScrumMinutes: form.getValues('dailyScrumMinutes'),
+        refinementHours: form.getValues('refinementHours'),
+        reviewDemoMinutes: form.getValues('reviewDemoMinutes'),
+        planningHours: form.getValues('planningHours'),
+        retrospectiveMinutes: form.getValues('retrospectiveMinutes')
+      })
+      
+      // Then fetch ceremony defaults
       fetchSquadDetails()
     }
   }, [squad])
@@ -81,15 +92,12 @@ export default function SquadEditDrawer({
       if (response.ok) {
         const data = await response.json()
         const squadData = data.squad
-        form.reset({
-          name: squadData.name,
-          alias: squadData.alias,
-          dailyScrumMinutes: squadData.ceremonyDefaults?.dailyScrumMinutes || 15,
-          refinementHours: squadData.ceremonyDefaults?.refinementHours || 1,
-          reviewDemoMinutes: squadData.ceremonyDefaults?.reviewDemoMinutes || 30,
-          planningHours: squadData.ceremonyDefaults?.planningHours || 2,
-          retrospectiveMinutes: squadData.ceremonyDefaults?.retrospectiveMinutes || 30
-        })
+        // Only update ceremony defaults, keep existing name/alias
+        form.setValue('dailyScrumMinutes', squadData.ceremonyDefaults?.dailyScrumMinutes || 15)
+        form.setValue('refinementHours', squadData.ceremonyDefaults?.refinementHours || 1)
+        form.setValue('reviewDemoMinutes', squadData.ceremonyDefaults?.reviewDemoMinutes || 30)
+        form.setValue('planningHours', squadData.ceremonyDefaults?.planningHours || 2)
+        form.setValue('retrospectiveMinutes', squadData.ceremonyDefaults?.retrospectiveMinutes || 30)
       }
     } catch (error) {
       console.error('Error fetching squad details:', error)
@@ -144,7 +152,7 @@ export default function SquadEditDrawer({
 
   return (
     <Drawer open={open} onOpenChange={handleOpenChange} data-testid="squad-edit-drawer">
-      <DrawerContent className="max-h-[90vh] overflow-y-auto">
+      <DrawerContent className="max-h-[90vh] w-full max-w-2xl mx-auto overflow-y-auto">
         <DrawerHeader>
           <DrawerTitle>Edit Squad</DrawerTitle>
         </DrawerHeader>

@@ -5,6 +5,106 @@ import { devAuthGuard } from '../../../../lib/devAuthMiddleware'
 import { prisma } from '../../../../lib/prisma'
 import { validateUpdateSquadRequest, UpdateSquadRequest } from '../../../../lib/validations/squad'
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Authentication
+    const session = await getServerSession(authOptions)
+    const devUser = await devAuthGuard(request)
+
+    if (!session && !devUser) {
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    const user = devUser || session?.user
+    if (!user?.email) {
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    // Get user from database
+    const dbUser = await prisma.user.findUnique({
+      where: { email: user.email.toLowerCase().trim() },
+      select: { id: true, role: true }
+    })
+
+    if (!dbUser) {
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'User not found' },
+        { status: 401 }
+      )
+    }
+
+    // Only Scrum Masters and Admins can view squads
+    if (dbUser.role !== 'SCRUM_MASTER' && dbUser.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Forbidden', message: 'Scrum Master or Admin role required' },
+        { status: 403 }
+      )
+    }
+
+    const squadId = params.id
+
+    // Get squad with ceremony defaults
+    const squad = await prisma.squad.findFirst({
+      where: {
+        id: squadId,
+        scrumMasterId: dbUser.id
+      },
+      select: {
+        id: true,
+        name: true,
+        alias: true,
+        dailyScrumMinutes: true,
+        refinementHours: true,
+        reviewDemoMinutes: true,
+        planningHours: true,
+        retrospectiveMinutes: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    })
+
+    if (!squad) {
+      return NextResponse.json(
+        { error: 'Not Found', message: 'Squad not found or access denied' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({
+      squad: {
+        id: squad.id,
+        name: squad.name,
+        alias: squad.alias,
+        ceremonyDefaults: {
+          dailyScrumMinutes: squad.dailyScrumMinutes,
+          refinementHours: squad.refinementHours,
+          reviewDemoMinutes: squad.reviewDemoMinutes,
+          planningHours: squad.planningHours,
+          retrospectiveMinutes: squad.retrospectiveMinutes
+        },
+        createdAt: squad.createdAt.toISOString(),
+        updatedAt: squad.updatedAt.toISOString()
+      }
+    })
+
+  } catch (error) {
+    console.error('GET /api/squads/[id] error:', error)
+    return NextResponse.json(
+      { error: 'Internal Server Error', message: 'Something went wrong' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
