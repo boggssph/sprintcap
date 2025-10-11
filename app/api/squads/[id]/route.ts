@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../../lib/auth'
 import { devAuthGuard } from '../../../../lib/devAuthMiddleware'
 import { prisma } from '../../../../lib/prisma'
-import { validateUpdateSquadRequest } from '../../../../lib/validations/squad'
+import { validateUpdateSquadRequest, UpdateSquadRequest } from '../../../../lib/validations/squad'
 
 export async function PATCH(
   request: NextRequest,
