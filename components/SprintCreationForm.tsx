@@ -7,7 +7,7 @@ import { MainShellSection } from './MainShell'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Combobox } from '@/components/ui/combobox'
-import { calculateCeremonyTime, DEFAULT_CEREMONY_VALUES } from '@/lib/services/ceremonyCalculations'
+import { calculateCeremonyTime } from '@/lib/services/ceremonyCalculations'
 
 
 type SprintFormSquad = {
