@@ -106,6 +106,7 @@ export class CapacityPlanService {
                   select: {
                     id: true,
                     displayName: true,
+                    name: true,
                     email: true,
                   },
                 },
