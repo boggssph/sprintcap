@@ -149,12 +149,6 @@ export default function CapacityPlanTable({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Capacity Tickets</h2>
-        {onCreateTicket && (
-          <Button onClick={onCreateTicket}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Ticket
-          </Button>
-        )}
       </div>
 
       {/* Filters */}
