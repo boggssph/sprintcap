@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Plus, Play } from 'lucide-react'
 
 type Sprint = {
   id: string
@@ -14,6 +15,19 @@ type Sprint = {
   squadId: string
   squadName: string
   isActive: boolean
+  status: 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
+  isEnabledForCapacity?: boolean
+}
+
+type ApiSprintResponse = {
+  id: string
+  name: string
+  startDate: string
+  endDate: string
+  squadId: string
+  squadName: string
+  isActive: boolean
+  status?: 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
 }
 
 type SquadSprints = {
@@ -32,6 +46,15 @@ export default function SprintList({ refreshTrigger, onCreateSprint, onSprintSel
   const [sprints, setSprints] = useState<Sprint[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [enablingSprintId, setEnablingSprintId] = useState<string | null>(null)
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  }
 
   const fetchSprints = async () => {
     try {
@@ -40,7 +63,30 @@ export default function SprintList({ refreshTrigger, onCreateSprint, onSprintSel
       const res = await fetch('/api/sprints')
       if (res.ok) {
         const data = await res.json()
-        setSprints(data.sprints || [])
+        // Fetch capacity planning status for each sprint
+        const sprintsWithCapacityStatus = await Promise.all(
+          (data.sprints || []).map(async (sprint: ApiSprintResponse) => {
+            try {
+              const capacityRes = await fetch(`/api/capacity-plan/${sprint.id}/status`)
+              if (capacityRes.ok) {
+                const capacityData = await capacityRes.json()
+                return { 
+                  ...sprint, 
+                  isEnabledForCapacity: capacityData.isEnabled || false,
+                  status: sprint.status || 'INACTIVE'
+                }
+              }
+            } catch (error) {
+              console.error(`Failed to fetch capacity status for sprint ${sprint.id}:`, error)
+            }
+            return { 
+              ...sprint, 
+              isEnabledForCapacity: false,
+              status: sprint.status || 'INACTIVE'
+            }
+          })
+        )
+        setSprints(sprintsWithCapacityStatus)
       } else {
         setError('Failed to load sprints')
       }
@@ -57,26 +103,62 @@ export default function SprintList({ refreshTrigger, onCreateSprint, onSprintSel
   }, [refreshTrigger])
 
   // Group sprints by squad
-  const sprintsBySquad = sprints.reduce((acc, sprint) => {
-    const existing = acc.find(s => s.squadId === sprint.squadId)
-    if (existing) {
-      existing.sprints.push(sprint)
-    } else {
-      acc.push({
-        squadId: sprint.squadId,
-        squadName: sprint.squadName,
-        sprints: [sprint]
-      })
-    }
-    return acc
-  }, [] as SquadSprints[])
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+  const sprintsBySquad = React.useMemo(() => {
+    const grouped: { [key: string]: SquadSprints } = {}
+    
+    sprints.forEach(sprint => {
+      if (!grouped[sprint.squadId]) {
+        grouped[sprint.squadId] = {
+          squadId: sprint.squadId,
+          squadName: sprint.squadName,
+          sprints: []
+        }
+      }
+      grouped[sprint.squadId].sprints.push(sprint)
     })
+    
+    return Object.values(grouped)
+  }, [sprints])
+
+  const handleEnableSprint = async (sprintId: string) => {
+    setEnablingSprintId(sprintId)
+    try {
+      const response = await fetch(`/api/capacity-plan/${sprintId}/activate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: true })
+      })
+
+      if (response.ok) {
+        // Refresh sprints to show updated status
+        await fetchSprints()
+      } else {
+        console.error('Failed to enable sprint for capacity planning')
+      }
+    } catch (error) {
+      console.error('Failed to enable sprint:', error)
+    } finally {
+      setEnablingSprintId(null)
+    }
+  }
+
+  const handleStatusChange = async (sprintId: string, newStatus: string) => {
+    try {
+      const response = await fetch(`/api/sprints/${sprintId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      })
+
+      if (response.ok) {
+        // Refresh sprints to show updated status
+        await fetchSprints()
+      } else {
+        console.error('Failed to update sprint status')
+      }
+    } catch (error) {
+      console.error('Failed to update sprint status:', error)
+    }
   }
 
   if (loading) {
@@ -163,11 +245,47 @@ export default function SprintList({ refreshTrigger, onCreateSprint, onSprintSel
                         {sprint.isActive && (
                           <Badge variant="default" className="text-xs">Active</Badge>
                         )}
+                        {sprint.isEnabledForCapacity && (
+                          <Badge variant="secondary" className="text-xs">Capacity Planning</Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-muted-foreground">Status:</span>
+                        <Select
+                          value={sprint.status || 'INACTIVE'}
+                          onValueChange={(value) => handleStatusChange(sprint.id, value)}
+                        >
+                          <SelectTrigger className="w-32 h-6 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="INACTIVE">INACTIVE</SelectItem>
+                            <SelectItem value="ACTIVE">ACTIVE</SelectItem>
+                            <SelectItem value="COMPLETED">COMPLETED</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
-                    <div className="text-sm text-muted-foreground text-right">
-                      <div>{formatDate(sprint.startDate)}</div>
-                      <div>to {formatDate(sprint.endDate)}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm text-muted-foreground text-right">
+                        <div>{formatDate(sprint.startDate)}</div>
+                        <div>to {formatDate(sprint.endDate)}</div>
+                      </div>
+                      {!sprint.isEnabledForCapacity && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEnableSprint(sprint.id)
+                          }}
+                          disabled={enablingSprintId === sprint.id}
+                          className="ml-2"
+                        >
+                          <Play className="h-3 w-3 mr-1" />
+                          {enablingSprintId === sprint.id ? 'Enabling...' : 'Enable'}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}

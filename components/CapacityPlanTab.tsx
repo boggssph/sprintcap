@@ -4,8 +4,9 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Target, Users, Calendar, CheckCircle } from "lucide-react"
+import { Target, Users, Calendar, CheckCircle, Plus } from "lucide-react"
 import CapacityPlanGrid from "./CapacityPlanGrid"
+import TicketCreationDrawer from "./TicketCreationDrawer"
 import { useRouter } from "next/navigation"
 
 interface Sprint {
@@ -37,8 +38,8 @@ export default function CapacityPlanTab() {
   const [sprints, setSprints] = useState<Sprint[]>([])
   const [selectedSprint, setSelectedSprint] = useState<Sprint | null>(null)
   const [tickets, setTickets] = useState<Ticket[]>([])
-  const [isLoading, setIsLoading] = useState(true)
   const [isTicketsLoading, setIsTicketsLoading] = useState(false)
+  const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false)
   const router = useRouter()
 
   // Fetch active sprints on mount
@@ -62,8 +63,6 @@ export default function CapacityPlanTab() {
       }
     } catch (error) {
       console.error('Failed to fetch active sprints:', error)
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -82,27 +81,8 @@ export default function CapacityPlanTab() {
     }
   }
 
-  const handleActivateSprint = async (sprintId: string) => {
-    try {
-      const response = await fetch(`/api/capacity-plan/${sprintId}/activate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: true })
-      })
-
-      if (response.ok) {
-        // Refresh sprints
-        await fetchActiveSprints()
-      }
-    } catch (error) {
-      console.error('Failed to activate sprint:', error)
-    }
-  }
-
   const handleCreateTicket = () => {
-    if (selectedSprint) {
-      router.push(`/dashboard/capacity-plan?sprintId=${selectedSprint.id}`)
-    }
+    setIsCreateDrawerOpen(true)
   }
 
   const handleEditTicket = (ticketId: string) => {
@@ -130,39 +110,24 @@ export default function CapacityPlanTab() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-48 mb-4"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="bg-gray-200 rounded-lg h-32"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold mb-4">Capacity Planning</h2>
         <p className="text-gray-600 mb-6">
-          Manage capacity tickets for your active sprints. Select a sprint below to view and manage its tickets.
+          Manage capacity tickets for your enabled sprints. Select a sprint below to view and manage its tickets.
         </p>
       </div>
 
-      {/* Active Sprints */}
+      {/* Enabled Sprints */}
       <div>
-        <h3 className="text-lg font-medium mb-4">Active Sprints</h3>
+        <h3 className="text-lg font-medium mb-4">Enabled Sprints</h3>
         {sprints.length === 0 ? (
           <Card>
             <CardContent className="pt-6">
               <div className="text-center py-8">
                 <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Active Sprints</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Enabled Sprints</h3>
                 <p className="text-gray-500 mb-4">
                   Activate a sprint from the Sprints tab to start capacity planning.
                 </p>
@@ -201,7 +166,14 @@ export default function CapacityPlanTab() {
                       {new Date(sprint.startDate).toLocaleDateString()} - {new Date(sprint.endDate).toLocaleDateString()}
                     </div>
                     <div className="flex items-center justify-between">
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge 
+                        variant={sprint.status === 'ACTIVE' ? 'default' : sprint.status === 'COMPLETED' ? 'secondary' : 'outline'}
+                        className={`text-xs ${
+                          sprint.status === 'ACTIVE' ? 'bg-green-500 hover:bg-green-600' :
+                          sprint.status === 'COMPLETED' ? 'bg-blue-500 hover:bg-blue-600' :
+                          'bg-gray-500 hover:bg-gray-600'
+                        }`}
+                      >
                         {sprint.status}
                       </Badge>
                       <CheckCircle className="h-4 w-4 text-green-500" />
@@ -222,11 +194,12 @@ export default function CapacityPlanTab() {
               Tickets for {selectedSprint.name}
             </h3>
             <Button
-              onClick={() => handleActivateSprint(selectedSprint.id)}
-              variant="outline"
+              variant="primary"
               size="sm"
+              onClick={handleOpenCreateDialog}
             >
-              Sync with Jira
+              <Plus className="h-4 w-4 mr-2" />
+              New Ticket
             </Button>
           </div>
 
@@ -238,6 +211,19 @@ export default function CapacityPlanTab() {
             isLoading={isTicketsLoading}
           />
         </div>
+      )}
+
+      {/* Create Ticket Drawer */}
+      {selectedSprint && (
+        <TicketCreationDrawer
+          open={isCreateDrawerOpen}
+          onOpenChange={setIsCreateDrawerOpen}
+          sprintId={selectedSprint.id}
+          onTicketCreated={() => {
+            // Refresh tickets after creation
+            fetchSprintTickets(selectedSprint.id)
+          }}
+        />
       )}
     </div>
   )

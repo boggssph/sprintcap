@@ -4,6 +4,7 @@
 
 import { prisma } from '../prisma'
 import { validateCreateSprintRequest, validateSprintDates, CreateSprintRequest } from '../validations/sprint'
+import type { Sprint } from '@prisma/client'
 
 export interface SprintResponse {
   id: string
@@ -48,12 +49,21 @@ export interface SprintListResponse {
 export interface SprintSummary {
   id: string
   name: string
-  squadId?: string
+  squadId: string
   squadName: string
   startDate: string
   endDate: string
-  memberCount: number
   status: 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
+  memberCount: number
+  createdAt: string
+  isActive: boolean
+  isEnabledForCapacity?: boolean
+}
+
+export interface SprintStatusUpdate {
+  id: string
+  oldStatus: 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
+  newStatus: 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
 }
 
 export interface SprintForScrumMaster {
@@ -64,6 +74,7 @@ export interface SprintForScrumMaster {
   squadId: string
   squadName: string
   isActive: boolean
+  status: 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
 }
 
 export class SprintServiceError extends Error {
@@ -321,6 +332,8 @@ export async function listSprints(
       startDate: true,
       endDate: true,
       status: true,
+      isActive: true,
+      createdAt: true,
       squadId: true,
       _count: {
         select: { members: true }
@@ -343,7 +356,9 @@ export async function listSprints(
       startDate: sprint.startDate.toISOString(),
       endDate: sprint.endDate.toISOString(),
       memberCount: sprint._count?.members ?? 0,
-      status: sprint.status as 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
+      status: sprint.status as 'ACTIVE' | 'INACTIVE' | 'COMPLETED',
+      createdAt: sprint.createdAt.toISOString(),
+      isActive: sprint.startDate <= new Date() && sprint.endDate >= new Date()
     }
   })
 
@@ -439,6 +454,8 @@ export async function getSprintsForScrumMaster(userId: string): Promise<SprintFo
       name: true,
       startDate: true,
       endDate: true,
+      status: true,
+      isActive: true,
       squadId: true,
       squad: {
         select: { name: true }
@@ -446,6 +463,36 @@ export async function getSprintsForScrumMaster(userId: string): Promise<SprintFo
     },
     orderBy: { startDate: 'desc' }
   })
+
+  // Auto-update statuses for all sprints
+  const statusUpdates: SprintStatusUpdate[] = []
+  for (const sprint of allSprints) {
+    let newStatus = sprint.status
+
+    if (sprint.status === 'INACTIVE' && now >= sprint.startDate && now <= sprint.endDate) {
+      newStatus = 'ACTIVE'
+    } else if (sprint.status === 'ACTIVE' && now > sprint.endDate) {
+      newStatus = 'COMPLETED'
+    }
+
+    if (newStatus !== sprint.status) {
+      statusUpdates.push({
+        id: sprint.id,
+        oldStatus: sprint.status,
+        newStatus
+      })
+    }
+  }
+
+  // Apply status updates in batch
+  if (statusUpdates.length > 0) {
+    for (const update of statusUpdates) {
+      await prisma.sprint.update({
+        where: { id: update.id },
+        data: { status: update.newStatus }
+      })
+    }
+  }
 
   // Group sprints by squad and take only the last 3 per squad
   const sprintsBySquad = new Map<string, typeof allSprints>()
@@ -458,7 +505,7 @@ export async function getSprintsForScrumMaster(userId: string): Promise<SprintFo
     }
   }
 
-  // Convert to response format with active sprint detection
+  // Convert to response format with updated statuses
   const result: SprintForScrumMaster[] = []
 
   for (const [squadId, sprints] of Array.from(sprintsBySquad.entries())) {
@@ -467,10 +514,17 @@ export async function getSprintsForScrumMaster(userId: string): Promise<SprintFo
 
     // Sort: active sprint first, then by start date ascending
     const sortedSprints = sprints
-      .map(sprint => ({
-        ...sprint,
-        isActive: now >= sprint.startDate && now <= sprint.endDate
-      }))
+      .map(sprint => {
+        // Use updated status if it was changed
+        const statusUpdate = statusUpdates.find(u => u.id === sprint.id)
+        const currentStatus = statusUpdate ? statusUpdate.newStatus : sprint.status
+
+        return {
+          ...sprint,
+          status: currentStatus,
+          isActive: now >= sprint.startDate && now <= sprint.endDate
+        }
+      })
       .sort((a, b) => {
         // Active sprints first
         if (a.isActive && !b.isActive) return -1
@@ -487,10 +541,140 @@ export async function getSprintsForScrumMaster(userId: string): Promise<SprintFo
         endDate: sprint.endDate.toISOString(),
         squadId: sprint.squadId,
         squadName: squad.name,
-        isActive: sprint.isActive
+        isActive: sprint.isActive,
+        status: sprint.status
       })
     }
   }
 
   return result
+}
+
+/**
+ * Automatically update sprint statuses based on current date
+ */
+export async function updateSprintStatuses(): Promise<SprintStatusUpdate[]> {
+  const now = new Date()
+  const updates: SprintStatusUpdate[] = []
+
+  // Find sprints that should be ACTIVE (current date is within sprint range)
+  const sprintsToActivate = await prisma.sprint.findMany({
+    where: {
+      status: 'INACTIVE',
+      startDate: { lte: now },
+      endDate: { gte: now }
+    },
+    select: { id: true, status: true }
+  })
+
+  // Find sprints that should be COMPLETED (current date is past end date)
+  const sprintsToComplete = await prisma.sprint.findMany({
+    where: {
+      status: 'ACTIVE',
+      endDate: { lt: now }
+    },
+    select: { id: true, status: true }
+  })
+
+  // Update INACTIVE → ACTIVE
+  if (sprintsToActivate.length > 0) {
+    await prisma.sprint.updateMany({
+      where: {
+        id: { in: sprintsToActivate.map(s => s.id) }
+      },
+      data: { status: 'ACTIVE' }
+    })
+
+    updates.push(...sprintsToActivate.map(sprint => ({
+      id: sprint.id,
+      oldStatus: sprint.status as 'ACTIVE' | 'INACTIVE' | 'COMPLETED',
+      newStatus: 'ACTIVE' as const
+    })))
+  }
+
+  // Update ACTIVE → COMPLETED
+  if (sprintsToComplete.length > 0) {
+    await prisma.sprint.updateMany({
+      where: {
+        id: { in: sprintsToComplete.map(s => s.id) }
+      },
+      data: { status: 'COMPLETED' }
+    })
+
+    updates.push(...sprintsToComplete.map(sprint => ({
+      id: sprint.id,
+      oldStatus: sprint.status as 'ACTIVE' | 'INACTIVE' | 'COMPLETED',
+      newStatus: 'COMPLETED' as const
+    })))
+  }
+
+  return updates
+}
+
+/**
+ * Manually update sprint status (for Scrum Masters)
+ */
+export async function updateSprintStatus(
+  sprintId: string,
+  newStatus: 'ACTIVE' | 'INACTIVE' | 'COMPLETED',
+  userId: string
+): Promise<Sprint> {
+  // Verify user is Scrum Master of the sprint's squad
+  const sprint = await prisma.sprint.findFirst({
+    where: {
+      id: sprintId,
+      squad: { scrumMasterId: userId }
+    }
+  })
+
+  if (!sprint) {
+    throw new Error('Sprint not found or user is not the Scrum Master')
+  }
+
+  // Validate status transition
+  const validTransitions: Record<string, string[]> = {
+    'INACTIVE': ['ACTIVE'],
+    'ACTIVE': ['COMPLETED'],
+    'COMPLETED': [] // Terminal state
+  }
+
+  if (!validTransitions[sprint.status].includes(newStatus)) {
+    throw new Error(`Invalid status transition from ${sprint.status} to ${newStatus}`)
+  }
+
+  return prisma.sprint.update({
+    where: { id: sprintId },
+    data: { status: newStatus }
+  })
+}
+
+/**
+ * Get sprint with current status (auto-updated if needed)
+ */
+export async function getSprintWithCurrentStatus(sprintId: string): Promise<Sprint | null> {
+  const sprint = await prisma.sprint.findUnique({
+    where: { id: sprintId }
+  })
+
+  if (!sprint) return null
+
+  // Auto-update status if needed
+  const now = new Date()
+  let updatedStatus = sprint.status
+
+  if (sprint.status === 'INACTIVE' && now >= sprint.startDate && now <= sprint.endDate) {
+    updatedStatus = 'ACTIVE'
+  } else if (sprint.status === 'ACTIVE' && now > sprint.endDate) {
+    updatedStatus = 'COMPLETED'
+  }
+
+  // Update in database if status changed
+  if (updatedStatus !== sprint.status) {
+    await prisma.sprint.update({
+      where: { id: sprintId },
+      data: { status: updatedStatus }
+    })
+  }
+
+  return { ...sprint, status: updatedStatus }
 }

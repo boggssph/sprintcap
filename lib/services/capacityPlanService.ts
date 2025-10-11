@@ -71,7 +71,8 @@ export class CapacityPlanService {
       alias: string;
     };
   }>> {
-    return prisma.sprint.findMany({
+    // First, get the sprints
+    const sprints = await prisma.sprint.findMany({
       where: {
         isActive: true,
         squad: {
@@ -99,7 +100,44 @@ export class CapacityPlanService {
       orderBy: {
         createdAt: 'desc',
       },
-    }) as Promise<(Sprint & { squad: { id: string; name: string; alias: string } })[]>;
+    })
+
+    // Auto-update statuses based on current date
+    const now = new Date()
+    const statusUpdates: Array<{ id: string; newStatus: 'ACTIVE' | 'INACTIVE' | 'COMPLETED' }> = []
+
+    for (const sprint of sprints) {
+      let newStatus = sprint.status as 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
+
+      if (sprint.status === 'INACTIVE' && now >= sprint.startDate && now <= sprint.endDate) {
+        newStatus = 'ACTIVE'
+      } else if (sprint.status === 'ACTIVE' && now > sprint.endDate) {
+        newStatus = 'COMPLETED'
+      }
+
+      if (newStatus !== sprint.status) {
+        statusUpdates.push({ id: sprint.id, newStatus })
+      }
+    }
+
+    // Apply status updates
+    if (statusUpdates.length > 0) {
+      for (const update of statusUpdates) {
+        await prisma.sprint.update({
+          where: { id: update.id },
+          data: { status: update.newStatus }
+        })
+      }
+    }
+
+    // Return sprints with updated statuses
+    return sprints.map(sprint => {
+      const statusUpdate = statusUpdates.find(u => u.id === sprint.id)
+      return {
+        ...sprint,
+        status: statusUpdate ? statusUpdate.newStatus : sprint.status
+      }
+    })
   }
 
   /**

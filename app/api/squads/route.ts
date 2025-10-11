@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     // Get user from database
     const dbUser = await prisma.user.findUnique({
-      where: { email: user.email },
+      where: { email: user.email.toLowerCase().trim() },
       select: { id: true, role: true }
     })
 
@@ -39,10 +39,10 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Only Scrum Masters can view squads
-    if (dbUser.role !== 'SCRUM_MASTER') {
+    // Only Scrum Masters and Admins can view squads
+    if (dbUser.role !== 'SCRUM_MASTER' && dbUser.role !== 'ADMIN') {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Scrum Master role required' },
+        { error: 'Forbidden', message: 'Scrum Master or Admin role required' },
         { status: 403 }
       )
     }
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
 
     // Get user from database
     const dbUser = await prisma.user.findUnique({
-      where: { email: user.email },
+      where: { email: user.email.toLowerCase().trim() },
       select: { id: true, role: true }
     })
 
@@ -125,10 +125,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Only Scrum Masters can create squads
-    if (dbUser.role !== 'SCRUM_MASTER') {
+    // Only Scrum Masters and Admins can create squads
+    if (dbUser.role !== 'SCRUM_MASTER' && dbUser.role !== 'ADMIN') {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Scrum Master role required' },
+        { error: 'Forbidden', message: 'Scrum Master or Admin role required' },
         { status: 403 }
       )
     }
