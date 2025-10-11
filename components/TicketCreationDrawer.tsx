@@ -7,12 +7,14 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Combobox } from '@/components/ui/combobox'
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-  DrawerClose
+  DrawerClose,
+  DrawerDescription
 } from '@/components/ui/drawer'
 import {
   Form,
@@ -22,14 +24,18 @@ import {
   FormLabel,
   FormMessage
 } from '@/components/ui/form'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { WorkType, ParentType, PlannedUnplanned } from '@/lib/types/ticket'
+import { Loader2 } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface TicketCreationDrawerProps {
   open: boolean
@@ -58,6 +64,7 @@ export default function TicketCreationDrawer({
   onTicketCreated
 }: TicketCreationDrawerProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
 
   const form = useForm<TicketFormData>({
     resolver: zodResolver(ticketSchema),
@@ -117,32 +124,39 @@ export default function TicketCreationDrawer({
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen && form.formState.isDirty) {
-      // Show confirmation dialog if form has unsaved changes
-      const confirmed = window.confirm(
-        'You have unsaved changes. Are you sure you want to close?'
-      )
-      if (!confirmed) return
+      setShowConfirmDialog(true)
+      return
     }
     onOpenChange(newOpen)
   }
 
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
-      <DrawerContent className="max-h-[85vh]">
-        <DrawerHeader>
-          <DrawerTitle>Create New Ticket</DrawerTitle>
+      <DrawerContent className="max-h-[95vh] w-full max-w-2xl mx-auto overflow-visible">
+        <DrawerHeader className="px-6 py-4">
+          <DrawerTitle className="text-2xl font-semibold">Create New Ticket</DrawerTitle>
+          <DrawerDescription>
+            Fill in the details below to create a new ticket for capacity planning.
+          </DrawerDescription>
         </DrawerHeader>
         <div className="px-6 pb-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" aria-labelledby="ticket-form-title" aria-describedby="ticket-form-description">
+              <div id="ticket-form-title" className="sr-only">
+                Create New Ticket Form
+              </div>
+              <div id="ticket-form-description" className="sr-only">
+                Fill in the details below to create a new ticket for capacity planning.
+              </div>
+
               <FormField
                 control={form.control}
                 name="jiraId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Jira ID *</FormLabel>
+                    <FormLabel className="text-base font-medium">Jira ID *</FormLabel>
                     <FormControl>
-                      <Input placeholder="PROJ-123" {...field} />
+                      <Input placeholder="PROJ-123" className="h-12 text-base" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -154,12 +168,13 @@ export default function TicketCreationDrawer({
                 name="hours"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Hours *</FormLabel>
+                    <FormLabel className="text-base font-medium">Hours *</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         step="0.5"
                         placeholder="0.0"
+                        className="h-12 text-base"
                         {...field}
                         onChange={(e) =>
                           field.onChange(parseFloat(e.target.value) || 0)
@@ -177,22 +192,18 @@ export default function TicketCreationDrawer({
                 name="workType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Work Type *</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
+                    <FormLabel className="text-base font-medium">Work Type *</FormLabel>
+                    <Combobox
+                      options={[
+                        { label: 'Backend', value: WorkType.BACKEND },
+                        { label: 'Frontend', value: WorkType.FRONTEND },
+                        { label: 'Testing', value: WorkType.TESTING }
+                      ]}
                       value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select work type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={WorkType.BACKEND}>Backend</SelectItem>
-                        <SelectItem value={WorkType.FRONTEND}>Frontend</SelectItem>
-                        <SelectItem value={WorkType.TESTING}>Testing</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      onValueChange={field.onChange}
+                      placeholder="Select work type"
+                      className="h-12 text-base"
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -203,22 +214,18 @@ export default function TicketCreationDrawer({
                 name="parentType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Parent Type *</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
+                    <FormLabel className="text-base font-medium">Parent Type *</FormLabel>
+                    <Combobox
+                      options={[
+                        { label: 'Bug', value: ParentType.BUG },
+                        { label: 'Story', value: ParentType.STORY },
+                        { label: 'Task', value: ParentType.TASK }
+                      ]}
                       value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select parent type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={ParentType.BUG}>Bug</SelectItem>
-                        <SelectItem value={ParentType.STORY}>Story</SelectItem>
-                        <SelectItem value={ParentType.TASK}>Task</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      onValueChange={field.onChange}
+                      placeholder="Select parent type"
+                      className="h-12 text-base"
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -229,25 +236,17 @@ export default function TicketCreationDrawer({
                 name="plannedUnplanned"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Planning Category *</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
+                    <FormLabel className="text-base font-medium">Planning Category *</FormLabel>
+                    <Combobox
+                      options={[
+                        { label: 'Planned', value: PlannedUnplanned.PLANNED },
+                        { label: 'Unplanned', value: PlannedUnplanned.UNPLANNED }
+                      ]}
                       value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select planning status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value={PlannedUnplanned.PLANNED}>
-                          Planned
-                        </SelectItem>
-                        <SelectItem value={PlannedUnplanned.UNPLANNED}>
-                          Unplanned
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                      onValueChange={field.onChange}
+                      placeholder="Select planning status"
+                      className="h-12 text-base"
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -258,45 +257,69 @@ export default function TicketCreationDrawer({
                 name="memberId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Assigned Member (Optional)</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
+                    <FormLabel className="text-base font-medium">Assigned Member (Optional)</FormLabel>
+                    <Combobox
+                      options={squadMembers
+                        .filter(member => member.displayName)
+                        .map((member) => ({
+                          label: member.displayName!,
+                          value: member.id
+                        }))}
                       value={field.value || ""}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select member (optional)" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {squadMembers
-                          .filter(member => member.displayName)
-                          .map((member) => (
-                          <SelectItem key={member.id} value={member.id}>
-                            {member.displayName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      onValueChange={field.onChange}
+                      placeholder="Select member (optional)"
+                      className="h-12 text-base"
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="flex justify-end gap-2 pt-4">
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 pt-6">
                 <DrawerClose asChild>
-                  <Button type="button" variant="outline" disabled={isSubmitting}>
+                  <Button type="button" variant="outline" disabled={isSubmitting} className="h-12 text-base">
                     Cancel
                   </Button>
                 </DrawerClose>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Creating...' : 'Create Ticket'}
+                <Button type="submit" disabled={isSubmitting} className="h-12 text-base min-w-[140px]">
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    'Create Ticket'
+                  )}
                 </Button>
               </div>
             </form>
           </Form>
         </div>
       </DrawerContent>
+
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Are you sure you want to close without saving?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowConfirmDialog(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowConfirmDialog(false)
+                onOpenChange(false)
+              }}
+            >
+              Discard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Drawer>
   )
 }
