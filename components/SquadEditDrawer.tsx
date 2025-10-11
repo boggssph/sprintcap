@@ -151,47 +151,49 @@ export default function SquadEditDrawer({
 
   return (
     <Drawer open={open} onOpenChange={handleOpenChange} data-testid="squad-edit-drawer">
-      <DrawerContent className="max-h-[90vh] w-full max-w-2xl mx-auto overflow-y-auto">
+      <DrawerContent className="max-h-[95vh] w-full max-w-2xl mx-auto overflow-visible">
         <DrawerHeader>
           <DrawerTitle>Edit Squad</DrawerTitle>
         </DrawerHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 p-6">
-            <SquadFormFields
-              name={form.watch('name')}
-              alias={form.watch('alias')}
-              dailyScrumMinutes={form.watch('dailyScrumMinutes')}
-              refinementHours={form.watch('refinementHours')}
-              reviewDemoMinutes={form.watch('reviewDemoMinutes')}
-              planningHours={form.watch('planningHours')}
-              retrospectiveMinutes={form.watch('retrospectiveMinutes')}
-              onChangeName={(value) => form.setValue('name', value)}
-              onChangeAlias={(value) => form.setValue('alias', value)}
-              onChangeDailyScrumMinutes={(value) => form.setValue('dailyScrumMinutes', value)}
-              onChangeRefinementHours={(value) => form.setValue('refinementHours', value)}
-              onChangeReviewDemoMinutes={(value) => form.setValue('reviewDemoMinutes', value)}
-              onChangePlanningHours={(value) => form.setValue('planningHours', value)}
-              onChangeRetrospectiveMinutes={(value) => form.setValue('retrospectiveMinutes', value)}
-            />
-          </form>
-        </Form>
+        <div className="px-6 pb-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <SquadFormFields
+                name={form.watch('name')}
+                alias={form.watch('alias')}
+                dailyScrumMinutes={form.watch('dailyScrumMinutes')}
+                refinementHours={form.watch('refinementHours')}
+                reviewDemoMinutes={form.watch('reviewDemoMinutes')}
+                planningHours={form.watch('planningHours')}
+                retrospectiveMinutes={form.watch('retrospectiveMinutes')}
+                onChangeName={(value) => form.setValue('name', value)}
+                onChangeAlias={(value) => form.setValue('alias', value)}
+                onChangeDailyScrumMinutes={(value) => form.setValue('dailyScrumMinutes', value)}
+                onChangeRefinementHours={(value) => form.setValue('refinementHours', value)}
+                onChangeReviewDemoMinutes={(value) => form.setValue('reviewDemoMinutes', value)}
+                onChangePlanningHours={(value) => form.setValue('planningHours', value)}
+                onChangeRetrospectiveMinutes={(value) => form.setValue('retrospectiveMinutes', value)}
+              />
 
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 p-6 pt-0">
-          <DrawerClose asChild>
-            <Button variant="outline" data-testid="cancel-squad-edit" className="h-12 text-base">
-              Cancel
-            </Button>
-          </DrawerClose>
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            data-testid="save-squad-button"
-            className="h-12 text-base min-w-[140px]"
-            onClick={form.handleSubmit(onSubmit)}
-          >
-            {isSubmitting ? 'Saving...' : 'Save Changes'}
-          </Button>
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-3 pt-6">
+                <DrawerClose asChild>
+                  <Button variant="outline" data-testid="cancel-squad-edit" className="h-12 text-base">
+                    Cancel
+                  </Button>
+                </DrawerClose>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  data-testid="save-squad-button"
+                  className="h-12 text-base min-w-[140px]"
+                  onClick={form.handleSubmit(onSubmit)}
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </div>
       </DrawerContent>
     </Drawer>
