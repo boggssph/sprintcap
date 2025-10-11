@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Target, Users, Calendar } from "lucide-react"
-import CapacityPlanGrid from "@/components/CapacityPlanGrid"
+import CapacityPlanTable from "@/components/CapacityPlanTable"
 import ScrumMasterHeader from "@/components/ScrumMasterHeader"
 import CenteredContainer from '@/components/CenteredContainer'
 import MainShell from '@/components/MainShell'
@@ -224,7 +224,7 @@ export default function CapacityPlanPage() {
         </div>
 
         {/* Tickets Grid */}
-        <CapacityPlanGrid
+        <CapacityPlanTable
           tickets={tickets}
           onCreateTicket={handleCreateTicket}
           onEditTicket={handleEditTicket}

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Target, Users, Calendar, CheckCircle, Plus } from "lucide-react"
-import CapacityPlanGrid from "./CapacityPlanGrid"
+import CapacityPlanTable from "./CapacityPlanTable"
 import TicketCreationDrawer from "./TicketCreationDrawer"
 import { useRouter } from "next/navigation"
 
@@ -221,7 +221,7 @@ export default function CapacityPlanTab() {
             </Button>
           </div>
 
-          <CapacityPlanGrid
+          <CapacityPlanTable
             tickets={tickets}
             onCreateTicket={handleCreateTicket}
             onEditTicket={handleEditTicket}
