@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
 import { Plus, Play } from 'lucide-react'
 
 type Sprint = {
@@ -251,19 +252,24 @@ export default function SprintList({ refreshTrigger, onCreateSprint, onSprintSel
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs text-muted-foreground">Status:</span>
-                        <Select
+                        <RadioGroup
                           value={sprint.status || 'INACTIVE'}
                           onValueChange={(value) => handleStatusChange(sprint.id, value)}
+                          className="flex flex-row gap-4"
                         >
-                          <SelectTrigger className="w-32 h-6 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="INACTIVE">INACTIVE</SelectItem>
-                            <SelectItem value="ACTIVE">ACTIVE</SelectItem>
-                            <SelectItem value="COMPLETED">COMPLETED</SelectItem>
-                          </SelectContent>
-                        </Select>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="INACTIVE" id={`inactive-${sprint.id}`} />
+                            <Label htmlFor={`inactive-${sprint.id}`} className="text-xs cursor-pointer">INACTIVE</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="ACTIVE" id={`active-${sprint.id}`} />
+                            <Label htmlFor={`active-${sprint.id}`} className="text-xs cursor-pointer">ACTIVE</Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="COMPLETED" id={`completed-${sprint.id}`} />
+                            <Label htmlFor={`completed-${sprint.id}`} className="text-xs cursor-pointer">COMPLETED</Label>
+                          </div>
+                        </RadioGroup>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
