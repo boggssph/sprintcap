@@ -118,7 +118,7 @@ const SelectContent: React.FC<React.PropsWithChildren<{ className?: string }>> =
     <div
       id={listboxId}
       role="listbox"
-      className={cn("absolute z-[100] mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-lg", className)}
+      className={cn("absolute z-[9999] mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-lg", className)}
       style={{ position: 'absolute', top: '100%', left: 0, right: 0 }}
     >
       <div className="p-1 max-h-60 overflow-y-auto">{children}</div>
