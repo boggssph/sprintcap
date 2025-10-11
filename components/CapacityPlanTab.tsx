@@ -24,6 +24,7 @@ interface Sprint {
       user: {
         id: string
         displayName: string | null
+        email: string
       }
     }>
   }
@@ -236,10 +237,9 @@ export default function CapacityPlanTab() {
           onOpenChange={setIsCreateDrawerOpen}
           sprintId={selectedSprint.id}
           squadMembers={selectedSprint.squad.members
-            .filter(member => member.user.displayName)
             .map(member => ({
               id: member.user.id,
-              displayName: member.user.displayName!,
+              displayName: member.user.displayName || member.user.email,
             }))}
           onTicketCreated={() => {
             // Refresh tickets after creation

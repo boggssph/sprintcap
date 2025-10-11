@@ -41,7 +41,7 @@ interface TicketCreationDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   sprintId: string
-  squadMembers: Array<{ id: string; displayName: string | null }>
+  squadMembers: Array<{ id: string; displayName: string }>
   onTicketCreated?: () => void
 }
 
@@ -260,9 +260,8 @@ export default function TicketCreationDrawer({
                     <FormLabel className="text-base font-medium">Assigned Member (Optional)</FormLabel>
                     <Combobox
                       options={squadMembers
-                        .filter(member => member.displayName)
                         .map((member) => ({
-                          label: member.displayName!,
+                          label: member.displayName,
                           value: member.id
                         }))}
                       value={field.value || ""}
