@@ -79,6 +79,10 @@ export interface SprintSummary {
   createdAt: string
   isActive: boolean
   isEnabledForCapacity?: boolean
+  dailyScrum?: number
+  sprintPlanning?: number
+  sprintReview?: number
+  sprintRetrospective?: number
 }
 
 export interface SprintStatusUpdate {
@@ -392,6 +396,11 @@ export async function listSprints(
       isActive: true,
       createdAt: true,
       squadId: true,
+      dailyScrumMinutes: true,
+      sprintPlanningMinutes: true,
+      sprintReviewMinutes: true,
+      sprintRetrospectiveMinutes: true,
+      refinementMinutes: true,
       _count: {
         select: { members: true }
       },
@@ -415,7 +424,12 @@ export async function listSprints(
       memberCount: sprint._count?.members ?? 0,
       status: sprint.status as 'ACTIVE' | 'INACTIVE' | 'COMPLETED',
       createdAt: sprint.createdAt.toISOString(),
-      isActive: sprint.startDate <= new Date() && sprint.endDate >= new Date()
+      isActive: sprint.startDate <= new Date() && sprint.endDate >= new Date(),
+      dailyScrum: sprint.dailyScrumMinutes,
+      sprintPlanning: sprint.sprintPlanningMinutes,
+      sprintReview: sprint.sprintReviewMinutes,
+      sprintRetrospective: sprint.sprintRetrospectiveMinutes,
+      refinement: sprint.refinementMinutes
     }
   })
 
@@ -758,6 +772,7 @@ export async function updateSprint(
     sprintPlanning?: number
     sprintReview?: number
     sprintRetrospective?: number
+    refinement?: number
   },
   scrumMasterId: string
 ): Promise<Sprint | null> {
@@ -803,6 +818,7 @@ export async function updateSprint(
       ...(updateData.sprintPlanning !== undefined && { sprintPlanningMinutes: updateData.sprintPlanning }),
       ...(updateData.sprintReview !== undefined && { sprintReviewMinutes: updateData.sprintReview }),
       ...(updateData.sprintRetrospective !== undefined && { sprintRetrospectiveMinutes: updateData.sprintRetrospective }),
+      ...(updateData.refinement !== undefined && { refinementMinutes: updateData.refinement }),
       updatedAt: new Date()
     }
   })

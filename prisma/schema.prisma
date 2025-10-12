@@ -80,6 +80,7 @@ model Sprint {
   sprintPlanningMinutes Int     @default(120)  // 2 hours
   sprintReviewMinutes   Int     @default(60)   // 1 hour
   sprintRetrospectiveMinutes Int @default(60)  // 1 hour
+  refinementMinutes     Int     @default(60)   // 1 hour - Team refinement to prepare backlog
 
   squad     Squad         @relation(fields: [squadId], references: [id])
   members   SprintMember[]

@@ -33,6 +33,7 @@ interface Sprint {
   sprintPlanning?: number
   sprintReview?: number
   sprintRetrospective?: number
+  refinement?: number
 }
 
 interface SprintUpdateDrawerProps {
@@ -57,6 +58,7 @@ export function SprintUpdateDrawer({ sprint, children, onSuccess }: SprintUpdate
       sprintPlanning: sprint.sprintPlanning || 120,
       sprintReview: sprint.sprintReview || 60,
       sprintRetrospective: sprint.sprintRetrospective || 60,
+      refinement: sprint.refinement || 60,
     },
   })
 
@@ -72,6 +74,7 @@ export function SprintUpdateDrawer({ sprint, children, onSuccess }: SprintUpdate
         sprintPlanning: sprint.sprintPlanning || 120,
         sprintReview: sprint.sprintReview || 60,
         sprintRetrospective: sprint.sprintRetrospective || 60,
+        refinement: sprint.refinement || 60,
       })
     }
   }, [sprint, open, form])
@@ -321,6 +324,30 @@ export function SprintUpdateDrawer({ sprint, children, onSuccess }: SprintUpdate
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-base font-medium">Sprint Retrospective *</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min="1"
+                              max="480"
+                              placeholder="60"
+                              className="h-12 text-base"
+                              {...field}
+                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                              value={field.value}
+                              disabled={isSubmitting}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="refinement"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-base font-medium">Team Refinement *</FormLabel>
                           <FormControl>
                             <Input
                               type="number"

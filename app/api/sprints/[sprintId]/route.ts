@@ -111,6 +111,7 @@ export async function PUT(
         sprintPlanningMinutes: updateData.sprintPlanning,
         sprintReviewMinutes: updateData.sprintReview,
         sprintRetrospectiveMinutes: updateData.sprintRetrospective,
+        refinementMinutes: updateData.refinement,
         updatedAt: new Date()
       },
       include: {
@@ -131,6 +132,7 @@ export async function PUT(
         sprintPlanning: updatedSprint.sprintPlanningMinutes,
         sprintReview: updatedSprint.sprintReviewMinutes,
         sprintRetrospective: updatedSprint.sprintRetrospectiveMinutes,
+        refinement: updatedSprint.refinementMinutes,
         squadName: updatedSprint.squad.name,
         updatedAt: updatedSprint.updatedAt.toISOString()
       }

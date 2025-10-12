@@ -15,6 +15,7 @@ export const SprintUpdateRequestSchema = z.object({
   sprintPlanning: z.number().min(1, 'Sprint planning time must be greater than 0').max(480, 'Sprint planning time too long'),
   sprintReview: z.number().min(1, 'Sprint review time must be greater than 0').max(480, 'Sprint review time too long'),
   sprintRetrospective: z.number().min(1, 'Sprint retrospective time must be greater than 0').max(480, 'Sprint retrospective time too long'),
+  refinement: z.number().min(1, 'Team refinement time must be greater than 0').max(480, 'Team refinement time too long'),
 }).refine((data) => {
   const start = new Date(data.startDate)
   const end = new Date(data.endDate)

@@ -23,6 +23,7 @@ type Sprint = {
   sprintPlanning?: number
   sprintReview?: number
   sprintRetrospective?: number
+  refinement?: number
 }
 
 type ApiSprintResponse = {
@@ -38,6 +39,7 @@ type ApiSprintResponse = {
   sprintPlanning?: number
   sprintReview?: number
   sprintRetrospective?: number
+  refinement?: number
 }
 
 type SquadSprints = {
@@ -71,7 +73,8 @@ export default function SprintList({ refreshTrigger, onCreateSprint, onSprintSel
       { key: 'dailyScrum' as keyof Sprint, label: 'Daily Scrum', fullName: 'Daily Scrum' },
       { key: 'sprintPlanning' as keyof Sprint, label: 'Planning', fullName: 'Sprint Planning' },
       { key: 'sprintReview' as keyof Sprint, label: 'Review & Demo', fullName: 'Sprint Review & Demo' },
-      { key: 'sprintRetrospective' as keyof Sprint, label: 'Retro', fullName: 'Sprint Retrospective' }
+      { key: 'sprintRetrospective' as keyof Sprint, label: 'Retro', fullName: 'Sprint Retrospective' },
+      { key: 'refinement' as keyof Sprint, label: 'Refinement', fullName: 'Team Refinement' }
     ]
 
     const activeCeremonies = ceremonies.filter(ceremony => {
