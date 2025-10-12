@@ -23,6 +23,7 @@ interface Invite {
   createdAt: string
   status?: string
   squadId?: string | null
+  invitedRole?: string | null
 }
 
 export default function InvitesTab() {
@@ -33,6 +34,11 @@ export default function InvitesTab() {
   const [email, setEmail] = useState('')
   const [selectedSquadId, setSelectedSquadId] = useState<string>('')
   const [message, setMessage] = useState<string | null>(null)
+
+  // Scrum Master invite state
+  const [smEmail, setSmEmail] = useState('')
+  const [smCreating, setSmCreating] = useState(false)
+  const [smMessage, setSmMessage] = useState<string | null>(null)
 
   const fetchSquads = async () => {
     try {
@@ -112,6 +118,48 @@ export default function InvitesTab() {
     }
   }
 
+  const handleCreateScrumMasterInvite = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!smEmail.trim()) {
+      setSmMessage('Please enter an email address')
+      return
+    }
+
+    setSmCreating(true)
+    setSmMessage(null)
+
+    try {
+      const response = await fetch('/api/invites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          invitedEmail: smEmail.trim(),
+          invitedRole: 'SCRUM_MASTER'
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setSmMessage('Scrum Master invite created successfully!')
+        setSmEmail('')
+
+        // Copy invite link to clipboard
+        const acceptUrl = `${window.location.origin}/accept-invite?token=${data.token}&email=${encodeURIComponent(smEmail.trim())}`
+        await navigator.clipboard.writeText(acceptUrl)
+
+        await fetchInvites()
+      } else {
+        const error = await response.json()
+        setSmMessage(`Error: ${error.error || 'Failed to create invite'}`)
+      }
+    } catch (err) {
+      console.error('Error creating scrum master invite:', err)
+      setSmMessage('Failed to create invite')
+    } finally {
+      setSmCreating(false)
+    }
+  }
+
   const handleCopyInviteLink = async (invite: Invite) => {
     try {
       // Regenerate token to get a fresh link
@@ -174,95 +222,179 @@ export default function InvitesTab() {
         </Button>
       </div>
 
-      {/* Create Invite Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            Invite Team Member
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleCreateInvite} className="space-y-4">
-            <div>
-              <Label htmlFor="invite-email">Email Address</Label>
-              <Input
-                id="invite-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="team.member@example.com"
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="invite-squad">Squad</Label>
-              <Combobox
-                options={squads.map((squad) => ({
-                  label: `${squad.name} (${squad.alias}) - ${squad.memberCount} members`,
-                  value: squad.id
-                }))}
-                value={selectedSquadId}
-                onValueChange={setSelectedSquadId}
-                placeholder="Select a squad"
-              />
-            </div>
-            <Button type="submit" disabled={creating}>
-              {creating ? 'Creating Invite...' : 'Send Invite'}
-            </Button>
-          </form>
-          {message && (
-            <div className={`mt-4 p-3 rounded ${message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
-              {message}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Create Invite Forms */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Invite Team Member */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Invite Team Member
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleCreateInvite} className="space-y-4">
+              <div>
+                <Label htmlFor="invite-email">Email Address</Label>
+                <Input
+                  id="invite-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="team.member@example.com"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="invite-squad">Squad</Label>
+                <Combobox
+                  options={squads.map((squad) => ({
+                    label: `${squad.name} (${squad.alias}) - ${squad.memberCount} members`,
+                    value: squad.id
+                  }))}
+                  value={selectedSquadId}
+                  onValueChange={setSelectedSquadId}
+                  placeholder="Select a squad"
+                />
+              </div>
+              <Button type="submit" disabled={creating}>
+                {creating ? 'Creating Invite...' : 'Send Invite'}
+              </Button>
+            </form>
+            {message && (
+              <div className={`mt-4 p-3 rounded ${message.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+                {message}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Invites List */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Sent Invites
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {invites.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">No invites sent yet</p>
-          ) : (
-            <div className="space-y-3">
-              {invites.map((invite) => (
-                <div key={invite.id} className="flex items-center justify-between p-3 border rounded">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{invite.email}</span>
-                      <Badge variant={getStatusBadgeVariant(invite.status)}>
-                        {invite.status || 'UNKNOWN'}
-                      </Badge>
+        {/* Invite Scrum Master */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Invite Scrum Master
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleCreateScrumMasterInvite} className="space-y-4">
+              <div>
+                <Label htmlFor="sm-invite-email">Email Address</Label>
+                <Input
+                  id="sm-invite-email"
+                  type="email"
+                  value={smEmail}
+                  onChange={(e) => setSmEmail(e.target.value)}
+                  placeholder="scrum.master@example.com"
+                  required
+                />
+              </div>
+              <Button type="submit" disabled={smCreating}>
+                {smCreating ? 'Creating Invite...' : 'Send Invite'}
+              </Button>
+            </form>
+            {smMessage && (
+              <div className={`mt-4 p-3 rounded ${smMessage.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+                {smMessage}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Sent Invites */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Member Invites */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Team Member Invites
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {invites.filter(invite => invite.invitedRole === 'MEMBER').length === 0 ? (
+              <p className="text-gray-500 text-center py-4">No member invites sent yet</p>
+            ) : (
+              <div className="space-y-3">
+                {invites.filter(invite => invite.invitedRole === 'MEMBER').map((invite) => (
+                  <div key={invite.id} className="flex items-center justify-between p-3 border rounded">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{invite.email}</span>
+                        <Badge variant={getStatusBadgeVariant(invite.status)}>
+                          {invite.status || 'UNKNOWN'}
+                        </Badge>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Sent {new Date(invite.createdAt).toLocaleDateString()} •
+                        Expires {new Date(invite.expiresAt).toLocaleDateString()}
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-500">
-                      Sent {new Date(invite.createdAt).toLocaleDateString()} •
-                      Expires {new Date(invite.expiresAt).toLocaleDateString()}
-                    </div>
+                    {invite.status === 'PENDING' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCopyInviteLink(invite)}
+                        className="flex items-center gap-1"
+                      >
+                        <Copy className="h-3 w-3" />
+                        Copy Link
+                      </Button>
+                    )}
                   </div>
-                  {invite.status === 'PENDING' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCopyInviteLink(invite)}
-                      className="flex items-center gap-1"
-                    >
-                      <Copy className="h-3 w-3" />
-                      Copy Link
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Scrum Master Invites */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Scrum Master Invites
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {invites.filter(invite => invite.invitedRole === 'SCRUM_MASTER').length === 0 ? (
+              <p className="text-gray-500 text-center py-4">No scrum master invites sent yet</p>
+            ) : (
+              <div className="space-y-3">
+                {invites.filter(invite => invite.invitedRole === 'SCRUM_MASTER').map((invite) => (
+                  <div key={invite.id} className="flex items-center justify-between p-3 border rounded">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{invite.email}</span>
+                        <Badge variant={getStatusBadgeVariant(invite.status)}>
+                          {invite.status || 'UNKNOWN'}
+                        </Badge>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        Sent {new Date(invite.createdAt).toLocaleDateString()} •
+                        Expires {new Date(invite.expiresAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                    {invite.status === 'PENDING' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCopyInviteLink(invite)}
+                        className="flex items-center gap-1"
+                      >
+                        <Copy className="h-3 w-3" />
+                        Copy Link
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
