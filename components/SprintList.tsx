@@ -19,6 +19,10 @@ type Sprint = {
   isActive: boolean
   status: 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
   isEnabledForCapacity?: boolean
+  dailyScrum?: number
+  sprintPlanning?: number
+  sprintReview?: number
+  sprintRetrospective?: number
 }
 
 type ApiSprintResponse = {
@@ -30,6 +34,10 @@ type ApiSprintResponse = {
   squadName: string
   isActive: boolean
   status?: 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
+  dailyScrum?: number
+  sprintPlanning?: number
+  sprintReview?: number
+  sprintRetrospective?: number
 }
 
 type SquadSprints = {

@@ -96,6 +96,10 @@ export interface SprintForScrumMaster {
   squadName: string
   isActive: boolean
   status: 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
+  dailyScrum?: number
+  sprintPlanning?: number
+  sprintReview?: number
+  sprintRetrospective?: number
 }
 
 export class SprintServiceError extends Error {
@@ -510,6 +514,10 @@ export async function getSprintsForScrumMaster(userId: string): Promise<SprintFo
       status: true,
       isActive: true,
       squadId: true,
+      dailyScrumMinutes: true,
+      sprintPlanningMinutes: true,
+      sprintReviewMinutes: true,
+      sprintRetrospectiveMinutes: true,
       squad: {
         select: { name: true }
       }
@@ -595,7 +603,11 @@ export async function getSprintsForScrumMaster(userId: string): Promise<SprintFo
         squadId: sprint.squadId,
         squadName: squad.name,
         isActive: sprint.isActive,
-        status: sprint.status
+        status: sprint.status,
+        dailyScrum: sprint.dailyScrumMinutes,
+        sprintPlanning: sprint.sprintPlanningMinutes,
+        sprintReview: sprint.sprintReviewMinutes,
+        sprintRetrospective: sprint.sprintRetrospectiveMinutes
       })
     }
   }
@@ -742,6 +754,10 @@ export async function updateSprint(
     startDate: Date
     endDate: Date
     status?: 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
+    dailyScrum?: number
+    sprintPlanning?: number
+    sprintReview?: number
+    sprintRetrospective?: number
   },
   scrumMasterId: string
 ): Promise<Sprint | null> {
@@ -783,6 +799,10 @@ export async function updateSprint(
       startDate: updateData.startDate,
       endDate: updateData.endDate,
       ...(updateData.status && { status: updateData.status }),
+      ...(updateData.dailyScrum !== undefined && { dailyScrumMinutes: updateData.dailyScrum }),
+      ...(updateData.sprintPlanning !== undefined && { sprintPlanningMinutes: updateData.sprintPlanning }),
+      ...(updateData.sprintReview !== undefined && { sprintReviewMinutes: updateData.sprintReview }),
+      ...(updateData.sprintRetrospective !== undefined && { sprintRetrospectiveMinutes: updateData.sprintRetrospective }),
       updatedAt: new Date()
     }
   })

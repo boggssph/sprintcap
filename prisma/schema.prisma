@@ -75,6 +75,12 @@ model Sprint {
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
+  // Ceremony time allocations (in minutes)
+  dailyScrumMinutes     Int     @default(15)
+  sprintPlanningMinutes Int     @default(120)  // 2 hours
+  sprintReviewMinutes   Int     @default(60)   // 1 hour
+  sprintRetrospectiveMinutes Int @default(60)  // 1 hour
+
   squad     Squad         @relation(fields: [squadId], references: [id])
   members   SprintMember[]
   tickets   Ticket[]
