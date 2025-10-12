@@ -68,10 +68,10 @@ export default function SprintList({ refreshTrigger, onCreateSprint, onSprintSel
 
   const formatCeremonies = (sprint: Sprint) => {
     const ceremonies = [
-      { key: 'dailyScrum' as keyof Sprint, label: 'DS', fullName: 'Daily Scrum' },
-      { key: 'sprintPlanning' as keyof Sprint, label: 'SP', fullName: 'Sprint Planning' },
-      { key: 'sprintReview' as keyof Sprint, label: 'SR', fullName: 'Sprint Review' },
-      { key: 'sprintRetrospective' as keyof Sprint, label: 'RT', fullName: 'Retrospective' }
+      { key: 'dailyScrum' as keyof Sprint, label: 'Daily Scrum', fullName: 'Daily Scrum' },
+      { key: 'sprintPlanning' as keyof Sprint, label: 'Planning', fullName: 'Sprint Planning' },
+      { key: 'sprintReview' as keyof Sprint, label: 'Review & Demo', fullName: 'Sprint Review & Demo' },
+      { key: 'sprintRetrospective' as keyof Sprint, label: 'Retro', fullName: 'Sprint Retrospective' }
     ]
 
     const activeCeremonies = ceremonies.filter(ceremony => {
