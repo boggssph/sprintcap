@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
-import { Plus, Play, Edit } from 'lucide-react'
+import { Plus, Play, Edit, Clock } from 'lucide-react'
 import { SprintUpdateDrawer } from './SprintUpdateDrawer'
 
 type Sprint = {
@@ -64,6 +64,37 @@ export default function SprintList({ refreshTrigger, onCreateSprint, onSprintSel
       day: 'numeric',
       year: 'numeric'
     })
+  }
+
+  const formatCeremonies = (sprint: Sprint) => {
+    const ceremonies = [
+      { key: 'dailyScrum' as keyof Sprint, label: 'DS', fullName: 'Daily Scrum' },
+      { key: 'sprintPlanning' as keyof Sprint, label: 'SP', fullName: 'Sprint Planning' },
+      { key: 'sprintReview' as keyof Sprint, label: 'SR', fullName: 'Sprint Review' },
+      { key: 'sprintRetrospective' as keyof Sprint, label: 'RT', fullName: 'Retrospective' }
+    ]
+
+    const activeCeremonies = ceremonies.filter(ceremony => {
+      const value = sprint[ceremony.key]
+      return typeof value === 'number' && value > 0
+    })
+
+    if (activeCeremonies.length === 0) return null
+
+    return (
+      <div className="flex items-center gap-1 mt-2">
+        <Clock className="h-3 w-3 text-muted-foreground" />
+        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+          {activeCeremonies.map((ceremony, index) => (
+            <span key={ceremony.key} className="flex items-center gap-1">
+              <span className="font-medium" title={ceremony.fullName}>{ceremony.label}:</span>
+              <span>{sprint[ceremony.key]}m</span>
+              {index < activeCeremonies.length - 1 && <span className="text-muted-foreground/50">•</span>}
+            </span>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   const fetchSprints = async () => {
@@ -280,6 +311,7 @@ export default function SprintList({ refreshTrigger, onCreateSprint, onSprintSel
                           </div>
                         </RadioGroup>
                       </div>
+                      {formatCeremonies(sprint)}
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="text-sm text-muted-foreground text-right">
