@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerTrigger, DrawerClose } from '@/components/ui/drawer'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Combobox } from '@/components/ui/combobox'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Edit, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -222,18 +222,18 @@ export function SprintUpdateDrawer({ sprint, children, onSuccess }: SprintUpdate
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-base font-medium">Status</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} disabled={isSubmitting}>
-                        <FormControl>
-                          <SelectTrigger className="h-12 text-base">
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="INACTIVE">Planned</SelectItem>
-                          <SelectItem value="ACTIVE">Active</SelectItem>
-                          <SelectItem value="COMPLETED">Completed</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Combobox
+                        options={[
+                          { label: 'Planned', value: 'INACTIVE' },
+                          { label: 'Active', value: 'ACTIVE' },
+                          { label: 'Completed', value: 'COMPLETED' }
+                        ]}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        placeholder="Select status"
+                        disabled={isSubmitting}
+                        className="h-12 text-base"
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
