@@ -29,6 +29,11 @@ export async function createInvite(actorEmail: string, params: { email: string, 
   const actor = await prisma.user.findUnique({ where: { email: actorEmail.toLowerCase() } })
   if (!actor) throw new Error('forbidden')
 
+  // Validate that invited email is a Gmail address
+  if (!params.email.toLowerCase().endsWith('@gmail.com')) {
+    throw new Error('invitations are restricted to Gmail addresses only')
+  }
+
   const desiredRole = (params.role || 'MEMBER')
   const allowedRoles = ['MEMBER', 'SCRUM_MASTER', 'ADMIN']
   if (!allowedRoles.includes(desiredRole)) throw new Error('invalid role')
