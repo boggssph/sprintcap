@@ -26,7 +26,7 @@ export default function ScrumMasterHeader() {
         </div>
       </div>
       <div className="flex items-center gap-2 mt-2 md:mt-0">
-        <Button onClick={() => signOut({ callbackUrl: '/auth/no-access' })} variant="ghost" size="sm" className="border-slate-200 px-3 py-1">
+        <Button onClick={() => signOut({ callbackUrl: '/auth/signout' })} variant="ghost" size="sm" className="border-slate-200 px-3 py-1">
           <span className="sr-only">Sign out</span>
           Sign Out
         </Button>
