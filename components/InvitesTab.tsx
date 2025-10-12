@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Combobox } from '@/components/ui/combobox'
 import { Badge } from '@/components/ui/badge'
 import { Users, Mail, Copy } from 'lucide-react'
 
@@ -197,18 +197,15 @@ export default function InvitesTab() {
             </div>
             <div>
               <Label htmlFor="invite-squad">Squad</Label>
-              <Select value={selectedSquadId} onValueChange={setSelectedSquadId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a squad" />
-                </SelectTrigger>
-                <SelectContent>
-                  {squads.map((squad) => (
-                    <SelectItem key={squad.id} value={squad.id}>
-                      {squad.name} ({squad.alias}) - {squad.memberCount} members
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Combobox
+                options={squads.map((squad) => ({
+                  label: `${squad.name} (${squad.alias}) - ${squad.memberCount} members`,
+                  value: squad.id
+                }))}
+                value={selectedSquadId}
+                onValueChange={setSelectedSquadId}
+                placeholder="Select a squad"
+              />
             </div>
             <Button type="submit" disabled={creating}>
               {creating ? 'Creating Invite...' : 'Send Invite'}
