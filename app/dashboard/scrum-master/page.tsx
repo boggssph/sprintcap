@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Target, BarChart3 } from "lucide-react";
+import { Users, Target, BarChart3, Mail } from "lucide-react";
 import SprintCreationDrawer from "@/components/SprintCreationDrawer";
 import SprintList from "@/components/SprintList";
 import SquadsTab from "@/components/SquadsTab";
@@ -9,6 +9,7 @@ import CapacityPlanTab from "@/components/CapacityPlanTab";
 import ScrumMasterHeader from "@/components/ScrumMasterHeader";
 import CenteredContainer from '@/components/CenteredContainer'
 import MainShell from '@/components/MainShell'
+import InvitesTab from "@/components/InvitesTab";
 
 // --- Main Component ---
 export default function ScrumMasterDashboard() {
@@ -27,7 +28,7 @@ export default function ScrumMasterDashboard() {
       <CenteredContainer>
         <ScrumMasterHeader />
         <Tabs defaultValue="squads" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="squads" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Squads
@@ -39,6 +40,10 @@ export default function ScrumMasterDashboard() {
             <TabsTrigger value="capacity" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Capacity
+            </TabsTrigger>
+            <TabsTrigger value="invites" className="flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              Invites
             </TabsTrigger>
           </TabsList>
           <TabsContent value="squads" className="space-y-6">
@@ -52,6 +57,9 @@ export default function ScrumMasterDashboard() {
           </TabsContent>
           <TabsContent value="capacity" className="space-y-6">
             <CapacityPlanTab />
+          </TabsContent>
+          <TabsContent value="invites" className="space-y-6">
+            <InvitesTab />
           </TabsContent>
         </Tabs>
 

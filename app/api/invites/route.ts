@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createInvite, regenerateInvite, revokeInvite } from '../../../lib/inviteService'
+import { createInvite, regenerateInvite, revokeInvite, listInvites } from '../../../lib/inviteService'
 import { devAuthGuard } from '../../../lib/devAuthMiddleware'
 import { rateLimit } from '../../../lib/rateLimit'
 
@@ -56,6 +56,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'unknown action' }, { status: 400 })
   } catch (e) {
     console.error(e)
+    return NextResponse.json({ error: 'server error' }, { status: 500 })
+  }
+}
+
+export async function GET(request: Request) {
+  try {
+    const actor = await devAuthGuard(request as unknown as import('next/server').NextRequest)
+    if (!actor || !actor.email) {
+      return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const cursor = searchParams.get('cursor') || null
+    const status = searchParams.get('status') || undefined
+    const q = searchParams.get('q') || undefined
+
+    const result = await listInvites(actor.email, { limit, cursor, status, q })
+
+    return NextResponse.json({
+      invites: result.invites,
+      nextCursor: result.nextCursor
+    })
+  } catch (e) {
+    console.error('Error listing invites:', e)
     return NextResponse.json({ error: 'server error' }, { status: 500 })
   }
 }
