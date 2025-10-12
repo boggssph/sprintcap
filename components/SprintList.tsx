@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
-import { Plus, Play } from 'lucide-react'
+import { Plus, Play, Edit } from 'lucide-react'
+import { SprintUpdateDrawer } from './SprintUpdateDrawer'
 
 type Sprint = {
   id: string
@@ -277,21 +278,36 @@ export default function SprintList({ refreshTrigger, onCreateSprint, onSprintSel
                         <div>{formatDate(sprint.startDate)}</div>
                         <div>to {formatDate(sprint.endDate)}</div>
                       </div>
-                      {!sprint.isEnabledForCapacity && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleEnableSprint(sprint.id)
-                          }}
-                          disabled={enablingSprintId === sprint.id}
-                          className="ml-2"
+                      <div className="flex flex-col gap-1">
+                        <SprintUpdateDrawer
+                          sprint={sprint}
+                          onSuccess={fetchSprints}
                         >
-                          <Play className="h-3 w-3 mr-1" />
-                          {enablingSprintId === sprint.id ? 'Enabling...' : 'Enable'}
-                        </Button>
-                      )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-8"
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            Edit
+                          </Button>
+                        </SprintUpdateDrawer>
+                        {!sprint.isEnabledForCapacity && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleEnableSprint(sprint.id)
+                            }}
+                            disabled={enablingSprintId === sprint.id}
+                          >
+                            <Play className="h-3 w-3 mr-1" />
+                            {enablingSprintId === sprint.id ? 'Enabling...' : 'Enable'}
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}

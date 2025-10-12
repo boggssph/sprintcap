@@ -7,6 +7,18 @@ import { validateCreateSprintRequest, validateSprintDates, CreateSprintRequest }
 import type { Sprint } from '@prisma/client'
 import { calculateCeremonyTime, DEFAULT_CEREMONY_VALUES } from './ceremonyCalculations'
 
+type SquadWithCeremonyFields = {
+  id: string
+  name: string
+  alias: string
+  scrumMasterId: string
+  dailyScrumMinutes: number
+  refinementHours: number
+  reviewDemoMinutes: number
+  planningHours: number
+  retrospectiveMinutes: number
+}
+
 export interface SprintResponse {
   id: string
   name: string
@@ -129,7 +141,7 @@ export async function createSprint(
       planningHours: true,
       retrospectiveMinutes: true
     }
-  })
+  }) as SquadWithCeremonyFields | null
 
   if (!squad) {
     console.log('Squad not found:', data.squadId)
@@ -718,4 +730,60 @@ export async function getSprintWithCurrentStatus(sprintId: string): Promise<Spri
   }
 
   return { ...sprint, status: updatedStatus }
+}
+
+/**
+ * Update a sprint with validation
+ */
+export async function updateSprint(
+  sprintId: string,
+  updateData: {
+    name: string
+    startDate: Date
+    endDate: Date
+    status?: 'ACTIVE' | 'INACTIVE' | 'COMPLETED'
+  },
+  scrumMasterId: string
+): Promise<Sprint | null> {
+  // Verify the sprint exists and belongs to the scrum master
+  const sprint = await prisma.sprint.findUnique({
+    where: { id: sprintId },
+    include: {
+      squad: {
+        select: { scrumMasterId: true }
+      }
+    }
+  })
+
+  if (!sprint) return null
+
+  // Verify ownership
+  if (sprint.squad.scrumMasterId !== scrumMasterId) {
+    throw new Error('Unauthorized: Sprint does not belong to this Scrum Master')
+  }
+
+  // Validate status transition if provided
+  if (updateData.status && updateData.status !== sprint.status) {
+    const validTransitions: Record<string, string[]> = {
+      'INACTIVE': ['ACTIVE'],
+      'ACTIVE': ['COMPLETED'],
+      'COMPLETED': []
+    }
+
+    if (!validTransitions[sprint.status]?.includes(updateData.status)) {
+      throw new Error(`Invalid status transition from ${sprint.status} to ${updateData.status}`)
+    }
+  }
+
+  // Update the sprint
+  return await prisma.sprint.update({
+    where: { id: sprintId },
+    data: {
+      name: updateData.name,
+      startDate: updateData.startDate,
+      endDate: updateData.endDate,
+      ...(updateData.status && { status: updateData.status }),
+      updatedAt: new Date()
+    }
+  })
 }
