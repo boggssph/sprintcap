@@ -104,6 +104,7 @@ export interface SprintForScrumMaster {
   sprintPlanning?: number
   sprintReview?: number
   sprintRetrospective?: number
+  refinement?: number
 }
 
 export class SprintServiceError extends Error {
@@ -532,6 +533,7 @@ export async function getSprintsForScrumMaster(userId: string): Promise<SprintFo
       sprintPlanningMinutes: true,
       sprintReviewMinutes: true,
       sprintRetrospectiveMinutes: true,
+      refinementMinutes: true,
       squad: {
         select: { name: true }
       }
@@ -621,7 +623,8 @@ export async function getSprintsForScrumMaster(userId: string): Promise<SprintFo
         dailyScrum: sprint.dailyScrumMinutes,
         sprintPlanning: sprint.sprintPlanningMinutes,
         sprintReview: sprint.sprintReviewMinutes,
-        sprintRetrospective: sprint.sprintRetrospectiveMinutes
+        sprintRetrospective: sprint.sprintRetrospectiveMinutes,
+        refinement: sprint.refinementMinutes
       })
     }
   }
