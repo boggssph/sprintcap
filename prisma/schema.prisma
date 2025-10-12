@@ -26,6 +26,7 @@ model User {
   dayAllocations DayAllocation[]
   auditLogs  AuditLog[]
   tickets    Ticket[]
+  invitations Invitation[]
 }
 
 enum UserRole {
@@ -218,6 +219,8 @@ model Invitation {
   squad     Squad? @relation(fields: [squadId], references: [id])
   squadId   String?
   invitedRole UserRole?
+  createdBy   User   @relation(fields: [createdById], references: [id])
+  createdById String
   tokenHash String
   expiresAt DateTime
   status    InvitationStatus @default(PENDING)

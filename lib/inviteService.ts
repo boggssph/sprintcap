@@ -10,8 +10,35 @@ export async function listInvites(actorEmail: string, opts: { limit?: number, cu
   if (opts.status) where.status = opts.status
   if (opts.q) where.email = { contains: opts.q, mode: 'insensitive' }
 
+  // Filter invites based on user role
+  if (actor.role !== 'ADMIN') {
+    if (actor.role === 'SCRUM_MASTER') {
+      // Scrum Masters see invites for squads they manage
+      const managedSquadIds = await prisma.squad.findMany({
+        where: { scrumMasterId: actor.id },
+        select: { id: true }
+      }).then(squads => squads.map(s => s.id))
+
+      where.OR = [
+        { createdById: actor.id }, // Invites they created
+        { squadId: { in: managedSquadIds } } // Invites for squads they manage
+      ]
+    } else {
+      // Regular members only see invites they created
+      where.createdById = actor.id
+    }
+  }
+
   const invites = await prisma.invitation.findMany({
     where,
+    include: {
+      squad: {
+        select: {
+          name: true,
+          alias: true
+        }
+      }
+    },
     orderBy: { createdAt: 'desc' },
     take: limit + 1,
     ...(opts.cursor ? { cursor: { id: opts.cursor }, skip: 1 } : {})
@@ -46,7 +73,7 @@ export async function createInvite(actorEmail: string, params: { email: string, 
   // Default TTL: 72 hours
   const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000)
 
-  const invite = await prisma.invitation.create({ data: { email: params.email.toLowerCase(), squadId: params.squadId, tokenHash, expiresAt, invitedRole: desiredRole as 'MEMBER' | 'SCRUM_MASTER' | 'ADMIN' } })
+  const invite = await prisma.invitation.create({ data: { email: params.email.toLowerCase(), squadId: params.squadId, createdById: actor.id, tokenHash, expiresAt, invitedRole: desiredRole as 'MEMBER' | 'SCRUM_MASTER' | 'ADMIN' } })
 
   try {
     await prisma.auditLog.create({ data: { actorId: actor.id, action: 'CREATE_INVITE', meta: { inviteId: invite.id, email: params.email, squadId: params.squadId, role: desiredRole } } })
@@ -91,7 +118,7 @@ export async function regenerateInvite(actorEmail: string, inviteId: string) {
   const newToken = generateToken()
   const newTokenHash = hashToken(newToken)
   const newExpires = new Date(Date.now() + 72 * 60 * 60 * 1000)
-  const created = await prisma.invitation.create({ data: { email: existing.email, squadId: existing.squadId, tokenHash: newTokenHash, expiresAt: newExpires, invitedRole: existing.invitedRole } })
+  const created = await prisma.invitation.create({ data: { email: existing.email, squadId: existing.squadId, createdById: existing.createdById, tokenHash: newTokenHash, expiresAt: newExpires, invitedRole: existing.invitedRole } })
   try {
     await prisma.auditLog.create({ data: { actorId: actor.id, action: 'REGENERATE_INVITE', meta: { inviteId } } })
   } catch (e) {
