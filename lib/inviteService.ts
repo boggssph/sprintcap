@@ -11,6 +11,10 @@ export async function listInvites(actorEmail: string, opts: { limit?: number, cu
   if (opts.q) where.email = { contains: opts.q, mode: 'insensitive' }
 
   // Filter invites based on user role
+  if (actor.role === 'MEMBER') {
+    // Members cannot see any invites
+    return { invites: [], nextCursor: null }
+  }
   if (actor.role !== 'ADMIN') {
     if (actor.role === 'SCRUM_MASTER') {
       // Scrum Masters see invites for squads they manage
@@ -23,9 +27,6 @@ export async function listInvites(actorEmail: string, opts: { limit?: number, cu
         { createdById: actor.id }, // Invites they created
         { squadId: { in: managedSquadIds } } // Invites for squads they manage
       ]
-    } else {
-      // Regular members only see invites they created
-      where.createdById = actor.id
     }
   }
 
@@ -56,6 +57,11 @@ export async function createInvite(actorEmail: string, params: { email: string, 
   const actor = await prisma.user.findUnique({ where: { email: actorEmail.toLowerCase() } })
   if (!actor) throw new Error('forbidden')
 
+  // Only ADMIN and SCRUM_MASTER can create invites
+  if (actor.role === 'MEMBER') {
+    throw new Error('only ADMIN and SCRUM_MASTER can create invites')
+  }
+
   // Validate that invited email is a Gmail address
   if (!params.email.toLowerCase().endsWith('@gmail.com')) {
     throw new Error('invitations are restricted to Gmail addresses only')
@@ -64,8 +70,11 @@ export async function createInvite(actorEmail: string, params: { email: string, 
   const desiredRole = (params.role || 'MEMBER')
   const allowedRoles = ['MEMBER', 'SCRUM_MASTER', 'ADMIN']
   if (!allowedRoles.includes(desiredRole)) throw new Error('invalid role')
-  if ((desiredRole === 'SCRUM_MASTER' || desiredRole === 'ADMIN') && typeof actor === 'object' && 'role' in actor && actor.role !== 'ADMIN') {
-    throw new Error('only ADMIN can invite SCRUM_MASTER or ADMIN')
+  if (desiredRole === 'ADMIN' && typeof actor === 'object' && 'role' in actor && actor.role !== 'ADMIN') {
+    throw new Error('only ADMIN can invite ADMIN')
+  }
+  if (desiredRole === 'SCRUM_MASTER' && typeof actor === 'object' && 'role' in actor && !['ADMIN', 'SCRUM_MASTER'].includes(actor.role)) {
+    throw new Error('only ADMIN or SCRUM_MASTER can invite SCRUM_MASTER')
   }
 
   const token = generateToken()
@@ -108,11 +117,20 @@ export async function createInvite(actorEmail: string, params: { email: string, 
 export async function regenerateInvite(actorEmail: string, inviteId: string) {
   const actor = await prisma.user.findUnique({ where: { email: actorEmail.toLowerCase() } })
   if (!actor) throw new Error('forbidden')
-  if (typeof actor === 'object' && 'role' in actor && actor.role !== 'ADMIN') throw new Error('only ADMIN can regenerate tokens')
-
-  // Expire the existing invite and create a new invite record with a fresh token
+  
+  // Check if the invite exists and get its role
   const existing = await prisma.invitation.findUnique({ where: { id: inviteId } })
   if (!existing) throw new Error('invite not found')
+  
+  // Only ADMIN can regenerate ADMIN invites, but ADMIN or SCRUM_MASTER can regenerate SCRUM_MASTER invites
+  if (existing.invitedRole === 'ADMIN' && actor.role !== 'ADMIN') {
+    throw new Error('only ADMIN can regenerate ADMIN invites')
+  }
+  if (existing.invitedRole === 'SCRUM_MASTER' && !['ADMIN', 'SCRUM_MASTER'].includes(actor.role)) {
+    throw new Error('only ADMIN or SCRUM_MASTER can regenerate SCRUM_MASTER invites')
+  }
+
+  // Expire the existing invite and create a new invite record with a fresh token
   await prisma.invitation.update({ where: { id: inviteId }, data: { status: 'EXPIRED' } })
 
   const newToken = generateToken()
@@ -157,7 +175,19 @@ export async function acceptInvite(token: string, email: string) {
 export async function revokeInvite(actorEmail: string, inviteId: string) {
   const actor = await prisma.user.findUnique({ where: { email: actorEmail.toLowerCase() } })
   if (!actor) throw new Error('forbidden')
-  if (typeof actor === 'object' && 'role' in actor && actor.role !== 'ADMIN') throw new Error('only ADMIN can revoke invites')
+  
+  // Check if the invite exists and get its role
+  const existing = await prisma.invitation.findUnique({ where: { id: inviteId } })
+  if (!existing) throw new Error('invite not found')
+  
+  // Only ADMIN can revoke ADMIN invites, but ADMIN or SCRUM_MASTER can revoke SCRUM_MASTER invites
+  if (existing.invitedRole === 'ADMIN' && actor.role !== 'ADMIN') {
+    throw new Error('only ADMIN can revoke ADMIN invites')
+  }
+  if (existing.invitedRole === 'SCRUM_MASTER' && !['ADMIN', 'SCRUM_MASTER'].includes(actor.role)) {
+    throw new Error('only ADMIN or SCRUM_MASTER can revoke SCRUM_MASTER invites')
+  }
+  
   const updated = await prisma.invitation.update({ where: { id: inviteId }, data: { status: 'EXPIRED' } })
   try {
     await prisma.auditLog.create({ data: { actorId: actor.id, action: 'REVOKE_INVITE', meta: { inviteId } } })
