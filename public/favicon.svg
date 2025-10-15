@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <style>
+      .running-person { font-size: 80px; }
+    </style>
+  </defs>
+  <text x="50" y="75" text-anchor="middle" class="running-person">🏃</text>
+</svg>
