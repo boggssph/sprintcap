@@ -137,7 +137,12 @@ export async function GET(request: NextRequest) {
       updatedAt: hour.updatedAt
     }))
 
-    return NextResponse.json(formattedHours)
+    // Sort by member name alphabetically
+    const sortedHours = formattedHours.sort((a, b) => 
+      a.memberName.localeCompare(b.memberName)
+    )
+
+    return NextResponse.json(sortedHours)
   } catch (error) {
     console.error('GET /api/member-hours error:', error)
     return NextResponse.json(

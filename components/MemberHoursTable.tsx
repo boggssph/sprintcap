@@ -34,7 +34,11 @@ export default function MemberHoursTable({ sprintId }: MemberHoursTableProps) {
       const response = await fetch(`/api/member-hours?sprintId=${sprintId}`)
       if (!response.ok) throw new Error('Failed to fetch member hours')
       const data = await response.json()
-      setMemberHours(data)
+      // Sort by member name alphabetically
+      const sortedData = data.sort((a: MemberHours, b: MemberHours) => 
+        a.memberName.localeCompare(b.memberName)
+      )
+      setMemberHours(sortedData)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
