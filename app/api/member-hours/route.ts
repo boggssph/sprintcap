@@ -52,7 +52,22 @@ export async function GET(request: NextRequest) {
     // Get sprint and check if user is scrum master for the squad
     const sprint = await prisma.sprint.findUnique({
       where: { id: sprintId },
-      select: { id: true, squadId: true, squad: { select: { scrumMasterId: true } } }
+      select: { 
+        id: true, 
+        squadId: true, 
+        squad: { 
+          select: { 
+            scrumMasterId: true,
+            members: {
+              select: {
+                user: {
+                  select: { id: true, name: true, displayName: true }
+                }
+              }
+            }
+          } 
+        }
+      }
     })
 
     if (!sprint) {
@@ -69,7 +84,37 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get member hours for the sprint
+    // Get existing member hours for the sprint
+    const existingHours = await prisma.memberHours.findMany({
+      where: { sprintId },
+      include: {
+        member: {
+          select: { id: true, name: true, displayName: true }
+        }
+      }
+    })
+
+    // Get all squad members
+    const squadMembers = sprint.squad.members.map(member => member.user)
+
+    // Create default hours records for members who don't have them
+    const membersWithoutHours = squadMembers.filter(member => 
+      !existingHours.some(hours => hours.memberId === member.id)
+    )
+
+    if (membersWithoutHours.length > 0) {
+      await prisma.memberHours.createMany({
+        data: membersWithoutHours.map(member => ({
+          memberId: member.id,
+          sprintId,
+          supportIncidents: 0,
+          prReview: 0,
+          others: 0
+        }))
+      })
+    }
+
+    // Get all member hours (including newly created ones)
     const memberHours = await prisma.memberHours.findMany({
       where: { sprintId },
       include: {
