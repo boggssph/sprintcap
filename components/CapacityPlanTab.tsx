@@ -8,6 +8,7 @@ import { Target, Users, Calendar, CheckCircle, Plus } from "lucide-react"
 import CapacityPlanTable from "./CapacityPlanTable"
 import TicketCreationDrawer from "./TicketCreationDrawer"
 import { useRouter } from "next/navigation"
+import MemberHoursTable from "./MemberHoursTable"
 
 interface Sprint {
   id: string
@@ -207,6 +208,12 @@ export default function CapacityPlanTab() {
       {/* Selected Sprint Tickets */}
       {selectedSprint && (
         <div className="border-t pt-6">
+          {/* Member Hours Table */}
+          <div className="mb-6">
+            <h3 className="text-lg font-medium mb-4">Member Hours</h3>
+            <MemberHoursTable sprintId={selectedSprint.id} />
+          </div>
+
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium">
               Tickets for {selectedSprint.name}
