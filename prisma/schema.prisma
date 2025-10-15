@@ -27,6 +27,7 @@ model User {
   auditLogs  AuditLog[]
   tickets    Ticket[]
   invitations Invitation[]
+  memberHours MemberHours[]
 }
 
 enum UserRole {
@@ -89,6 +90,7 @@ model Sprint {
   capacityTickets CapacityTicket[] // NEW: Jira tickets for capacity planning
   absences  Absence[]
   assignments Assignment[]
+  memberHours MemberHours[]
 
   @@unique([squadId, name]) // Prevent duplicate sprint names within squad
 }
@@ -258,4 +260,21 @@ enum AccessRequestStatus {
   PENDING
   APPROVED
   DECLINED
+}
+
+model MemberHours {
+  id               String   @id @default(cuid())
+  memberId         String
+  sprintId         String
+  supportIncidents Float    @default(0)
+  prReview         Float    @default(0)
+  others           Float    @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  member User @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  sprint Sprint @relation(fields: [sprintId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, sprintId])
+  @@map("member_hours")
 }

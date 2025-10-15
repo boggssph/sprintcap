@@ -10,6 +10,7 @@ import CapacityPlanTable from "@/components/CapacityPlanTable"
 import ScrumMasterHeader from "@/components/ScrumMasterHeader"
 import CenteredContainer from '@/components/CenteredContainer'
 import MainShell from '@/components/MainShell'
+import MemberHoursTable from "@/components/MemberHoursTable"
 
 interface Sprint {
   id: string
@@ -221,6 +222,12 @@ export default function CapacityPlanPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Member Hours Table */}
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold mb-4">Member Hours</h2>
+          <MemberHoursTable sprintId={sprintId!} />
         </div>
 
         {/* Tickets Grid */}

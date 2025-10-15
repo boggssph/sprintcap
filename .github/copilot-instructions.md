@@ -37,6 +37,8 @@ Auto-generated from all feature plans. Last updated: 2025-09-28
 - PostgreSQL (hosted on Neon) (020-as-scrum-master)
 - TypeScript 5.x + Next.js App Router, Prisma ORM, PostgreSQL, shadcn/ui components, Tailwind CSS (022-as-scrum-master)
 - TypeScript 5.x + Next.js App Router, Prisma ORM, shadcn/ui components, React Hook Form (023-as-scrum-master)
+- TypeScript 5.x + Next.js App Router, Prisma, shadcn/ui, Tailwind CSS (024-as-scrum-master)
+- Prisma ORM with PostgreSQL (Neon) (024-as-scrum-master)
 
 ## Project Structure
 ```
@@ -52,9 +54,9 @@ npm test [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNO
 TypeScript 5.9: Follow standard conventions
 
 ## Recent Changes
+- 024-as-scrum-master: Added TypeScript 5.x + Next.js App Router, Prisma, shadcn/ui, Tailwind CSS
 - 023-as-scrum-master: Added TypeScript 5.x + Next.js App Router, Prisma ORM, shadcn/ui components, React Hook Form
 - 023-as-scrum-master: Added TypeScript 5.x + Next.js App Router, Prisma ORM, shadcn/ui components, React Hook Form
-- 022-as-scrum-master: Added TypeScript 5.x + Next.js App Router, Prisma ORM, PostgreSQL, shadcn/ui components, Tailwind CSS
 
 <!-- MANUAL ADDITIONS START -->
 Whenever troubleshooting, circumspection is required and avoid making knee-jerk changes that could introduce new issues.

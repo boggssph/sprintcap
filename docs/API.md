@@ -154,3 +154,38 @@ Security
 OpenAPI spec
 
 There is a minimal OpenAPI spec in `docs/openapi.yaml` which describes the main invite endpoints.
+
+## GET /api/member-hours
+
+Retrieve member hours for a specific sprint.
+
+- Query parameters: `sprintId` (required)
+- Authentication: requires Scrum Master role for the sprint's squad
+- Response: 200 with array of member hours objects
+
+Example
+
+```bash
+curl "http://localhost:3000/api/member-hours?sprintId=sprint-123" \
+  -H "x-test-user: scrum@example.com"
+```
+
+## PUT /api/member-hours
+
+Update or create member hours for a team member in a sprint.
+
+- Request body: `{ memberId, sprintId, supportIncidents, prReview, others }`
+- Authentication: requires Scrum Master role for the sprint's squad
+- Validation: all hour values must be non-negative numbers
+- Response: 200 with updated member hours object
+
+Example
+
+```bash
+curl -X PUT "http://localhost:3000/api/member-hours" \
+  -H "Content-Type: application/json" \
+  -H "x-test-user: scrum@example.com" \
+  -d '{"memberId":"user-123","sprintId":"sprint-123","supportIncidents":2.5,"prReview":1.0,"others":0.5}'
+```
+
+Security
